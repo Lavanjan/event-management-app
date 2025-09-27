@@ -1,0 +1,55 @@
+{
+  "name": "event-booking-system",
+  "version": "1.0.0",
+  "description": "Production-ready Inventory + Event Booking system with React, NestJS, and PostgreSQL",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "build": "nx build",
+    "test": "nx test",
+    "lint": "nx lint",
+    "serve": "nx serve",
+    "start:backend": "nx serve backend",
+    "start:frontend": "nx serve frontend",
+    "start:dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "db:migrate": "cd apps/backend && npm run typeorm:run",
+    "db:generate": "cd apps/backend && npm run typeorm:generate",
+    "db:seed": "cd apps/backend && npm run seed",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "test:e2e": "nx e2e",
+    "format": "nx format:write",
+    "affected:build": "nx affected:build",
+    "affected:test": "nx affected:test"
+  },
+  "devDependencies": {
+    "@nx/eslint": "^17.0.0",
+    "@nx/eslint-plugin": "^17.0.0",
+    "@nx/jest": "^17.0.0",
+    "@nx/js": "^17.0.0",
+    "@nx/nest": "^17.0.0",
+    "@nx/node": "^17.0.0",
+    "@nx/react": "^17.0.0",
+    "@nx/vite": "^17.0.0",
+    "@nx/workspace": "^17.0.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.5.0",
+    "nx": "^17.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.2.0"
+  },
+  "dependencies": {
+    "tslib": "^2.6.0"
+  }
+}
