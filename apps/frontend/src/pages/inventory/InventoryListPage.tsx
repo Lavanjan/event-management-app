@@ -1,49 +1,32 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Package,
-  Plus,
-  Search,
-  Filter,
-  MoreHorizontal,
-  Edit,
-  Trash2,
   AlertTriangle,
   TrendingUp,
   TrendingDown,
-  Eye
+  RefreshCw,
+  Bell
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../../components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import {
   useInventoryList,
   useInventoryStats,
-  useInventoryCategories,
-  useDeleteInventoryItem
+  useDeleteInventoryItem,
+  useLowStockItems,
+  useOutOfStockItems
 } from '../../hooks/useInventory';
+import { InventoryDataTable } from '../../components/inventory/InventoryDataTable';
+import { createInventoryColumns } from '../../components/inventory/InventoryTableColumns';
+import { LowStockAlerts } from '../../components/inventory/LowStockAlerts';
 import { InventoryFilters } from '../../services/inventoryService';
-import { format } from 'date-fns';
+import { InventoryItem } from '../../types';
 import CreateInventoryDialog from '../../components/modals/CreateInventoryDialog';
-import EditInventoryDialog from '../../components/modals/EditInventoryDialog';
 import { useToast } from '../../hooks/use-toast';
 
 export function InventoryListPage() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [filters, setFilters] = useState<InventoryFilters>({
     page: 1,
@@ -52,10 +35,13 @@ export function InventoryListPage() {
     sortBy: 'name',
     sortOrder: 'ASC',
   });
+  const [showLowStockAlerts, setShowLowStockAlerts] = useState(true);
 
-  const { data: inventoryData, isLoading, error } = useInventoryList(filters);
+  const { data: inventoryData, isLoading, error, refetch } = useInventoryList(filters);
   const { data: stats, isLoading: statsLoading } = useInventoryStats();
-  const { data: categories, isLoading: categoriesLoading } = useInventoryCategories();
+
+  const { data: lowStockItems = [], isLoading: lowStockLoading } = useLowStockItems();
+  const { data: outOfStockItems = [], isLoading: outOfStockLoading } = useOutOfStockItems();
   const deleteInventoryItem = useDeleteInventoryItem();
 
   const formatCurrency = (amount: number) => {
@@ -65,43 +51,68 @@ export function InventoryListPage() {
     }).format(amount);
   };
 
-  const getStockStatus = (item: any) => {
-    if (item.quantity === 0) return { label: 'Out of Stock', variant: 'destructive' as const };
-    const minimumQuantity = item.metadata?.minimumQuantity || 5; // Default minimum quantity
-    if (item.quantity <= minimumQuantity) return { label: 'Low Stock', variant: 'warning' as const };
-    return { label: 'In Stock', variant: 'success' as const };
+  const handleFiltersChange = (newFilters: Partial<InventoryFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
   };
 
-  const handleSearch = (value: string) => {
-    setFilters(prev => ({ ...prev, search: value, page: 1 }));
-  };
-
-  const handleCategoryFilter = (category: string) => {
-    setFilters(prev => ({
-      ...prev,
-      category: category === 'all' ? undefined : category,
-      page: 1
-    }));
-  };
-
-  const handleSort = (sortBy: string) => {
-    setFilters(prev => ({
-      ...prev,
-      sortBy,
-      sortOrder: prev.sortBy === sortBy && prev.sortOrder === 'ASC' ? 'DESC' : 'ASC',
-      page: 1
-    }));
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this inventory item?')) {
-      await deleteInventoryItem.mutateAsync(id);
+  const handleDelete = async (item: InventoryItem) => {
+    if (window.confirm(`Are you sure you want to delete "${item.name}"?`)) {
+      try {
+        await deleteInventoryItem.mutateAsync(item.id);
+        toast({
+          title: 'Item Deleted',
+          description: `${item.name} has been deleted successfully.`,
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete the item. Please try again.',
+          variant: 'destructive',
+        });
+      }
     }
+  };
+
+  const handleEdit = (item: InventoryItem) => {
+    // This will be handled by the EditInventoryDialog component
+    console.log('Edit item:', item);
+  };
+
+  const handleView = (item: InventoryItem) => {
+    // Navigate to item detail page or open view modal
+    console.log('View item:', item);
   };
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }));
   };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setFilters(prev => ({ ...prev, limit: pageSize, page: 1 }));
+  };
+
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  // Create filter options from stats
+  const filterOptions = {
+    categories: stats?.categories?.map(cat => ({ label: cat, value: cat })) || [],
+    brands: stats?.brands?.map(brand => ({ label: brand, value: brand })) || [],
+    quantityUnits: stats?.quantityUnits?.map(unit => ({ label: unit, value: unit })) || [],
+    stockStatuses: [
+      { label: 'In Stock', value: 'in_stock' },
+      { label: 'Low Stock', value: 'low_stock' },
+      { label: 'Out of Stock', value: 'out_of_stock' },
+    ],
+  };
+
+  // Create table columns
+  const columns = createInventoryColumns({
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onView: handleView,
+  });
 
   if (error) {
     return (
@@ -110,7 +121,7 @@ export function InventoryListPage() {
           <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
           <h3 className="mt-4 text-lg font-semibold">Error loading inventory</h3>
           <p className="mt-2 text-muted-foreground">
-            {error.message || 'Something went wrong'}
+            {(error as any)?.message || 'Something went wrong'}
           </p>
           <Button className="mt-4" onClick={() => window.location.reload()}>
             Try Again
@@ -130,8 +141,39 @@ export function InventoryListPage() {
             Manage your event inventory items and track stock levels
           </p>
         </div>
-        <CreateInventoryDialog onInventoryCreated={() => {}} />
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/inventory/alerts')}
+            className="relative"
+          >
+            <Bell className="h-4 w-4 mr-2" />
+            Alerts
+            {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                {lowStockItems.length + outOfStockItems.length}
+              </span>
+            )}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <CreateInventoryDialog onInventoryCreated={() => {}} />
+        </div>
       </div>
+
+      {/* Low Stock Alerts */}
+      {showLowStockAlerts && !lowStockLoading && !outOfStockLoading &&
+       (lowStockItems.length > 0 || outOfStockItems.length > 0) && (
+        <LowStockAlerts
+          lowStockItems={lowStockItems}
+          outOfStockItems={outOfStockItems}
+          onItemClick={handleView}
+          onDismiss={() => setShowLowStockAlerts(false)}
+        />
+      )}
 
       {/* Stats Cards */}
       {!statsLoading && stats && (
@@ -144,7 +186,7 @@ export function InventoryListPage() {
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalItems}</div>
               <p className="text-xs text-muted-foreground">
-                Across {stats.totalCategories} categories
+                {stats.activeItems} active items
               </p>
             </CardContent>
           </Card>
@@ -190,195 +232,23 @@ export function InventoryListPage() {
         </div>
       )}
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search inventory items..."
-                  value={filters.search || ''}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+      {/* Enhanced Data Table */}
+      <InventoryDataTable
+        columns={columns}
+        data={inventoryData?.data || []}
+        searchPlaceholder="Search inventory items..."
+        filterOptions={filterOptions}
+        onFiltersChange={handleFiltersChange}
+        isLoading={isLoading}
+        totalCount={inventoryData?.total || 0}
+        pageCount={inventoryData?.totalPages || 0}
+        currentPage={inventoryData?.page || 1}
+        pageSize={inventoryData?.limit || 20}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
 
-            <Select
-              value={filters.category || 'all'}
-              onValueChange={handleCategoryFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {!categoriesLoading && categories?.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
 
-            <Select
-              value={`${filters.sortBy}-${filters.sortOrder}`}
-              onValueChange={(value) => {
-                const [sortBy, sortOrder] = value.split('-');
-                setFilters(prev => ({ ...prev, sortBy, sortOrder: sortOrder as 'ASC' | 'DESC' }));
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name-ASC">Name (A-Z)</SelectItem>
-                <SelectItem value="name-DESC">Name (Z-A)</SelectItem>
-                <SelectItem value="quantity-ASC">Quantity (Low-High)</SelectItem>
-                <SelectItem value="quantity-DESC">Quantity (High-Low)</SelectItem>
-                <SelectItem value="unitPrice-ASC">Price (Low-High)</SelectItem>
-                <SelectItem value="unitPrice-DESC">Price (High-Low)</SelectItem>
-                <SelectItem value="createdAt-DESC">Newest First</SelectItem>
-                <SelectItem value="createdAt-ASC">Oldest First</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Inventory List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
-          <CardDescription>
-            {inventoryData?.total || 0} items found
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="h-16 bg-gray-200 rounded"></div>
-                </div>
-              ))}
-            </div>
-          ) : inventoryData?.data && inventoryData.data.length > 0 ? (
-            <div className="space-y-4">
-              {inventoryData.data.map((item) => {
-                const stockStatus = getStockStatus(item);
-                return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex-shrink-0">
-                        <Package className="h-10 w-10 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-medium">{item.name}</h3>
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <span className="text-sm">
-                            <strong>Category:</strong> {item.metadata?.category || 'Uncategorized'}
-                          </span>
-                          <span className="text-sm">
-                            <strong>SKU:</strong> {item.metadata?.sku || 'N/A'}
-                          </span>
-                          <span className="text-sm">
-                            <strong>Price:</strong> {formatCurrency(item.unitPrice)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-lg font-semibold">{item.quantity}</p>
-                        <p className="text-sm text-muted-foreground">Available</p>
-                        {item.allocatedQuantity > 0 && (
-                          <p className="text-xs text-orange-600">
-                            {item.allocatedQuantity} allocated
-                          </p>
-                        )}
-                      </div>
-
-                      <Badge variant={stockStatus.variant}>
-                        {stockStatus.label}
-                      </Badge>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem asChild>
-                            <EditInventoryDialog item={item} onInventoryUpdated={() => {}} />
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(item.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No inventory items found</h3>
-              <p className="mt-2 text-muted-foreground">
-                {filters.search ? 'Try adjusting your search criteria' : 'Get started by adding your first inventory item'}
-              </p>
-              <div className="mt-4">
-                <CreateInventoryDialog onInventoryCreated={() => {}} />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      {inventoryData && inventoryData.total > inventoryData.limit && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {((inventoryData.page - 1) * inventoryData.limit) + 1} to{' '}
-            {Math.min(inventoryData.page * inventoryData.limit, inventoryData.total)} of{' '}
-            {inventoryData.total} items
-          </p>
-          <div className="flex space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(inventoryData.page - 1)}
-              disabled={inventoryData.page <= 1}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(inventoryData.page + 1)}
-              disabled={inventoryData.page >= Math.ceil(inventoryData.total / inventoryData.limit)}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

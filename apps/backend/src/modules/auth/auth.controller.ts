@@ -98,8 +98,9 @@ export class AuthController {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        userType: user.userType,
         roles: user.roles?.map(role => role.name) || [],
-        permissions: req.user?.permissions || [],
+        permissions: req.session?.permissions || [],
       },
     };
   }
@@ -113,7 +114,7 @@ export class AuthController {
     @Req() req: AuthenticatedRequest,
     @Body() changePasswordDto: ChangePasswordDto
   ) {
-    await this.authService.changePassword(req.user.userId, changePasswordDto);
+    await this.authService.changePassword(req.user.id, changePasswordDto);
     return { message: 'Password changed successfully' };
   }
 

@@ -10,13 +10,24 @@ import {
   Download,
   RefreshCw,
   TrendingUp,
+  TrendingDown,
   Calendar,
   DollarSign,
   ArrowUpDown,
+  Eye,
+  FileText,
+  BarChart3,
+  Play,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import {
   DropdownMenu,
@@ -30,9 +41,11 @@ import { DataTable } from '../../components/ui/data-table';
 import { DataTableFacetedFilter } from '../../components/ui/data-table-faceted-filter';
 import { BookingStatus, PaymentStatus, Booking } from '../../types';
 import { format } from 'date-fns';
-import { useBookingList } from '../../hooks/useBookings';
+import { useBookingList, useStartBooking, useCompleteBooking } from '../../hooks/useBookings';
 import CreateBookingDialog from '../../components/modals/CreateBookingDialog';
 import EditBookingDialog from '../../components/modals/EditBookingDialog';
+import { BookingDetailsModal } from '../../components/modals/BookingDetailsModal';
+import { BookingReportsModal } from '../../components/modals/BookingReportsModal';
 import { useToast } from '../../hooks/use-toast';
 
 interface BookingFilters {
@@ -57,6 +70,8 @@ const getStatusBadgeVariant = (status: BookingStatus) => {
     case BookingStatus.CONFIRMED:
       return 'default';
     case BookingStatus.PENDING:
+      return 'secondary';
+    case BookingStatus.STARTED:
       return 'secondary';
     case BookingStatus.COMPLETED:
       return 'default';
@@ -87,22 +102,27 @@ const getPaymentStatusBadgeVariant = (status: PaymentStatus) => {
 // Filter options
 const statusOptions = [
   {
-    label: "Pending",
+    label: 'Pending',
     value: BookingStatus.PENDING,
     icon: AlertCircle,
   },
   {
-    label: "Confirmed",
+    label: 'Confirmed',
     value: BookingStatus.CONFIRMED,
     icon: CheckCircle,
   },
   {
-    label: "Completed",
+    label: 'Started',
+    value: BookingStatus.STARTED,
+    icon: Play,
+  },
+  {
+    label: 'Completed',
     value: BookingStatus.COMPLETED,
     icon: CheckCircle,
   },
   {
-    label: "Cancelled",
+    label: 'Cancelled',
     value: BookingStatus.CANCELLED,
     icon: XCircle,
   },
@@ -110,27 +130,27 @@ const statusOptions = [
 
 const paymentStatusOptions = [
   {
-    label: "Pending",
+    label: 'Pending',
     value: PaymentStatus.PENDING,
     icon: AlertCircle,
   },
   {
-    label: "Advance Paid",
+    label: 'Advance Paid',
     value: PaymentStatus.ADVANCE_PAID,
     icon: DollarSign,
   },
   {
-    label: "Fully Paid",
+    label: 'Fully Paid',
     value: PaymentStatus.FULLY_PAID,
     icon: CheckCircle,
   },
   {
-    label: "Overdue",
+    label: 'Overdue',
     value: PaymentStatus.OVERDUE,
     icon: XCircle,
   },
   {
-    label: "Refunded",
+    label: 'Refunded',
     value: PaymentStatus.REFUNDED,
     icon: RefreshCw,
   },
@@ -161,8 +181,8 @@ function BookingFiltersToolbar({
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           placeholder="Search bookings..."
-          value={filters.search || ""}
-          onChange={(e) => onSearchChange(e.target.value)}
+          value={filters.search || ''}
+          onChange={e => onSearchChange(e.target.value)}
           className="h-8 pl-10"
         />
       </div>
@@ -187,11 +207,7 @@ function BookingFiltersToolbar({
 
       {/* Reset Filters Button */}
       {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          className="h-8 px-2 lg:px-3"
-          onClick={onResetFilters}
-        >
+        <Button variant="ghost" className="h-8 px-2 lg:px-3" onClick={onResetFilters}>
           Reset
           <XCircle className="ml-2 h-4 w-4" />
         </Button>
@@ -201,14 +217,20 @@ function BookingFiltersToolbar({
 }
 
 // Table columns definition
-const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
+const createColumns = (
+  onBookingUpdated: () => void,
+  onViewDetails: (booking: Booking) => void,
+  onOpenReports: (booking: Booking) => void,
+  onStartEvent: (booking: Booking) => void,
+  onCompleteEvent: (booking: Booking) => void
+): ColumnDef<Booking>[] => [
   {
-    accessorKey: "customerName",
+    accessorKey: 'customerName',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-auto p-0 font-medium"
         >
           Customer
@@ -227,8 +249,8 @@ const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
     },
   },
   {
-    accessorKey: "event",
-    header: "Event",
+    accessorKey: 'event',
+    header: 'Event',
     cell: ({ row }) => {
       const booking = row.original;
       return (
@@ -240,12 +262,12 @@ const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
     },
   },
   {
-    accessorKey: "totalAmount",
+    accessorKey: 'totalAmount',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-auto p-0 font-medium"
         >
           Amount
@@ -266,14 +288,23 @@ const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
     },
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: 'status',
+    header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue("status") as BookingStatus;
+      const status = row.getValue('status') as BookingStatus;
+      return <Badge variant={getStatusBadgeVariant(status)}>{status}</Badge>;
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
+  },
+  {
+    accessorKey: 'paymentStatus',
+    header: 'Payment',
+    cell: ({ row }) => {
+      const status = row.getValue('paymentStatus') as PaymentStatus;
       return (
-        <Badge variant={getStatusBadgeVariant(status)}>
-          {status}
-        </Badge>
+        <Badge variant={getPaymentStatusBadgeVariant(status)}>{status.replace('_', ' ')}</Badge>
       );
     },
     filterFn: (row, id, value) => {
@@ -281,27 +312,12 @@ const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
     },
   },
   {
-    accessorKey: "paymentStatus",
-    header: "Payment",
-    cell: ({ row }) => {
-      const status = row.getValue("paymentStatus") as PaymentStatus;
-      return (
-        <Badge variant={getPaymentStatusBadgeVariant(status)}>
-          {status.replace('_', ' ')}
-        </Badge>
-      );
-    },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-  },
-  {
-    accessorKey: "createdAt",
+    accessorKey: 'createdAt',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-auto p-0 font-medium"
         >
           Created
@@ -310,7 +326,7 @@ const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
       );
     },
     cell: ({ row }) => {
-      const date = row.getValue("createdAt") as Date;
+      const date = row.getValue('createdAt') as Date;
       return (
         <div className="flex items-center">
           <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -320,8 +336,33 @@ const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
     },
   },
   {
-    id: "actions",
-    header: "Actions",
+    accessorKey: 'reports',
+    header: 'Reports',
+    cell: ({ row }) => {
+      const booking = row.original;
+      // Reports only available for completed events
+      const isCompleted = booking.status === BookingStatus.COMPLETED;
+      const hasData = isCompleted && ((booking.expenses && booking.expenses.length > 0) || (booking.revenues && booking.revenues.length > 0));
+
+      return (
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => onOpenReports(booking)}
+            disabled={!isCompleted}
+            title={!isCompleted ? 'Reports available only for completed events' : hasData ? 'View financial reports' : 'No financial data available'}
+          >
+            <BarChart3 className={`h-4 w-4 ${isCompleted ? (hasData ? 'text-primary' : 'text-muted-foreground') : 'text-gray-300'}`} />
+          </Button>
+        </div>
+      );
+    },
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
     cell: ({ row }) => {
       const booking = row.original;
       return (
@@ -333,26 +374,32 @@ const createColumns = (onBookingUpdated: () => void): ColumnDef<Booking>[] => [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => onViewDetails(booking)}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <EditBookingDialog booking={booking} onBookingUpdated={onBookingUpdated} />
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            {booking.status === BookingStatus.PENDING && (
-              <DropdownMenuItem>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Confirm Booking
-              </DropdownMenuItem>
-            )}
             {booking.status === BookingStatus.CONFIRMED && (
-              <DropdownMenuItem>
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Mark Complete
+              <DropdownMenuItem onClick={() => onStartEvent(booking)}>
+                <Play className="mr-2 h-4 w-4" />
+                Start Event
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem className="text-destructive">
-              <XCircle className="mr-2 h-4 w-4" />
-              Cancel Booking
-            </DropdownMenuItem>
+            {booking.status === BookingStatus.STARTED && (
+              <DropdownMenuItem onClick={() => onCompleteEvent(booking)}>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Complete Event
+              </DropdownMenuItem>
+            )}
+            {booking.status !== BookingStatus.COMPLETED && booking.status !== BookingStatus.CANCELLED && (
+              <DropdownMenuItem className="text-destructive">
+                <XCircle className="mr-2 h-4 w-4" />
+                Cancel Booking
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -369,40 +416,66 @@ export function BookingListPage() {
     sortBy: 'createdAt',
     sortOrder: 'DESC',
   });
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedBookingForReports, setSelectedBookingForReports] = useState<Booking | null>(null);
 
   const { data: bookingData, isLoading, error } = useBookingList(filters);
   const bookings = bookingData?.data || [];
   const totalPages = bookingData ? Math.ceil(bookingData.total / filters.limit) : 0;
+  const startBookingMutation = useStartBooking();
+  const completeBookingMutation = useCompleteBooking();
 
   const handleBookingUpdated = () => {
     // Refetch bookings data
   };
 
-  const columns = useMemo(() => createColumns(handleBookingUpdated), []);
+  const handleViewDetails = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsDetailsModalOpen(true);
+  };
 
+  const handleOpenReports = (booking: Booking) => {
+    setSelectedBookingForReports(booking);
+  };
 
+  const handleStartEvent = (booking: Booking) => {
+    startBookingMutation.mutate(booking.id);
+  };
+
+  const handleCompleteEvent = (booking: Booking) => {
+    completeBookingMutation.mutate(booking.id);
+  };
+
+  const columns = useMemo(() => createColumns(
+    handleBookingUpdated,
+    handleViewDetails,
+    handleOpenReports,
+    handleStartEvent,
+    handleCompleteEvent
+  ), []);
 
   const handleSearch = (search: string) => {
     setFilters(prev => ({
       ...prev,
       search,
-      page: 1
+      page: 1,
     }));
   };
 
   const handleStatusFilter = (values: string[]) => {
     setFilters(prev => ({
       ...prev,
-      status: values.length > 0 ? values[0] as BookingStatus : undefined,
-      page: 1
+      status: values.length > 0 ? (values[0] as BookingStatus) : undefined,
+      page: 1,
     }));
   };
 
   const handlePaymentStatusFilter = (values: string[]) => {
     setFilters(prev => ({
       ...prev,
-      paymentStatus: values.length > 0 ? values[0] as PaymentStatus : undefined,
-      page: 1
+      paymentStatus: values.length > 0 ? (values[0] as PaymentStatus) : undefined,
+      page: 1,
     }));
   };
 
@@ -451,9 +524,7 @@ export function BookingListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Booking Management</h1>
-          <p className="text-muted-foreground">
-            Manage customer bookings and track payments
-          </p>
+          <p className="text-muted-foreground">Manage customer bookings and track payments</p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm">
@@ -465,7 +536,7 @@ export function BookingListPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -484,7 +555,14 @@ export function BookingListPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(bookings.reduce((sum: number, booking: Booking) => sum + booking.totalAmount, 0))}
+                  {formatCurrency(
+                    bookings.reduce((sum: number, booking: Booking) => {
+                      const amount = typeof booking.totalAmount === 'string'
+                        ? parseFloat(booking.totalAmount)
+                        : booking.totalAmount;
+                      return sum + (isNaN(amount) ? 0 : amount);
+                    }, 0)
+                  )}
                 </p>
               </div>
             </div>
@@ -493,11 +571,14 @@ export function BookingListPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-blue-600" />
+              <Calendar className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Confirmed</p>
+                <p className="text-sm font-medium text-muted-foreground">Upcoming Events</p>
                 <p className="text-2xl font-bold">
-                  {bookings.filter(b => b.status === BookingStatus.CONFIRMED).length}
+                  {bookings.filter(b =>
+                    (b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.STARTED) &&
+                    new Date(b.startDate) > new Date()
+                  ).length}
                 </p>
               </div>
             </div>
@@ -506,19 +587,35 @@ export function BookingListPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
-              <AlertCircle className="h-8 w-8 text-orange-600" />
+              <Play className="h-8 w-8 text-orange-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Pending</p>
+                <p className="text-sm font-medium text-muted-foreground">Started Today</p>
                 <p className="text-2xl font-bold">
-                  {bookings.filter(b => b.status === BookingStatus.PENDING).length}
+                  {bookings.filter(b => {
+                    const today = new Date();
+                    const startDate = new Date(b.startDate);
+                    return b.status === BookingStatus.STARTED &&
+                           startDate.toDateString() === today.toDateString();
+                  }).length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                <p className="text-2xl font-bold">
+                  {bookings.filter(b => b.status === BookingStatus.COMPLETED).length}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-
 
       {/* Bookings Table */}
       <Card>
@@ -552,6 +649,26 @@ export function BookingListPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Booking Details Modal */}
+      {selectedBooking && (
+        <BookingDetailsModal
+          booking={selectedBooking}
+          isOpen={isDetailsModalOpen}
+          onClose={() => {
+            setIsDetailsModalOpen(false);
+            setSelectedBooking(null);
+          }}
+          onBookingUpdated={handleBookingUpdated}
+        />
+      )}
+
+      {/* Booking Reports Modal */}
+      <BookingReportsModal
+        booking={selectedBookingForReports}
+        isOpen={!!selectedBookingForReports}
+        onClose={() => setSelectedBookingForReports(null)}
+      />
     </div>
   );
 }

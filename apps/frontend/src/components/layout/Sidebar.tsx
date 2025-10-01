@@ -27,6 +27,7 @@ import {
   Filter,
   Cog,
   Building2,
+  Tag,
 } from 'lucide-react';
 import { RootState } from '../../store';
 import { Button } from '../ui/button';
@@ -49,23 +50,10 @@ const navigation: NavigationItem[] = [
     permission: 'dashboard:read',
   },
   {
-    name: 'Organization Management',
+    name: 'Organizations',
+    href: '/organizations',
     icon: Building2,
     permission: 'organizations:read',
-    children: [
-      {
-        name: 'All Organizations',
-        href: '/organizations',
-        icon: List,
-        permission: 'organizations:read',
-      },
-      {
-        name: 'Add Organization',
-        href: '/organizations/create',
-        icon: Plus,
-        permission: 'organizations:create',
-      },
-    ],
   },
   {
     name: 'Inventory Management',
@@ -78,17 +66,18 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'inventory:read',
       },
-      {
-        name: 'Add Item',
-        href: '/inventory/create',
-        icon: Plus,
-        permission: 'inventory:create',
-      },
+
       {
         name: 'Low Stock Alerts',
         href: '/inventory/alerts',
         icon: Archive,
         permission: 'inventory:read',
+      },
+      {
+        name: 'Categories',
+        href: '/inventory/categories',
+        icon: Tag,
+        permission: 'inventory:create',
       },
     ],
   },
@@ -103,12 +92,7 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'events:read',
       },
-      {
-        name: 'Create Event',
-        href: '/events/create',
-        icon: Plus,
-        permission: 'events:create',
-      },
+
       {
         name: 'Event Templates',
         href: '/events/templates',
@@ -128,12 +112,7 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'bookings:read',
       },
-      {
-        name: 'Create Booking',
-        href: '/bookings/create',
-        icon: Plus,
-        permission: 'bookings:create',
-      },
+
       {
         name: 'Payment Tracking',
         href: '/bookings/payments',
@@ -153,12 +132,7 @@ const navigation: NavigationItem[] = [
         icon: User,
         permission: 'users:read',
       },
-      {
-        name: 'Add User',
-        href: '/users/create',
-        icon: UserPlus,
-        permission: 'users:create',
-      },
+
       {
         name: 'User Roles',
         href: '/users/roles',
@@ -178,12 +152,7 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'roles:read',
       },
-      {
-        name: 'Create Role',
-        href: '/roles/create',
-        icon: Plus,
-        permission: 'roles:create',
-      },
+
       {
         name: 'Permissions',
         href: '/roles/permissions',
@@ -245,14 +214,27 @@ export function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   const hasPermission = (permission: string) => {
-    // Check if this is organization management and user is Product Admin
-    if (permission.startsWith('organizations:')) {
-      return user?.userType === UserType.PRODUCT_ADMIN;
+    if (!user) return false;
+
+    // Product Admin has access to organizations and dashboard only (no user management)
+    if (user.userType === UserType.PRODUCT_ADMIN) {
+      return permission === 'dashboard:read' ||
+             permission.startsWith('organizations:');
     }
 
-    // For now, return true for other permissions since the user has admin role
-    // TODO: Implement proper permission checking based on user roles
-    return true;
+    // Organization Admin has access to everything except organizations management
+    if (user.userType === UserType.ORGANIZATION_ADMIN) {
+      return !permission.startsWith('organizations:');
+    }
+
+    // Organization User has limited access
+    if (user.userType === UserType.ORGANIZATION_USER) {
+      return permission === 'dashboard:read' ||
+             permission.startsWith('events:read') ||
+             permission.startsWith('bookings:read');
+    }
+
+    return false;
   };
 
   const toggleMenu = (menuName: string) => {

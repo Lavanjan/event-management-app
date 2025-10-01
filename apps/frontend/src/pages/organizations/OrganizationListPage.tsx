@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Search, Filter, MoreHorizontal, Building2, Users, Globe, Phone, Mail } from 'lucide-react';
+import { Plus, Building2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Card, CardContent } from '../../components/ui/card';
 import { organizationService, Organization, OrganizationQueryParams } from '../../services/organizationService';
+import { CreateOrganizationModal } from '../../components/organizations/CreateOrganizationModal';
+import { ViewOrganizationModal } from '../../components/organizations/ViewOrganizationModal';
+import { EditOrganizationModal } from '../../components/organizations/EditOrganizationModal';
+import { ManagePermissionsModal } from '../../components/organizations/ManagePermissionsModal';
+import { OrganizationDataTable } from '../../components/organizations/OrganizationDataTable';
+import { OrganizationTableFilters } from '../../components/organizations/OrganizationTableFilters';
 import { useToast } from '../../hooks/use-toast';
 import { LoadingSpinner } from '../../components/ui/loading-spinner';
 
@@ -15,10 +16,11 @@ export function OrganizationListPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const { toast } = useToast();
 
   const loadOrganizations = async () => {
@@ -28,13 +30,13 @@ export function OrganizationListPage() {
         page: currentPage,
         limit: 10,
         search: searchTerm || undefined,
-        status: statusFilter !== 'all' ? statusFilter as any : undefined,
+        status: statusFilter.length > 0 ? statusFilter[0] as any : undefined,
         sortBy: 'createdAt',
         sortOrder: 'desc',
       };
 
       const response = await organizationService.getOrganizations(params);
-      setOrganizations(response.data);
+      setOrganizations(response.data.data);
       setTotalPages(response.totalPages);
       setTotal(response.total);
     } catch (error) {
@@ -58,9 +60,102 @@ export function OrganizationListPage() {
     setCurrentPage(1);
   };
 
-  const handleStatusFilter = (value: string) => {
-    setStatusFilter(value);
+  const handleStatusFilterChange = (values: string[]) => {
+    setStatusFilter(values);
     setCurrentPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter([]);
+    setCurrentPage(1);
+  };
+
+  // Modal handlers
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
+
+  const handleView = (organization: Organization) => {
+    setSelectedOrganization(organization);
+    setViewModalOpen(true);
+  };
+
+  const handleEdit = (organization: Organization) => {
+    setSelectedOrganization(organization);
+    setEditModalOpen(true);
+  };
+
+  const handleManagePermissions = (organization: Organization) => {
+    setSelectedOrganization(organization);
+    setPermissionsModalOpen(true);
+  };
+
+  const handleDelete = async (organization: Organization) => {
+    if (organization.status === 'active') {
+      toast({
+        title: 'Cannot Delete',
+        description: 'Cannot delete active organization. Please suspend it first.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete "${organization.name}"? This action cannot be undone.`)) {
+      try {
+        await organizationService.deleteOrganization(organization.id);
+        toast({
+          title: 'Success',
+          description: 'Organization deleted successfully.',
+        });
+        loadOrganizations();
+      } catch (error) {
+        console.error('Failed to delete organization:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete organization. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleSuspend = async (organization: Organization) => {
+    if (confirm(`Are you sure you want to suspend "${organization.name}"?`)) {
+      try {
+        await organizationService.suspendOrganization(organization.id);
+        toast({
+          title: 'Success',
+          description: 'Organization suspended successfully.',
+        });
+        loadOrganizations();
+      } catch (error) {
+        console.error('Failed to suspend organization:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to suspend organization. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleResendVerification = async (organization: Organization) => {
+    try {
+      await organizationService.resendVerificationEmail(organization.id);
+      toast({
+        title: 'Success',
+        description: 'Verification email sent successfully.',
+      });
+    } catch (error) {
+      console.error('Failed to resend verification email:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to resend verification email. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleStatusChange = async (organizationId: string, action: 'activate' | 'suspend' | 'deactivate') => {
@@ -96,16 +191,6 @@ export function OrganizationListPage() {
     }
   };
 
-  const getStatusBadge = (status: string, isActive: boolean) => {
-    if (!isActive || status === 'inactive') {
-      return <Badge variant="secondary">Inactive</Badge>;
-    }
-    if (status === 'suspended') {
-      return <Badge variant="destructive">Suspended</Badge>;
-    }
-    return <Badge variant="default">Active</Badge>;
-  };
-
   if (loading && organizations.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -124,127 +209,42 @@ export function OrganizationListPage() {
             Manage organizations and their settings
           </p>
         </div>
-        <Link to="/organizations/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Organization
-          </Button>
-        </Link>
+        <Button onClick={() => setCreateModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Organization
+        </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search organizations..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Data Table with Filters */}
+      <OrganizationDataTable
+        data={organizations}
+        isLoading={loading}
+        totalCount={total}
+        pageNumber={currentPage}
+        pageSize={10}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => {
+          // Handle page size change if needed
+        }}
+        onView={handleView}
+        onEdit={handleEdit}
+        onManagePermissions={handleManagePermissions}
+        onDelete={handleDelete}
+        onSuspend={handleSuspend}
+        onResendVerification={handleResendVerification}
+        filtersToolbar={
+          <OrganizationTableFilters
+            searchValue={searchTerm}
+            onSearchChange={handleSearch}
+            statusFilter={statusFilter}
+            onStatusFilterChange={handleStatusFilterChange}
+            onClearFilters={handleClearFilters}
+            isLoading={loading}
+          />
+        }
+      />
 
-      {/* Organizations Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {organizations.map((organization) => (
-          <Card key={organization.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="flex items-center space-x-2">
-                <Building2 className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg">{organization.name}</CardTitle>
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link to={`/organizations/${organization.id}`}>View Details</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to={`/organizations/${organization.id}/edit`}>Edit</Link>
-                  </DropdownMenuItem>
-                  {organization.status !== 'active' && (
-                    <DropdownMenuItem onClick={() => handleStatusChange(organization.id, 'activate')}>
-                      Activate
-                    </DropdownMenuItem>
-                  )}
-                  {organization.status === 'active' && (
-                    <DropdownMenuItem onClick={() => handleStatusChange(organization.id, 'suspend')}>
-                      Suspend
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => handleStatusChange(organization.id, 'deactivate')}>
-                    Deactivate
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  {getStatusBadge(organization.status, organization.isActive)}
-                </div>
-                
-                {organization.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {organization.description}
-                  </p>
-                )}
 
-                <div className="space-y-2">
-                  {organization.website && (
-                    <div className="flex items-center space-x-2 text-sm">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <span className="truncate">{organization.website}</span>
-                    </div>
-                  )}
-                  {organization.email && (
-                    <div className="flex items-center space-x-2 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="truncate">{organization.email}</span>
-                    </div>
-                  )}
-                  {organization.phone && (
-                    <div className="flex items-center space-x-2 text-sm">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{organization.phone}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-2 border-t">
-                  <p className="text-xs text-muted-foreground">
-                    Created {new Date(organization.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       {/* Empty State */}
       {organizations.length === 0 && !loading && (
@@ -253,48 +253,52 @@ export function OrganizationListPage() {
             <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No organizations found</h3>
             <p className="text-muted-foreground text-center mb-4">
-              {searchTerm || statusFilter !== 'all'
+              {searchTerm || statusFilter.length > 0
                 ? 'No organizations match your current filters.'
                 : 'Get started by creating your first organization.'}
             </p>
-            <Link to="/organizations/create">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Organization
-              </Button>
-            </Link>
+            <Button onClick={() => setCreateModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Organization
+            </Button>
           </CardContent>
         </Card>
       )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {organizations.length} of {total} organizations
-          </p>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </Button>
-            <span className="text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
+      {/* Create Organization Modal */}
+      <CreateOrganizationModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSuccess={loadOrganizations}
+      />
+
+      {/* View/Edit/Permissions Modals */}
+      {selectedOrganization && (
+        <>
+          <ViewOrganizationModal
+            open={viewModalOpen}
+            onOpenChange={setViewModalOpen}
+            organization={selectedOrganization}
+          />
+          <EditOrganizationModal
+            open={editModalOpen}
+            onOpenChange={setEditModalOpen}
+            organization={selectedOrganization}
+            onSuccess={() => {
+              loadOrganizations();
+              setEditModalOpen(false);
+            }}
+          />
+          <ManagePermissionsModal
+            open={permissionsModalOpen}
+            onOpenChange={setPermissionsModalOpen}
+            organization={selectedOrganization}
+            onSuccess={() => {
+              loadOrganizations();
+              setPermissionsModalOpen(false);
+            }}
+          />
+        </>
       )}
     </div>
   );

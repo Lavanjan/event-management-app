@@ -13,39 +13,25 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateEventDto {
   @ApiProperty({
-    description: 'Name of the event',
-    example: 'Annual Corporate Gala',
+    description: 'Name of the event type (e.g., Wedding Ceremony, Birthday Party)',
+    example: 'Wedding Ceremony',
   })
   @IsString()
   @MaxLength(255)
   name: string;
 
   @ApiPropertyOptional({
-    description: 'Description of the event',
-    example: 'Elegant corporate gala dinner for 200 guests',
+    description: 'Description of the event type',
+    example: 'Elegant wedding ceremony package with full decorations',
   })
   @IsOptional()
   @IsString()
   @MaxLength(1000)
   description?: string;
 
-  @ApiProperty({
-    description: 'Event start date and time',
-    example: '2024-12-15T18:00:00Z',
-  })
-  @IsDateString()
-  startDate: Date;
-
-  @ApiProperty({
-    description: 'Event end date and time',
-    example: '2024-12-15T23:00:00Z',
-  })
-  @IsDateString()
-  endDate: Date;
-
   @ApiPropertyOptional({
-    description: 'Event location',
-    example: 'Grand Ballroom, Downtown Hotel',
+    description: 'Event location/venue (e.g., Wedding Hall, Conference Room)',
+    example: 'Wedding Hall',
   })
   @IsOptional()
   @IsString()
@@ -62,6 +48,39 @@ export class CreateEventDto {
   @IsNumber()
   @Min(1)
   maxAttendees?: number;
+
+  @ApiPropertyOptional({
+    description: 'Price per hour',
+    example: 500.0,
+    minimum: 0,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  hourlyPrice?: number;
+
+  @ApiPropertyOptional({
+    description: 'Price for half day (typically 4-6 hours)',
+    example: 2000.0,
+    minimum: 0,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  halfDayPrice?: number;
+
+  @ApiPropertyOptional({
+    description: 'Price for full day (typically 8-12 hours)',
+    example: 3500.0,
+    minimum: 0,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  fullDayPrice?: number;
 
   @ApiProperty({
     description: 'Required advance payment percentage',
@@ -86,7 +105,7 @@ export class CreateEventDto {
   balancePaymentWindowDays: number;
 
   @ApiProperty({
-    description: 'Whether to allow inventory allocation for this event',
+    description: 'Whether to allow inventory allocation for this event type',
     example: true,
   })
   @IsBoolean()

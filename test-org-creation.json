@@ -1,0 +1,11 @@
+{
+  "name": "Test Organization",
+  "description": "Test organization for verification flow",
+  "admin": {
+    "email": "test@example.com",
+    "firstName": "Test",
+    "lastName": "Admin",
+    "autoGeneratePassword": true,
+    "requiresVerification": true
+  }
+}

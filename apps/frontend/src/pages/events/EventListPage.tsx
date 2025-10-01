@@ -107,36 +107,7 @@ const createColumns = (
       );
     },
   },
-  {
-    accessorKey: "startDate",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="h-auto p-0 font-medium"
-        >
-          Date & Time
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const event = row.original;
-      return (
-        <div className="space-y-1">
-          <div className="flex items-center">
-            <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-            {format(new Date(event.startDate), 'MMM dd, yyyy')}
-          </div>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Clock className="mr-2 h-4 w-4" />
-            {format(new Date(event.startDate), 'h:mm a')} - {format(new Date(event.endDate), 'h:mm a')}
-          </div>
-        </div>
-      );
-    },
-  },
+
   {
     accessorKey: "maxAttendees",
     header: "Capacity",
@@ -224,7 +195,7 @@ export function EventListPage() {
     page: 1,
     limit: 20,
     search: '',
-    sortBy: 'startDate',
+    sortBy: 'createdAt',
     sortOrder: 'DESC',
   });
 

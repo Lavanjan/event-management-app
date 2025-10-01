@@ -69,7 +69,8 @@ export function UserListPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return 'secondary';
     switch (status.toLowerCase()) {
       case 'active':
         return 'success';
@@ -228,7 +229,7 @@ export function UserListPage() {
                       {user.roles?.[0]?.name || 'Customer'}
                     </Badge>
                     <Badge variant={getStatusColor(user.status)}>
-                      {user.status}
+                      {user.status || 'Unknown'}
                     </Badge>
 
                     <DropdownMenu>

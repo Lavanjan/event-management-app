@@ -17,19 +17,21 @@ import { CreateInventoryItemDto } from './dto/create-inventory-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { SecureAuthGuard } from '../auth/guards/secure-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { RequirePermissions } from '../../common/decorators/permissions.decorator';
+import {
+  OrganizationPermissionGuard,
+  RequireOrganizationPermission,
+} from '../../common/guards/organization-permission.guard';
 import { CurrentOrganization } from '../../common/decorators/current-organization.decorator';
 
 @ApiTags('Inventory')
 @Controller('inventory')
-@UseGuards(SecureAuthGuard, PermissionsGuard)
+@UseGuards(SecureAuthGuard, OrganizationPermissionGuard)
 @ApiBearerAuth('JWT-auth')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Post()
-  @RequirePermissions({ resource: 'inventory', action: 'create' })
+  @RequireOrganizationPermission('inventory.create')
   @ApiOperation({ summary: 'Create a new inventory item' })
   @ApiResponse({ status: 201, description: 'Inventory item created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -42,20 +44,37 @@ export class InventoryController {
   }
 
   @Get()
-  @RequirePermissions({ resource: 'inventory', action: 'read' })
-  @ApiOperation({ summary: 'Get all inventory items with pagination' })
+  @RequireOrganizationPermission('inventory.read')
+  @ApiOperation({ summary: 'Get all inventory items with pagination and filters' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['ASC', 'DESC'] })
+  @ApiQuery({ name: 'category', required: false, type: String })
+  @ApiQuery({ name: 'brand', required: false, type: String })
+  @ApiQuery({ name: 'quantityUnit', required: false, type: String })
+  @ApiQuery({
+    name: 'stockStatus',
+    required: false,
+    enum: ['in_stock', 'low_stock', 'out_of_stock'],
+  })
   @ApiResponse({ status: 200, description: 'Inventory items retrieved successfully' })
-  findAll(@Query() paginationDto: PaginationDto, @CurrentOrganization() organizationId: string) {
+  findAll(
+    @Query()
+    paginationDto: PaginationDto & {
+      category?: string;
+      brand?: string;
+      quantityUnit?: string;
+      stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+    },
+    @CurrentOrganization() organizationId: string
+  ) {
     return this.inventoryService.findAll(paginationDto, organizationId);
   }
 
   @Get('available')
-  @RequirePermissions({ resource: 'inventory', action: 'read' })
+  @RequireOrganizationPermission('inventory.read')
   @ApiOperation({ summary: 'Get available inventory items for booking' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -69,29 +88,31 @@ export class InventoryController {
   }
 
   @Get('stats')
-  @RequirePermissions({ resource: 'inventory', action: 'read' })
+  @RequireOrganizationPermission('inventory.read')
   @ApiOperation({ summary: 'Get inventory statistics' })
   @ApiResponse({ status: 200, description: 'Inventory statistics retrieved' })
-  getStats() {
-    return this.inventoryService.getInventoryStats();
+  getStats(@CurrentOrganization() organizationId: string) {
+    return this.inventoryService.getInventoryStats(organizationId);
   }
 
   @Get('low-stock')
-  @RequirePermissions({ resource: 'inventory', action: 'read' })
+  @RequireOrganizationPermission('inventory.read')
   @ApiOperation({ summary: 'Get low stock items' })
-  @ApiQuery({
-    name: 'threshold',
-    required: false,
-    type: Number,
-    description: 'Stock threshold (default: 10)',
-  })
   @ApiResponse({ status: 200, description: 'Low stock items retrieved' })
-  getLowStock(@Query('threshold') threshold?: number) {
-    return this.inventoryService.getLowStockItems(threshold);
+  getLowStock(@CurrentOrganization() organizationId: string) {
+    return this.inventoryService.getLowStockItems(organizationId);
+  }
+
+  @Get('out-of-stock')
+  @RequireOrganizationPermission('inventory.read')
+  @ApiOperation({ summary: 'Get out of stock items' })
+  @ApiResponse({ status: 200, description: 'Out of stock items retrieved' })
+  getOutOfStock(@CurrentOrganization() organizationId: string) {
+    return this.inventoryService.getOutOfStockItems(organizationId);
   }
 
   @Get('categories')
-  @RequirePermissions({ resource: 'inventory', action: 'read' })
+  @RequireOrganizationPermission('inventory.read')
   @ApiOperation({ summary: 'Get all inventory categories' })
   @ApiResponse({ status: 200, description: 'Inventory categories retrieved' })
   getCategories() {
@@ -99,7 +120,7 @@ export class InventoryController {
   }
 
   @Get(':id')
-  @RequirePermissions({ resource: 'inventory', action: 'read' })
+  @RequireOrganizationPermission('inventory.read')
   @ApiOperation({ summary: 'Get inventory item by ID' })
   @ApiResponse({ status: 200, description: 'Inventory item found' })
   @ApiResponse({ status: 404, description: 'Inventory item not found' })
@@ -108,7 +129,7 @@ export class InventoryController {
   }
 
   @Patch(':id')
-  @RequirePermissions({ resource: 'inventory', action: 'update' })
+  @RequireOrganizationPermission('inventory.update')
   @ApiOperation({ summary: 'Update inventory item' })
   @ApiResponse({ status: 200, description: 'Inventory item updated successfully' })
   @ApiResponse({ status: 404, description: 'Inventory item not found' })
@@ -121,7 +142,7 @@ export class InventoryController {
   }
 
   @Delete(':id')
-  @RequirePermissions({ resource: 'inventory', action: 'delete' })
+  @RequireOrganizationPermission('inventory.delete')
   @ApiOperation({ summary: 'Delete inventory item' })
   @ApiResponse({ status: 200, description: 'Inventory item deleted successfully' })
   @ApiResponse({ status: 404, description: 'Inventory item not found' })
@@ -131,7 +152,7 @@ export class InventoryController {
   }
 
   @Get(':id/availability/:quantity')
-  @RequirePermissions({ resource: 'inventory', action: 'read' })
+  @RequireOrganizationPermission('inventory.read')
   @ApiOperation({ summary: 'Check item availability for given quantity' })
   @ApiResponse({ status: 200, description: 'Availability checked' })
   checkAvailability(

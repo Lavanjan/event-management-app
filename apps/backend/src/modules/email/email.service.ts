@@ -11,6 +11,38 @@ export interface OrganizationAdminWelcomeData {
   temporaryPassword?: string;
 }
 
+export interface UserVerificationData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  organizationName?: string;
+  verificationUrl: string;
+  otp: string;
+  expiryMinutes: number;
+}
+
+export interface UserCredentialsData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  organizationName?: string;
+  loginUrl: string;
+  temporaryPassword: string;
+  requiresVerification: boolean;
+  verificationUrl?: string;
+  otp?: string;
+}
+
+export interface VerificationEmailData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  organizationName: string;
+  verificationOtp: string;
+  verificationUrl: string;
+  temporaryPassword?: string;
+}
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
@@ -197,6 +229,291 @@ Welcome aboard!
 ---
 This email was sent from the Event Booking System. Please do not reply to this email.
 If you did not expect this email, please contact our support team immediately.
+    `;
+  }
+
+  async sendVerificationEmail(data: VerificationEmailData): Promise<void> {
+    try {
+      const subject = `Verify Your Account - ${data.organizationName}`;
+
+      const verificationData: UserVerificationData = {
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        organizationName: data.organizationName,
+        verificationUrl: data.verificationUrl,
+        otp: data.verificationOtp,
+        expiryMinutes: 1440, // 24 hours
+      };
+
+      const htmlContent = this.generateUserVerificationHtml(verificationData);
+      const textContent = this.generateUserVerificationText(verificationData);
+
+      await this.transporter.sendMail({
+        from: this.configService.get('SMTP_FROM', 'noreply@eventbooking.com'),
+        to: data.email,
+        subject,
+        html: htmlContent,
+        text: textContent,
+      });
+
+      this.logger.log(`Verification email sent to ${data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send verification email to ${data.email}:`, error);
+      throw new Error('Failed to send verification email');
+    }
+  }
+
+  async sendUserVerification(data: UserVerificationData): Promise<void> {
+    try {
+      const subject = 'Verify Your Account - Action Required';
+
+      const htmlContent = this.generateUserVerificationHtml(data);
+      const textContent = this.generateUserVerificationText(data);
+
+      await this.transporter.sendMail({
+        from: this.configService.get('SMTP_FROM', 'noreply@eventbooking.com'),
+        to: data.email,
+        subject,
+        html: htmlContent,
+        text: textContent,
+      });
+
+      this.logger.log(`Verification email sent to ${data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send verification email to ${data.email}:`, error);
+      throw new Error('Failed to send verification email');
+    }
+  }
+
+  async sendUserCredentials(data: UserCredentialsData): Promise<void> {
+    try {
+      const subject = `Your Account Credentials${
+        data.organizationName ? ` - ${data.organizationName}` : ''
+      }`;
+
+      const htmlContent = this.generateUserCredentialsHtml(data);
+      const textContent = this.generateUserCredentialsText(data);
+
+      await this.transporter.sendMail({
+        from: this.configService.get('SMTP_FROM', 'noreply@eventbooking.com'),
+        to: data.email,
+        subject,
+        html: htmlContent,
+        text: textContent,
+      });
+
+      this.logger.log(`Credentials email sent to ${data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send credentials email to ${data.email}:`, error);
+      throw new Error('Failed to send credentials email');
+    }
+  }
+
+  private generateUserVerificationHtml(data: UserVerificationData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Account</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #4f46e5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+        .verification-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 2px solid #4f46e5; }
+        .otp-code { font-size: 32px; font-weight: bold; color: #4f46e5; letter-spacing: 8px; margin: 20px 0; }
+        .button { display: inline-block; background: #4f46e5; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; border: none; cursor: pointer; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280; }
+        .warning { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Verify Your Account</h1>
+    </div>
+    <div class="content">
+        <h2>Hello ${data.firstName} ${data.lastName},</h2>
+
+        <p>Welcome to the Event Booking System${
+          data.organizationName ? ` for ${data.organizationName}` : ''
+        }! To complete your account setup, please verify your email address.</p>
+
+        <div class="verification-box">
+            <h3>Verification Options</h3>
+
+            <p><strong>Option 1: Click to go to verification page</strong></p>
+            <table cellpadding="0" cellspacing="0" border="0" style="margin: 20px auto;">
+              <tr>
+                <td style="background-color: #4f46e5; border-radius: 6px; text-align: center; padding: 0;">
+                  <a href="${
+                    data.verificationUrl
+                  }" style="display: block; padding: 15px 30px; color: #ffffff; text-decoration: none; font-weight: bold; font-family: Arial, sans-serif; font-size: 16px; line-height: 1; border-radius: 6px;">Go to Verification Page</a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin: 10px 0; font-size: 14px; color: #666;">
+              Or copy and paste this link in your browser:<br>
+              <a href="${data.verificationUrl}" style="color: #4f46e5; word-break: break-all;">${
+      data.verificationUrl
+    }</a>
+            </p>
+
+            <p><strong>Option 2: Enter the OTP code directly</strong></p>
+            <div class="otp-code">${data.otp}</div>
+            <p>Click the button above to go to the verification page, then enter this 6-digit code to complete verification</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This verification code will expire in ${
+              data.expiryMinutes
+            } minutes. If you don't verify within this time, you'll need to request a new verification email.
+        </div>
+
+        <p>If you didn't create this account, please ignore this email or contact our support team.</p>
+
+        <div class="footer">
+            <p>This email was sent from the Event Booking System. Please do not reply to this email.</p>
+            <p>If you need assistance, please contact our support team.</p>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+  }
+
+  private generateUserVerificationText(data: UserVerificationData): string {
+    return `
+Verify Your Account
+
+Hello ${data.firstName} ${data.lastName},
+
+Welcome to the Event Booking System${
+      data.organizationName ? ` for ${data.organizationName}` : ''
+    }! To complete your account setup, please verify your email address.
+
+Verification Options:
+
+Option 1: Go to verification page
+${data.verificationUrl}
+
+Option 2: Enter the OTP code directly
+${data.otp}
+
+Click the link above to go to the verification page, then enter this 6-digit code to complete verification.
+
+⚠️ Important: This verification code will expire in ${data.expiryMinutes} minutes.
+
+If you didn't create this account, please ignore this email or contact our support team.
+
+---
+This email was sent from the Event Booking System. Please do not reply to this email.
+If you need assistance, please contact our support team.
+    `;
+  }
+
+  private generateUserCredentialsHtml(data: UserCredentialsData): string {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Account Credentials</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #4f46e5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+        .credentials-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #4f46e5; }
+        .password { font-family: monospace; font-size: 18px; background: #f3f4f6; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .button { display: inline-block; background: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280; }
+        .warning { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Your Account Credentials</h1>
+    </div>
+    <div class="content">
+        <h2>Hello ${data.firstName} ${data.lastName},</h2>
+
+        <p>Your account has been created${
+          data.organizationName ? ` for ${data.organizationName}` : ''
+        }. Here are your login credentials:</p>
+
+        <div class="credentials-box">
+            <h3>Login Information</h3>
+            <p><strong>Email:</strong> ${data.email}</p>
+            <p><strong>Temporary Password:</strong></p>
+            <div class="password">${data.temporaryPassword}</div>
+            <a href="${data.loginUrl}" class="button">Login Now</a>
+        </div>
+
+        ${
+          data.requiresVerification
+            ? `
+        <div class="warning">
+            <strong>⚠️ Account Verification Required</strong>
+            <p>Before you can use your account, you need to verify your email address.</p>
+            ${
+              data.verificationUrl
+                ? `<a href="${data.verificationUrl}" class="button">Verify Account</a>`
+                : ''
+            }
+            ${data.otp ? `<p>Or use this OTP code: <strong>${data.otp}</strong></p>` : ''}
+        </div>
+        `
+            : ''
+        }
+
+        <div class="warning">
+            <strong>🔒 Security Notice:</strong> Please change your temporary password immediately after logging in for security purposes.
+        </div>
+
+        <div class="footer">
+            <p>This email was sent from the Event Booking System. Please do not reply to this email.</p>
+            <p>If you need assistance, please contact our support team.</p>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+  }
+
+  private generateUserCredentialsText(data: UserCredentialsData): string {
+    return `
+Your Account Credentials
+
+Hello ${data.firstName} ${data.lastName},
+
+Your account has been created${
+      data.organizationName ? ` for ${data.organizationName}` : ''
+    }. Here are your login credentials:
+
+Email: ${data.email}
+Temporary Password: ${data.temporaryPassword}
+
+Login URL: ${data.loginUrl}
+
+${
+  data.requiresVerification
+    ? `
+⚠️ Account Verification Required
+Before you can use your account, you need to verify your email address.
+${data.verificationUrl ? `Verification URL: ${data.verificationUrl}` : ''}
+${data.otp ? `OTP Code: ${data.otp}` : ''}
+`
+    : ''
+}
+
+🔒 Security Notice: Please change your temporary password immediately after logging in for security purposes.
+
+---
+This email was sent from the Event Booking System. Please do not reply to this email.
+If you need assistance, please contact our support team.
     `;
   }
 }

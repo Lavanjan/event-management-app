@@ -17,14 +17,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 4200,
+    port: 4201,
     host: true,
     hmr: {
       overlay: false,
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3002',
         changeOrigin: true,
         secure: false,
         ws: true,

@@ -76,6 +76,24 @@ export class User {
   @Exclude()
   passwordResetExpires: Date;
 
+  @Column({ default: false, name: 'is_verified' })
+  isVerified: boolean;
+
+  @Column({ nullable: true, name: 'verification_token' })
+  @Exclude()
+  verificationToken: string;
+
+  @Column({ nullable: true, name: 'verification_otp' })
+  @Exclude()
+  verificationOtp: string;
+
+  @Column({ nullable: true, name: 'verification_otp_expires' })
+  @Exclude()
+  verificationOtpExpires: Date;
+
+  @Column({ default: false, name: 'requires_verification' })
+  requiresVerification: boolean;
+
   @ManyToMany(() => Role, role => role.users, { eager: true })
   @JoinTable({
     name: 'user_roles',
@@ -145,5 +163,20 @@ export class User {
   canAccessOrganization(organizationId: string): boolean {
     if (this.isProductAdmin()) return true;
     return this.belongsToOrganization(organizationId);
+  }
+
+  isVerificationExpired(): boolean {
+    if (!this.verificationOtpExpires) return true;
+    return new Date() > this.verificationOtpExpires;
+  }
+
+  canLogin(): boolean {
+    if (!this.isActive) return false;
+    if (this.requiresVerification && !this.isVerified) return false;
+    return true;
+  }
+
+  needsVerification(): boolean {
+    return this.requiresVerification && !this.isVerified;
   }
 }

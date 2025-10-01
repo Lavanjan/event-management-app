@@ -19,20 +19,21 @@ import { AddExpenseDto } from './dto/add-expense.dto';
 import { AddRevenueDto } from './dto/add-revenue.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { SecureAuthGuard } from '../auth/guards/secure-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { RequirePermissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { RequireUserType } from '../auth/decorators/user-type.decorator';
+import { UserType } from '../../database/entities';
 import { CurrentOrganization } from '../../common/decorators/current-organization.decorator';
 import { PaymentStatus } from '../../database/entities/booking.entity';
 
 @ApiTags('Bookings')
 @Controller('bookings')
-@UseGuards(SecureAuthGuard, PermissionsGuard)
+@UseGuards(SecureAuthGuard, RolesGuard)
 @ApiBearerAuth('JWT-auth')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
-  @RequirePermissions({ resource: 'bookings', action: 'create' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Create a new booking' })
   @ApiResponse({ status: 201, description: 'Booking created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data or insufficient inventory' })
@@ -40,11 +41,14 @@ export class BookingsController {
     @Body() createBookingDto: CreateBookingDto,
     @CurrentOrganization() organizationId: string
   ) {
+    console.log('Received booking data:', JSON.stringify(createBookingDto, null, 2));
+    console.log('startDate type:', typeof createBookingDto.startDate);
+    console.log('endDate type:', typeof createBookingDto.endDate);
     return this.bookingsService.create(createBookingDto, organizationId);
   }
 
   @Get()
-  @RequirePermissions({ resource: 'bookings', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get all bookings with pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -57,7 +61,7 @@ export class BookingsController {
   }
 
   @Get('overdue')
-  @RequirePermissions({ resource: 'bookings', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN, UserType.ORGANIZATION_USER)
   @ApiOperation({ summary: 'Get overdue bookings' })
   @ApiResponse({ status: 200, description: 'Overdue bookings retrieved' })
   getOverdueBookings() {
@@ -65,7 +69,7 @@ export class BookingsController {
   }
 
   @Get('event/:eventId')
-  @RequirePermissions({ resource: 'bookings', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN, UserType.ORGANIZATION_USER)
   @ApiOperation({ summary: 'Get bookings for a specific event' })
   @ApiResponse({ status: 200, description: 'Event bookings retrieved' })
   getBookingsByEvent(
@@ -76,7 +80,7 @@ export class BookingsController {
   }
 
   @Get(':id')
-  @RequirePermissions({ resource: 'bookings', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN, UserType.ORGANIZATION_USER)
   @ApiOperation({ summary: 'Get booking by ID' })
   @ApiResponse({ status: 200, description: 'Booking found' })
   @ApiResponse({ status: 404, description: 'Booking not found' })
@@ -85,7 +89,7 @@ export class BookingsController {
   }
 
   @Patch(':id')
-  @RequirePermissions({ resource: 'bookings', action: 'update' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Update booking' })
   @ApiResponse({ status: 200, description: 'Booking updated successfully' })
   @ApiResponse({ status: 404, description: 'Booking not found' })
@@ -98,15 +102,23 @@ export class BookingsController {
   }
 
   @Patch(':id/confirm')
-  @RequirePermissions({ resource: 'bookings', action: 'update' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Confirm booking' })
   @ApiResponse({ status: 200, description: 'Booking confirmed successfully' })
   confirm(@Param('id', ParseUUIDPipe) id: string, @CurrentOrganization() organizationId: string) {
     return this.bookingsService.confirm(id, organizationId);
   }
 
+  @Patch(':id/start')
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @ApiOperation({ summary: 'Start booking event' })
+  @ApiResponse({ status: 200, description: 'Event started successfully' })
+  start(@Param('id', ParseUUIDPipe) id: string, @CurrentOrganization() organizationId: string) {
+    return this.bookingsService.start(id, organizationId);
+  }
+
   @Patch(':id/complete')
-  @RequirePermissions({ resource: 'bookings', action: 'update' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Complete booking' })
   @ApiResponse({ status: 200, description: 'Booking completed successfully' })
   complete(@Param('id', ParseUUIDPipe) id: string, @CurrentOrganization() organizationId: string) {
@@ -114,7 +126,7 @@ export class BookingsController {
   }
 
   @Patch(':id/cancel')
-  @RequirePermissions({ resource: 'bookings', action: 'update' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Cancel booking' })
   @ApiResponse({ status: 200, description: 'Booking cancelled successfully' })
   cancel(
@@ -126,7 +138,7 @@ export class BookingsController {
   }
 
   @Patch(':id/payment-status')
-  @RequirePermissions({ resource: 'bookings', action: 'update' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Update payment status' })
   @ApiResponse({ status: 200, description: 'Payment status updated' })
   updatePaymentStatus(
@@ -138,7 +150,7 @@ export class BookingsController {
   }
 
   @Post(':id/expenses')
-  @RequirePermissions({ resource: 'expenses', action: 'manage' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Add expense to booking' })
   @ApiResponse({ status: 201, description: 'Expense added successfully' })
   addExpense(
@@ -150,7 +162,7 @@ export class BookingsController {
   }
 
   @Post(':id/revenues')
-  @RequirePermissions({ resource: 'revenues', action: 'manage' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Add revenue to booking' })
   @ApiResponse({ status: 201, description: 'Revenue added successfully' })
   addRevenue(
@@ -162,7 +174,7 @@ export class BookingsController {
   }
 
   @Delete(':id/expenses/:expenseId')
-  @RequirePermissions({ resource: 'expenses', action: 'manage' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Remove expense from booking' })
   @ApiResponse({ status: 200, description: 'Expense removed successfully' })
   removeExpense(
@@ -173,7 +185,7 @@ export class BookingsController {
   }
 
   @Delete(':id/revenues/:revenueId')
-  @RequirePermissions({ resource: 'revenues', action: 'manage' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Remove revenue from booking' })
   @ApiResponse({ status: 200, description: 'Revenue removed successfully' })
   removeRevenue(

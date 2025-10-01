@@ -11,6 +11,7 @@ import {
   Index,
 } from 'typeorm';
 import { BookingInventoryAllocation } from './booking-inventory-allocation.entity';
+// import { InventoryCategory } from './inventory-category.entity';
 // import { Organization } from './organization.entity';
 
 @Entity('inventory_items')
@@ -33,11 +34,30 @@ export class InventoryItem {
   @Column('decimal', { precision: 10, scale: 2, name: 'unit_price' })
   unitPrice: number;
 
-  @Column('int')
+  @Column('decimal', { precision: 10, scale: 3 })
   quantity: number;
 
-  @Column('int', { name: 'available_quantity' })
+  @Column('decimal', { precision: 10, scale: 3, name: 'available_quantity' })
   availableQuantity: number;
+
+  @Column({ name: 'quantity_unit', default: 'pieces' })
+  quantityUnit: string;
+
+  @Column({ type: 'uuid', nullable: true, name: 'category_id' })
+  categoryId?: string;
+
+  // @ManyToOne('InventoryCategory', (category: any) => category.items, { nullable: true })
+  // @JoinColumn({ name: 'category_id' })
+  // category?: any;
+
+  @Column({ nullable: true })
+  brand: string;
+
+  @Column({ nullable: true })
+  sku: string;
+
+  @Column('decimal', { precision: 10, scale: 3, name: 'low_stock_threshold', default: 10 })
+  lowStockThreshold: number;
 
   @Column('jsonb', { nullable: true })
   metadata: Record<string, any>;
@@ -86,5 +106,23 @@ export class InventoryItem {
       throw new Error(`Cannot deallocate ${quantity} items. Would exceed total quantity.`);
     }
     this.availableQuantity = newAvailable;
+  }
+
+  isLowStock(): boolean {
+    return this.availableQuantity <= this.lowStockThreshold;
+  }
+
+  getStockStatus(): 'in_stock' | 'low_stock' | 'out_of_stock' {
+    if (this.availableQuantity === 0) return 'out_of_stock';
+    if (this.isLowStock()) return 'low_stock';
+    return 'in_stock';
+  }
+
+  getFormattedQuantity(): string {
+    return `${this.availableQuantity} ${this.quantityUnit}`;
+  }
+
+  getFormattedTotalQuantity(): string {
+    return `${this.quantity} ${this.quantityUnit}`;
   }
 }

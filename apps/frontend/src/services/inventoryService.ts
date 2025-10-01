@@ -8,19 +8,20 @@ export interface InventoryFilters {
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
   category?: string;
-  lowStock?: boolean;
+  brand?: string;
+  quantityUnit?: string;
+  stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
 }
 
 export interface InventoryStats {
   totalItems: number;
+  activeItems: number;
   totalValue: number;
   lowStockItems: number;
   outOfStockItems: number;
-  categories: Array<{
-    name: string;
-    count: number;
-    value: number;
-  }>;
+  categories: string[];
+  brands: string[];
+  quantityUnits: string[];
 }
 
 class InventoryService {
@@ -69,7 +70,12 @@ class InventoryService {
 
   async getLowStock(): Promise<InventoryItem[]> {
     const response = await api.get('/inventory/low-stock');
-    return response.data.data;
+    return response.data.data || response.data;
+  }
+
+  async getOutOfStock(): Promise<InventoryItem[]> {
+    const response = await api.get('/inventory/out-of-stock');
+    return response.data.data || response.data;
   }
 
   async allocate(id: string, quantity: number): Promise<InventoryItem> {

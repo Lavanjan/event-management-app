@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Package, DollarSign, Hash, AlertTriangle } from 'lucide-react';
+import { Package, DollarSign, Hash, AlertTriangle, Scale } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -15,38 +15,51 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useCreateInventoryItem } from '../../hooks/useInventory';
+import { useInventoryCategories } from '../../hooks/useInventoryCategories';
 import { useToast } from '../../hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().trim().min(1, {
     message: 'Item name is required',
   }),
-  description: z.string().trim(),
+  description: z.string().trim().optional(),
   unitPrice: z.number().min(0, {
     message: 'Unit price must be 0 or greater',
   }),
   quantity: z.number().min(0, {
     message: 'Quantity must be 0 or greater',
   }),
-  sku: z.string().trim().min(1, {
-    message: 'SKU is required',
+  quantityUnit: z.string().min(1, {
+    message: 'Quantity unit is required',
   }),
-  category: z.string().min(1, {
-    message: 'Category is required',
-  }),
-  minimumQuantity: z.number().min(0, {
-    message: 'Minimum quantity must be 0 or greater',
+  sku: z.string().trim().optional(),
+  categoryId: z.string().optional(),
+  brand: z.string().trim().optional(),
+  lowStockThreshold: z.number().min(0, {
+    message: 'Low stock threshold must be 0 or greater',
   }),
 });
 
-const categories = [
-  'av_equipment',
-  'catering',
-  'decor',
-  'flooring',
-  'furniture',
-  'lighting',
-  'linens',
+// Quantity units for different types of items
+const quantityUnits = [
+  { value: 'pieces', label: 'Pieces' },
+  { value: 'kg', label: 'Kilograms (kg)' },
+  { value: 'g', label: 'Grams (g)' },
+  { value: 'mg', label: 'Milligrams (mg)' },
+  { value: 'litre', label: 'Litres (L)' },
+  { value: 'ml', label: 'Millilitres (ml)' },
+  { value: 'meter', label: 'Meters (m)' },
+  { value: 'cm', label: 'Centimeters (cm)' },
+  { value: 'mm', label: 'Millimeters (mm)' },
+  { value: 'sqm', label: 'Square Meters (m²)' },
+  { value: 'cubic_meter', label: 'Cubic Meters (m³)' },
+  { value: 'dozen', label: 'Dozen' },
+  { value: 'pair', label: 'Pair' },
+  { value: 'set', label: 'Set' },
+  { value: 'box', label: 'Box' },
+  { value: 'pack', label: 'Pack' },
+  { value: 'roll', label: 'Roll' },
+  { value: 'sheet', label: 'Sheet' },
 ];
 
 interface CreateInventoryFormProps {
@@ -56,6 +69,7 @@ interface CreateInventoryFormProps {
 export default function CreateInventoryForm({ onClose }: CreateInventoryFormProps) {
   const { toast } = useToast();
   const createInventoryItem = useCreateInventoryItem();
+  const { categories, isLoading: categoriesLoading } = useInventoryCategories();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,9 +78,11 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
       description: '',
       unitPrice: 0,
       quantity: 0,
+      quantityUnit: 'pieces',
       sku: '',
-      category: '',
-      minimumQuantity: 5,
+      categoryId: '',
+      brand: '',
+      lowStockThreshold: 5,
     },
   });
 
@@ -75,12 +91,14 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
 
     const inventoryData = {
       name: values.name,
-      description: values.description,
+      description: values.description || undefined,
       unitPrice: values.unitPrice,
       quantity: values.quantity,
-      sku: values.sku,
-      category: values.category,
-      minimumQuantity: values.minimumQuantity,
+      quantityUnit: values.quantityUnit,
+      sku: values.sku || undefined,
+      categoryId: values.categoryId || undefined,
+      brand: values.brand || undefined,
+      lowStockThreshold: values.lowStockThreshold,
     };
 
     createInventoryItem.mutate(inventoryData, {
@@ -182,7 +200,7 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="category"
+                name="categoryId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="dark:text-[#f1f7feb5] text-sm">
@@ -195,11 +213,16 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="">No Category</SelectItem>
+                        {categoriesLoading ? (
+                          <SelectItem value="" disabled>Loading categories...</SelectItem>
+                        ) : (
+                          categories?.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -209,21 +232,17 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
 
               <FormField
                 control={form.control}
-                name="unitPrice"
+                name="brand"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="dark:text-[#f1f7feb5] text-sm">
-                      <DollarSign className="inline w-4 h-4 mr-1" />
-                      Unit Price
+                      Brand
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        placeholder="e.g., IKEA, Samsung"
                         className="!h-[48px]"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -232,7 +251,32 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="unitPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="dark:text-[#f1f7feb5] text-sm">
+                    <DollarSign className="inline w-4 h-4 mr-1" />
+                    Unit Price
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      className="!h-[48px]"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="quantity"
@@ -245,9 +289,11 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
                       <Input
                         type="number"
                         min="0"
+                        step="0.001"
+                        placeholder="0"
                         className="!h-[48px]"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -257,20 +303,50 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
 
               <FormField
                 control={form.control}
-                name="minimumQuantity"
+                name="quantityUnit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="dark:text-[#f1f7feb5] text-sm">
+                      <Scale className="inline w-4 h-4 mr-1" />
+                      Unit
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="!h-[48px]">
+                          <SelectValue placeholder="Select unit" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {quantityUnits.map((unit) => (
+                          <SelectItem key={unit.value} value={unit.value}>
+                            {unit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="lowStockThreshold"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="dark:text-[#f1f7feb5] text-sm">
                       <AlertTriangle className="inline w-4 h-4 mr-1" />
-                      Minimum Quantity
+                      Low Stock Alert
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min="0"
+                        step="0.001"
+                        placeholder="5"
                         className="!h-[48px]"
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />

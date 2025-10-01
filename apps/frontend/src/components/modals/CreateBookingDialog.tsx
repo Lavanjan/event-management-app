@@ -24,7 +24,7 @@ const CreateBookingDialog = ({ onBookingCreated }: CreateBookingDialogProps) => 
           Create Booking
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto border-0">
+      <DialogContent className="max-w-[95vw] sm:max-w-[90vw] md:max-w-4xl lg:max-w-5xl xl:max-w-6xl max-h-[90vh] overflow-y-auto border-0">
         <CreateBookingForm onClose={onClose} />
       </DialogContent>
     </Dialog>

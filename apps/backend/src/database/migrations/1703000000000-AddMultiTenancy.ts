@@ -4,9 +4,13 @@ export class AddMultiTenancy1703000000000 implements MigrationInterface {
   name = 'AddMultiTenancy1703000000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create organization status enum
+    // Create organization status enum if it doesn't exist
     await queryRunner.query(`
-      CREATE TYPE "public"."organizations_status_enum" AS ENUM('active', 'suspended', 'inactive')
+      DO $$ BEGIN
+        CREATE TYPE "public"."organizations_status_enum" AS ENUM('active', 'suspended', 'inactive');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
     `);
 
     // Create organizations table

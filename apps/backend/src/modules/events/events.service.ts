@@ -20,30 +20,8 @@ export class EventsService {
   ) {}
 
   async create(createEventDto: CreateEventDto, organizationId: string): Promise<Event> {
-    // Validate dates
-    if (new Date(createEventDto.startDate) >= new Date(createEventDto.endDate)) {
-      throw new BadRequestException('Start date must be before end date');
-    }
-
-    if (new Date(createEventDto.startDate) <= new Date()) {
-      throw new BadRequestException('Start date must be in the future');
-    }
-
-    // Check for conflicting events at the same location within the organization
-    if (createEventDto.location) {
-      const conflictingEvent = await this.checkLocationConflict(
-        createEventDto.location,
-        new Date(createEventDto.startDate),
-        new Date(createEventDto.endDate),
-        organizationId
-      );
-
-      if (conflictingEvent) {
-        throw new ConflictException(
-          `Location "${createEventDto.location}" is already booked for the specified time period`
-        );
-      }
-    }
+    // Events are now templates without specific dates, so no date validation needed
+    // Location conflicts are checked at booking time, not event type creation time
 
     const event = this.eventRepository.create({
       ...createEventDto,
@@ -76,11 +54,11 @@ export class EventsService {
     // Filter active events by default
     queryBuilder.andWhere('event.isActive = :isActive', { isActive: true });
 
-    // Sorting
-    if (sortBy) {
+    // Sorting - default to name since startDate no longer exists on events
+    if (sortBy && sortBy !== 'startDate' && sortBy !== 'endDate') {
       queryBuilder.orderBy(`event.${sortBy}`, sortOrder);
     } else {
-      queryBuilder.orderBy('event.startDate', 'ASC');
+      queryBuilder.orderBy('event.name', 'ASC');
     }
 
     // Pagination
@@ -112,15 +90,14 @@ export class EventsService {
       );
     }
 
-    // Filter upcoming active events
+    // Filter upcoming active events (no longer applicable since events are templates)
     queryBuilder.andWhere('event.isActive = :isActive', { isActive: true });
-    queryBuilder.andWhere('event.startDate > :now', { now: new Date() });
 
-    // Sorting
-    if (sortBy) {
+    // Sorting - default to name since startDate no longer exists on events
+    if (sortBy && sortBy !== 'startDate' && sortBy !== 'endDate') {
       queryBuilder.orderBy(`event.${sortBy}`, sortOrder);
     } else {
-      queryBuilder.orderBy('event.startDate', 'ASC');
+      queryBuilder.orderBy('event.name', 'ASC');
     }
 
     // Pagination
@@ -147,41 +124,9 @@ export class EventsService {
   async update(id: string, updateEventDto: UpdateEventDto, organizationId: string): Promise<Event> {
     const event = await this.findById(id, organizationId);
 
-    // Validate dates if being updated
-    const startDate = updateEventDto.startDate
-      ? new Date(updateEventDto.startDate)
-      : event.startDate;
-    const endDate = updateEventDto.endDate ? new Date(updateEventDto.endDate) : event.endDate;
-
-    if (startDate >= endDate) {
-      throw new BadRequestException('Start date must be before end date');
-    }
-
-    // Don't allow updating past events
-    if (event.isInPast()) {
-      throw new BadRequestException('Cannot update past events');
-    }
-
-    // Check for location conflicts if location or dates are being updated
-    if (updateEventDto.location || updateEventDto.startDate || updateEventDto.endDate) {
-      const location = updateEventDto.location || event.location;
-
-      if (location) {
-        const conflictingEvent = await this.checkLocationConflict(
-          location,
-          startDate,
-          endDate,
-          organizationId,
-          id // Exclude current event from conflict check
-        );
-
-        if (conflictingEvent) {
-          throw new ConflictException(
-            `Location "${location}" is already booked for the specified time period`
-          );
-        }
-      }
-    }
+    // Events are now templates without specific dates
+    // No date validation or location conflict checking needed at event type level
+    // These checks happen at booking time
 
     // Update fields
     Object.assign(event, updateEventDto);
@@ -226,7 +171,8 @@ export class EventsService {
     const totalRevenue =
       event.bookings?.reduce((sum, booking) => sum + Number(booking.totalAmount), 0) || 0;
 
-    const availableSpots = event.availableSpots;
+    // Calculate available spots based on max attendees and confirmed bookings
+    const availableSpots = event.maxAttendees ? event.maxAttendees - confirmedBookings : 0;
     const occupancyRate = event.maxAttendees ? (confirmedBookings / event.maxAttendees) * 100 : 0;
 
     return {
@@ -240,14 +186,15 @@ export class EventsService {
   }
 
   async getEventsInDateRange(startDate: Date, endDate: Date): Promise<Event[]> {
+    // Events are now templates without dates
+    // This method should query bookings instead, but keeping for backward compatibility
     return this.eventRepository.find({
       where: {
         isActive: true,
-        startDate: Between(startDate, endDate),
       },
       relations: ['bookings'],
       order: {
-        startDate: 'ASC',
+        name: 'ASC',
       },
     });
   }
@@ -259,21 +206,10 @@ export class EventsService {
     organizationId: string,
     excludeEventId?: string
   ): Promise<Event | null> {
-    const queryBuilder = this.eventRepository
-      .createQueryBuilder('event')
-      .where('event.location = :location', { location })
-      .andWhere('event.organizationId = :organizationId', { organizationId })
-      .andWhere('event.isActive = :isActive', { isActive: true })
-      .andWhere('(event.startDate < :endDate AND event.endDate > :startDate)', {
-        startDate,
-        endDate,
-      });
-
-    if (excludeEventId) {
-      queryBuilder.andWhere('event.id != :excludeEventId', { excludeEventId });
-    }
-
-    return queryBuilder.getOne();
+    // Events are now templates without dates
+    // Location conflicts should be checked at booking level, not event type level
+    // Returning null means no conflict
+    return null;
   }
 
   async getLocations(organizationId: string): Promise<{ success: boolean; data: string[] }> {

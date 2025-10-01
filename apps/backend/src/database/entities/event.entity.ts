@@ -15,12 +15,13 @@ import { Booking } from './booking.entity';
 
 @Entity('events')
 @Index(['organizationId'])
-@Index(['startDate'])
 @Index(['isActive'])
-@Check('"start_date" < "end_date"')
 @Check('"required_advance_percentage" >= 0 AND "required_advance_percentage" <= 100')
 @Check('"balance_payment_window_days" >= 0')
 @Check('"max_attendees" IS NULL OR "max_attendees" > 0')
+@Check('"hourly_price" IS NULL OR "hourly_price" >= 0')
+@Check('"half_day_price" IS NULL OR "half_day_price" >= 0')
+@Check('"full_day_price" IS NULL OR "full_day_price" >= 0')
 export class Event {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -31,17 +32,35 @@ export class Event {
   @Column({ nullable: true })
   description: string;
 
-  @Column('timestamp', { name: 'start_date' })
-  startDate: Date;
-
-  @Column('timestamp', { name: 'end_date' })
-  endDate: Date;
-
   @Column({ nullable: true })
   location: string;
 
   @Column('int', { nullable: true, name: 'max_attendees' })
   maxAttendees: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    name: 'hourly_price',
+  })
+  hourlyPrice?: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    name: 'half_day_price',
+  })
+  halfDayPrice?: number;
+
+  @Column('decimal', {
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    name: 'full_day_price',
+  })
+  fullDayPrice?: number;
 
   @Column('decimal', {
     precision: 5,
@@ -84,39 +103,49 @@ export class Event {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  get currentAttendees(): number {
-    return (
-      this.bookings?.filter(
-        booking => booking.status === 'confirmed' || booking.status === 'completed'
-      ).length || 0
-    );
+  // Deprecated fields - kept for backward compatibility during migration
+  @Column('timestamp', { name: 'start_date', nullable: true })
+  startDate?: Date;
+
+  @Column('timestamp', { name: 'end_date', nullable: true })
+  endDate?: Date;
+
+  /**
+   * Calculate price based on duration type
+   */
+  calculatePrice(durationType: 'hourly' | 'half_day' | 'full_day', hours?: number): number {
+    switch (durationType) {
+      case 'hourly':
+        return this.hourlyPrice && hours ? this.hourlyPrice * hours : 0;
+      case 'half_day':
+        return this.halfDayPrice || 0;
+      case 'full_day':
+        return this.fullDayPrice || 0;
+      default:
+        return 0;
+    }
   }
 
-  get availableSpots(): number {
-    if (!this.maxAttendees) return Infinity;
-    return Math.max(0, this.maxAttendees - this.currentAttendees);
+  /**
+   * Calculate advance amount based on total and percentage
+   */
+  calculateAdvanceAmount(totalAmount: number): number {
+    return (totalAmount * this.requiredAdvancePercentage) / 100;
   }
 
-  canAcceptBooking(): boolean {
-    return (
-      this.isActive &&
-      new Date() < this.startDate &&
-      (this.maxAttendees === null || this.currentAttendees < this.maxAttendees)
-    );
+  /**
+   * Calculate balance amount
+   */
+  calculateBalanceAmount(totalAmount: number, advanceAmount: number): number {
+    return totalAmount - advanceAmount;
   }
 
-  calculateAdvanceDueDate(): Date {
-    // Advance payment due immediately upon booking
-    return new Date();
-  }
-
-  calculateBalanceDueDate(): Date {
-    const dueDate = new Date(this.startDate);
+  /**
+   * Calculate balance due date based on booking start date
+   */
+  calculateBalanceDueDate(bookingStartDate: Date): Date {
+    const dueDate = new Date(bookingStartDate);
     dueDate.setDate(dueDate.getDate() - this.balancePaymentWindowDays);
     return dueDate;
-  }
-
-  isInPast(): boolean {
-    return new Date() > this.endDate;
   }
 }

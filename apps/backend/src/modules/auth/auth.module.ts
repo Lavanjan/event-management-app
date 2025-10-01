@@ -7,15 +7,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { SecureAuthService } from './secure-auth.service';
 import { AuthController } from './auth.controller';
+import { VerificationController } from './verification.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { SecureAuthGuard } from './guards/secure-auth.guard';
-import { User } from '../../database/entities/user.entity';
+import { User, Organization } from '../../database/entities';
 import { UsersModule } from '../users/users.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Organization]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -28,8 +30,9 @@ import { UsersModule } from '../users/users.module';
       inject: [ConfigService],
     }),
     forwardRef(() => UsersModule),
+    EmailModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, VerificationController],
   providers: [AuthService, SecureAuthService, SecureAuthGuard, JwtStrategy, LocalStrategy],
   exports: [AuthService, SecureAuthService, SecureAuthGuard, JwtModule],
 })

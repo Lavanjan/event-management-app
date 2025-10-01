@@ -12,6 +12,7 @@ export const INVENTORY_QUERY_KEYS = {
   detail: (id: string) => [...INVENTORY_QUERY_KEYS.details(), id] as const,
   stats: () => [...INVENTORY_QUERY_KEYS.all, 'stats'] as const,
   lowStock: () => [...INVENTORY_QUERY_KEYS.all, 'low-stock'] as const,
+  outOfStock: () => [...INVENTORY_QUERY_KEYS.all, 'out-of-stock'] as const,
   categories: () => [...INVENTORY_QUERY_KEYS.all, 'categories'] as const,
 };
 
@@ -42,6 +43,13 @@ export function useLowStockItems() {
   return useQuery({
     queryKey: INVENTORY_QUERY_KEYS.lowStock(),
     queryFn: () => inventoryService.getLowStock(),
+  });
+}
+
+export function useOutOfStockItems() {
+  return useQuery({
+    queryKey: INVENTORY_QUERY_KEYS.outOfStock(),
+    queryFn: () => inventoryService.getOutOfStock(),
   });
 }
 
