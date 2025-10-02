@@ -389,7 +389,7 @@ We look forward to serving you!
 
     // Use the email service's sendMail method directly
     await this.emailService['transporter'].sendMail({
-      from: process.env.SMTP_FROM || 'noreply@eventbooking.com',
+      from: process.env.FROM_EMAIL || 'noreply@eventbooking.com',
       to: booking.customerEmail,
       subject,
       html: htmlContent,
@@ -510,7 +510,7 @@ Thank you for choosing our services!
 
     // Use the email service's sendMail method directly
     await this.emailService['transporter'].sendMail({
-      from: process.env.SMTP_FROM || 'noreply@eventbooking.com',
+      from: process.env.FROM_EMAIL || 'noreply@eventbooking.com',
       to: booking.customerEmail,
       subject,
       html: htmlContent,

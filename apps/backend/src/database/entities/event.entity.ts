@@ -11,6 +11,7 @@ import {
   Index,
 } from 'typeorm';
 import { Booking } from './booking.entity';
+import { EventTemplate } from './event-template.entity';
 // import { Organization } from './organization.entity';
 
 @Entity('events')
@@ -90,6 +91,15 @@ export class Event {
   // })
   // @JoinColumn({ name: 'organization_id' })
   // organization: Organization;
+
+  @Column({ name: 'template_id', type: 'uuid', nullable: true })
+  templateId?: string;
+
+  @ManyToOne(() => EventTemplate, template => template.events, {
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'template_id' })
+  template?: EventTemplate;
 
   @Column({ default: true, name: 'is_active' })
   isActive: boolean;

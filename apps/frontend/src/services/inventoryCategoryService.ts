@@ -32,33 +32,39 @@ export interface UpdateInventoryCategoryDto {
 }
 
 class InventoryCategoryService {
+  private baseUrl = '/inventory-categories';
+
   async getAll(): Promise<InventoryCategory[]> {
-    const response = await api.get('/inventory-categories');
-    return response.data.data;
+    // For product admin, we need to specify an organization ID
+    // Using 'default-org' as a fallback for testing
+    const response = await api.get(`${this.baseUrl}?organizationId=default-org`);
+    return response.data;
   }
 
   async getById(id: string): Promise<InventoryCategory> {
-    const response = await api.get(`/inventory-categories/${id}`);
-    return response.data.data;
+    const response = await api.get(`${this.baseUrl}/${id}?organizationId=default-org`);
+    return response.data;
   }
 
   async create(data: CreateInventoryCategoryDto): Promise<InventoryCategory> {
-    const response = await api.post('/inventory-categories', data);
-    return response.data.data;
+    const response = await api.post(`${this.baseUrl}?organizationId=default-org`, data);
+    return response.data;
   }
 
   async update(id: string, data: UpdateInventoryCategoryDto): Promise<InventoryCategory> {
-    const response = await api.put(`/inventory-categories/${id}`, data);
-    return response.data.data;
+    const response = await api.put(`${this.baseUrl}/${id}?organizationId=default-org`, data);
+    return response.data;
   }
 
   async delete(id: string): Promise<void> {
-    await api.delete(`/inventory-categories/${id}`);
+    await api.delete(`${this.baseUrl}/${id}?organizationId=default-org`);
   }
 
   async reorder(categoryIds: string[]): Promise<InventoryCategory[]> {
-    const response = await api.put('/inventory-categories/reorder', { categoryIds });
-    return response.data.data;
+    const response = await api.put(`${this.baseUrl}/reorder?organizationId=default-org`, {
+      categoryIds,
+    });
+    return response.data;
   }
 }
 

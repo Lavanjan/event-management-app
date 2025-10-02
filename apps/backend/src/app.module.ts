@@ -15,8 +15,10 @@ import { InventoryModule } from './modules/inventory/inventory.module';
 import { EventsModule } from './modules/events/events.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { FinancialModule } from './modules/financial/financial.module';
+import { PrintingModule } from './modules/printing/printing.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 
 import { createWinstonLogger } from './common/config/winston.config';
 import { validationSchema } from './common/config/validation.schema';
@@ -82,8 +84,10 @@ import { validationSchema } from './common/config/validation.schema';
     EventsModule,
     BookingsModule,
     FinancialModule,
+    PrintingModule,
     NotificationsModule,
     DashboardModule,
+    DocumentsModule,
   ],
   controllers: [],
   providers: [],

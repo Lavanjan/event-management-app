@@ -66,7 +66,12 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'inventory:read',
       },
-
+      {
+        name: 'Add Item',
+        href: '/inventory/create',
+        icon: Plus,
+        permission: 'inventory:create',
+      },
       {
         name: 'Low Stock Alerts',
         href: '/inventory/alerts',
@@ -92,7 +97,12 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'events:read',
       },
-
+      {
+        name: 'Create Event',
+        href: '/events/create',
+        icon: Plus,
+        permission: 'events:create',
+      },
       {
         name: 'Event Templates',
         href: '/events/templates',
@@ -112,7 +122,12 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'bookings:read',
       },
-
+      {
+        name: 'Create Booking',
+        href: '/bookings/create',
+        icon: Plus,
+        permission: 'bookings:create',
+      },
       {
         name: 'Payment Tracking',
         href: '/bookings/payments',
@@ -132,7 +147,12 @@ const navigation: NavigationItem[] = [
         icon: User,
         permission: 'users:read',
       },
-
+      {
+        name: 'Add User',
+        href: '/users/create',
+        icon: UserPlus,
+        permission: 'users:create',
+      },
       {
         name: 'User Roles',
         href: '/users/roles',
@@ -152,7 +172,12 @@ const navigation: NavigationItem[] = [
         icon: List,
         permission: 'roles:read',
       },
-
+      {
+        name: 'Create Role',
+        href: '/roles/create',
+        icon: Plus,
+        permission: 'roles:create',
+      },
       {
         name: 'Permissions',
         href: '/roles/permissions',

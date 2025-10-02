@@ -31,24 +31,24 @@ export class InventoryCategory {
   @Column({ type: 'varchar', length: 50, nullable: true })
   icon?: string; // Icon name for UI display
 
-  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ type: 'int', default: 0, name: 'sort_order' })
+  @Column({ type: 'int', default: 0 })
   sortOrder: number;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn()
   updatedAt: Date;
 
   // Multi-tenant relationship
-  @Column({ type: 'uuid', name: 'organization_id' })
+  @Column({ type: 'uuid' })
   organizationId: string;
 
   @ManyToOne(() => Organization, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'organization_id' })
+  @JoinColumn({ name: 'organizationId' })
   organization: Organization;
 
   // Relationship with inventory items

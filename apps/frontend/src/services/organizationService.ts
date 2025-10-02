@@ -13,7 +13,6 @@ export interface Organization {
   state?: string;
   postalCode?: string;
   country?: string;
-  currency: string;
   status: 'active' | 'suspended' | 'inactive';
   settings?: Record<string, any>;
   metadata?: Record<string, any>;
@@ -34,7 +33,6 @@ export interface CreateOrganizationRequest {
   state?: string;
   postalCode?: string;
   country?: string;
-  currency?: string;
   status?: 'active' | 'suspended' | 'inactive';
   settings?: Record<string, any>;
   metadata?: Record<string, any>;

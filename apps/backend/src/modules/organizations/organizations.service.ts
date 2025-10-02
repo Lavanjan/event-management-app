@@ -267,14 +267,6 @@ export class OrganizationsService {
       }
     }
 
-    // Check if currency is being changed and if it's allowed
-    if (
-      updateOrganizationDto.currency &&
-      updateOrganizationDto.currency !== organization.currency
-    ) {
-      await this.checkCurrencyChangeAllowed(id);
-    }
-
     Object.assign(organization, updateOrganizationDto);
     return this.organizationRepository.save(organization);
   }
@@ -300,7 +292,7 @@ export class OrganizationsService {
     }
 
     // Check for other relationships (events, bookings, etc.)
-    await this.checkOrganizationDependencies(id);
+    // Note: Add more checks here as needed for other entities
 
     // If only admin user exists, delete the user first, then the organization
     if (userCount === 1) {
@@ -439,9 +431,6 @@ export class OrganizationsService {
         throw new BadRequestException('Cannot delete organization with existing users');
       }
 
-      // Check for other dependencies
-      await this.checkOrganizationDependencies(id);
-
       await this.organizationRepository.remove(organization);
 
       return {
@@ -453,93 +442,6 @@ export class OrganizationsService {
         throw error;
       }
       throw new BadRequestException('Failed to delete organization');
-    }
-  }
-
-  /**
-   * Check if currency can be changed for this organization
-   */
-  private async checkCurrencyChangeAllowed(organizationId: string): Promise<void> {
-    // Check for events with pricing
-    const eventCount = await this.dataSource.getRepository('Event').count({
-      where: { organizationId },
-    });
-
-    if (eventCount > 0) {
-      throw new BadRequestException(
-        'Cannot change currency when organization has existing events. Currency changes affect pricing and financial calculations.'
-      );
-    }
-
-    // Check for bookings with financial data
-    const bookingCount = await this.dataSource.getRepository('Booking').count({
-      where: { organizationId },
-    });
-
-    if (bookingCount > 0) {
-      throw new BadRequestException(
-        'Cannot change currency when organization has existing bookings. Currency changes affect financial calculations.'
-      );
-    }
-
-    // Check for inventory items with pricing
-    const inventoryCount = await this.dataSource.getRepository('InventoryItem').count({
-      where: { organizationId },
-    });
-
-    if (inventoryCount > 0) {
-      throw new BadRequestException(
-        'Cannot change currency when organization has existing inventory items. Currency changes affect pricing calculations.'
-      );
-    }
-  }
-
-  /**
-   * Check if organization has dependencies that prevent deletion
-   */
-  private async checkOrganizationDependencies(organizationId: string): Promise<void> {
-    // Check for events
-    const eventCount = await this.dataSource.getRepository('Event').count({
-      where: { organizationId },
-    });
-
-    if (eventCount > 0) {
-      throw new BadRequestException(
-        `Cannot delete organization with ${eventCount} existing event(s). Please delete all events first.`
-      );
-    }
-
-    // Check for bookings
-    const bookingCount = await this.dataSource.getRepository('Booking').count({
-      where: { organizationId },
-    });
-
-    if (bookingCount > 0) {
-      throw new BadRequestException(
-        `Cannot delete organization with ${bookingCount} existing booking(s). Please delete all bookings first.`
-      );
-    }
-
-    // Check for inventory items
-    const inventoryCount = await this.dataSource.getRepository('InventoryItem').count({
-      where: { organizationId },
-    });
-
-    if (inventoryCount > 0) {
-      throw new BadRequestException(
-        `Cannot delete organization with ${inventoryCount} existing inventory item(s). Please delete all inventory first.`
-      );
-    }
-
-    // Check for roles
-    const roleCount = await this.dataSource.getRepository('Role').count({
-      where: { organizationId },
-    });
-
-    if (roleCount > 0) {
-      throw new BadRequestException(
-        `Cannot delete organization with ${roleCount} existing role(s). Please delete all roles first.`
-      );
     }
   }
 

@@ -2,13 +2,11 @@ import { useState, useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import {
   Calendar,
-  Search,
   MoreHorizontal,
   Edit,
   Trash2,
   MapPin,
   Users,
-  Clock,
   Eye,
   Copy,
   ArrowUpDown,
@@ -16,10 +14,9 @@ import {
   CalendarDays,
   DollarSign,
   XCircle,
+  Download,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import {
   DropdownMenu,
@@ -29,8 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
-import { DataTable } from '../../components/ui/data-table';
-import { DataTableFacetedFilter } from '../../components/ui/data-table-faceted-filter';
 import {
   useEventList,
   useEventLocations,
@@ -40,10 +35,18 @@ import {
 } from '../../hooks/useEvents';
 import { EventFilters } from '../../services/eventService';
 import { Event } from '../../types';
-import { format } from 'date-fns';
 import CreateEventDialog from '../../components/modals/CreateEventDialog';
 import EditEventDialog from '../../components/modals/EditEventDialog';
 import { useToast } from '../../hooks/use-toast';
+import {
+  PageLayout,
+  PageHeader,
+  StatsGrid,
+  StatsCard,
+  LoadingState,
+  ErrorState
+} from '../../components/common/PageLayout';
+import { UnifiedDataTable, FilterConfig } from '../../components/common/UnifiedDataTable';
 
 // Filter options
 const statusOptions = [
@@ -207,6 +210,13 @@ export function EventListPage() {
 
   const events = eventData?.data || [];
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
   const handleDuplicate = (id: string) => {
     const event = events.find(e => e.id === id);
     const newName = `${event?.name || 'Event'} (Copy)`;
@@ -231,11 +241,11 @@ export function EventListPage() {
     }));
   };
 
-  const handleStatusFilter = (values: string[]) => {
+  const handleFilterChange = (key: string, values: string[]) => {
     setFilters(prev => ({
       ...prev,
-      status: values.length > 0 ? values[0] : undefined,
-      page: 1
+      [key]: values.length > 0 ? values[0] : undefined,
+      page: 1,
     }));
   };
 
@@ -257,180 +267,90 @@ export function EventListPage() {
     });
   };
 
+  // Create filter configurations - Events don't support status filtering in backend
+  const filterConfigs: FilterConfig[] = [];
+
+  if (isLoading) {
+    return <LoadingState message="Loading events..." />;
+  }
+
   if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <XCircle className="mx-auto h-12 w-12 text-red-500" />
-          <h3 className="mt-4 text-lg font-semibold">Error loading events</h3>
-          <p className="mt-2 text-muted-foreground">
-            Something went wrong
-          </p>
-          <Button className="mt-4" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
-      </div>
+      <ErrorState
+        message="Failed to load events"
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
   return (
-    <div className="space-y-6">
+    <PageLayout>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-          <p className="text-muted-foreground">
-            Manage and organize your events
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <CreateEventDialog onEventCreated={handleEventUpdated} />
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CalendarDays className="h-8 w-8 text-primary" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Events</p>
-                <p className="text-2xl font-bold">{eventData?.total || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Eye className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Published</p>
-                <p className="text-2xl font-bold">
-                  {events.filter(e => e.isActive).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Edit className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Draft</p>
-                <p className="text-2xl font-bold">
-                  {events.filter(e => !e.isActive).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Capacity</p>
-                <p className="text-2xl font-bold">
-                  {events.reduce((sum, event) => sum + (event.maxAttendees || 0), 0)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Events Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Events</CardTitle>
-          <CardDescription>
-            Manage and track all your events with advanced filtering and search capabilities.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={events}
-            isLoading={isLoading}
-            pagination={{
-              totalCount: eventData?.total || 0,
-              pageNumber: filters.page || 1,
-              pageSize: filters.limit || 20,
-            }}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            filtersToolbar={
-              <EventFiltersToolbar
-                filters={filters}
-                onSearchChange={handleSearch}
-                onStatusChange={handleStatusFilter}
-                onResetFilters={handleResetFilters}
-              />
-            }
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// Filters Toolbar Component
-interface EventFiltersToolbarProps {
-  filters: EventFilters;
-  onSearchChange: (search: string) => void;
-  onStatusChange: (values: string[]) => void;
-  onResetFilters: () => void;
-}
-
-function EventFiltersToolbar({
-  filters,
-  onSearchChange,
-  onStatusChange,
-  onResetFilters,
-}: EventFiltersToolbarProps) {
-  const hasActiveFilters = filters.search || filters.status;
-
-  return (
-    <div className="flex flex-col lg:flex-row w-full items-start space-y-2 mb-2 lg:mb-0 lg:space-x-2 lg:space-y-0">
-      {/* Search Input */}
-      <div className="relative w-full lg:w-[250px]">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="Search events..."
-          value={filters.search || ""}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="h-8 pl-10"
-        />
-      </div>
-
-      {/* Status Filter */}
-      <DataTableFacetedFilter
-        title="Status"
-        multiSelect={false}
-        options={statusOptions}
-        selectedValues={filters.status ? [filters.status] : []}
-        onFilterChange={onStatusChange}
+      <PageHeader
+        title="Event Management"
+        description="Manage and organize your event templates"
+        actions={
+          <>
+            <Button variant="outline" size="sm">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <CreateEventDialog onEventCreated={handleEventUpdated} />
+          </>
+        }
       />
 
-      {/* Reset Filters Button */}
-      {hasActiveFilters && (
-        <Button
-          variant="ghost"
-          className="h-8 px-2 lg:px-3"
-          onClick={onResetFilters}
-        >
-          Reset
-          <XCircle className="ml-2 h-4 w-4" />
-        </Button>
-      )}
-    </div>
+
+
+      {/* Stats Cards */}
+      <StatsGrid columns={4}>
+        <StatsCard
+          icon={<Calendar className="h-8 w-8" />}
+          title="Total Events"
+          value={eventData?.total || 0}
+          iconColor="text-primary"
+        />
+        <StatsCard
+          icon={<MapPin className="h-8 w-8" />}
+          title="Active Events"
+          value={events.filter(e => e.isActive).length}
+          iconColor="text-green-600"
+        />
+        <StatsCard
+          icon={<DollarSign className="h-8 w-8" />}
+          title="Avg. Hourly Rate"
+          value={formatCurrency(
+            events.reduce((sum, e) => sum + (e.hourlyPrice || 0), 0) / (events.length || 1)
+          )}
+          iconColor="text-blue-600"
+        />
+        <StatsCard
+          icon={<Users className="h-8 w-8" />}
+          title="Max Capacity"
+          value={Math.max(...events.map(e => e.maxAttendees || 0), 0)}
+          iconColor="text-purple-600"
+        />
+      </StatsGrid>
+
+      {/* Events Table */}
+      <UnifiedDataTable
+        columns={columns}
+        data={events}
+        isLoading={isLoading}
+        title="All Events"
+        description="Manage and track all your event templates with advanced filtering and search capabilities."
+        filters={filters}
+        filterConfigs={filterConfigs}
+        searchPlaceholder="Search events..."
+        onSearchChange={handleSearch}
+        onFilterChange={handleFilterChange}
+        onResetFilters={handleResetFilters}
+        totalCount={eventData?.total || 0}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
+    </PageLayout>
   );
 }
+
+

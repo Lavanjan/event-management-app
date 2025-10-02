@@ -61,9 +61,6 @@ export class Organization {
   @Column({ nullable: true })
   country: string;
 
-  @Column({ default: 'USD', length: 3 })
-  currency: string;
-
   @Column({
     type: 'enum',
     enum: OrganizationStatus,

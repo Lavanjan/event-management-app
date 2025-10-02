@@ -253,62 +253,30 @@ export class EventsService {
     };
   }
 
-  async getEventTemplates(): Promise<{ success: boolean; data: any[] }> {
-    // For now, return some predefined templates
-    // In the future, this could be stored in a separate table
-    const templates = [
-      {
-        id: '1',
-        name: 'Corporate Conference',
-        type: 'Conference',
-        description: 'Standard corporate conference template',
-        defaultDuration: 8, // hours
-        defaultCapacity: 100,
-        requiredInventory: ['Projector', 'Microphone', 'Chairs'],
-      },
-      {
-        id: '2',
-        name: 'Wedding Reception',
-        type: 'Wedding',
-        description: 'Wedding reception template',
-        defaultDuration: 6,
-        defaultCapacity: 150,
-        requiredInventory: ['Tables', 'Chairs', 'Sound System'],
-      },
-      {
-        id: '3',
-        name: 'Birthday Party',
-        type: 'Party',
-        description: 'Birthday party template',
-        defaultDuration: 4,
-        defaultCapacity: 50,
-        requiredInventory: ['Tables', 'Chairs', 'Decorations'],
-      },
-    ];
-
+  // Deprecated methods - use EventTemplatesService instead
+  async getEventTemplates(): Promise<{ success: boolean; data: any[]; message?: string }> {
+    // This method is deprecated and will be removed
+    // Use EventTemplatesService.findAll() instead
     return {
       success: true,
-      data: templates,
+      data: [],
+      message: 'This endpoint is deprecated. Use /events/templates instead.',
     };
   }
 
-  async getTemplatesStats(): Promise<{ success: boolean; data: any }> {
-    // Return statistics about event templates usage
-    const stats = {
-      totalTemplates: 3,
-      mostUsedTemplate: 'Corporate Conference',
-      usageStats: [
-        { templateId: '1', name: 'Corporate Conference', usageCount: 15 },
-        { templateId: '2', name: 'Wedding Reception', usageCount: 8 },
-        { templateId: '3', name: 'Birthday Party', usageCount: 12 },
-      ],
-      recentlyCreated: 2,
-      averageCapacity: 100,
-    };
-
+  async getTemplatesStats(): Promise<{ success: boolean; data: any; message?: string }> {
+    // This method is deprecated and will be removed
+    // Use EventTemplatesService.getTemplateStats() instead
     return {
       success: true,
-      data: stats,
+      data: {
+        totalTemplates: 0,
+        mostUsedTemplate: 'None',
+        usageStats: [],
+        recentlyCreated: 0,
+        averageCapacity: 0,
+      },
+      message: 'This endpoint is deprecated. Use /events/templates/stats instead.',
     };
   }
 }
