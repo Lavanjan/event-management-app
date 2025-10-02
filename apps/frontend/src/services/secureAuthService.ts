@@ -1,4 +1,5 @@
 import api from './api';
+import { UserType } from '../types';
 
 export interface SecureLoginRequest {
   email: string;
@@ -20,6 +21,7 @@ export interface SecureAuthResponse {
     email: string;
     firstName: string;
     lastName: string;
+    userType: UserType;
     roles: string[];
     permissions: string[];
   };
@@ -33,6 +35,7 @@ export interface SecureUserResponse {
     email: string;
     firstName: string;
     lastName: string;
+    userType: UserType;
     roles: string[];
     permissions: string[];
   };

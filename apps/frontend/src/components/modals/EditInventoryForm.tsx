@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { Package, DollarSign, Hash, AlertTriangle } from 'lucide-react';
+import { Package, DollarSign, Hash, AlertTriangle, Scale } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -16,6 +16,7 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useUpdateInventoryItem } from '../../hooks/useInventory';
+import { useInventoryCategories } from '../../hooks/useInventoryCategories';
 import { useToast } from '../../hooks/use-toast';
 import { InventoryItem } from '../../types';
 
@@ -23,31 +24,44 @@ const formSchema = z.object({
   name: z.string().trim().min(1, {
     message: 'Item name is required',
   }),
-  description: z.string().trim(),
+  description: z.string().trim().optional(),
   unitPrice: z.number().min(0, {
     message: 'Unit price must be 0 or greater',
   }),
   quantity: z.number().min(0, {
     message: 'Quantity must be 0 or greater',
   }),
-  sku: z.string().trim().min(1, {
-    message: 'SKU is required',
+  quantityUnit: z.string().min(1, {
+    message: 'Quantity unit is required',
   }),
-  category: z.string().min(1, {
-    message: 'Category is required',
-  }),
-  minimumQuantity: z.number().min(0, {
-    message: 'Minimum quantity must be 0 or greater',
+  sku: z.string().trim().optional(),
+  categoryId: z.string().optional(),
+  brand: z.string().trim().optional(),
+  lowStockThreshold: z.number().min(0, {
+    message: 'Low stock threshold must be 0 or greater',
   }),
 });
 
-const categories = [
-  'av_equipment',
-  'catering',
-  'decor',
-  'flooring',
-  'furniture',
-  'lighting',
+// Quantity units for different types of items
+const quantityUnits = [
+  { value: 'pieces', label: 'Pieces' },
+  { value: 'kg', label: 'Kilograms (kg)' },
+  { value: 'g', label: 'Grams (g)' },
+  { value: 'mg', label: 'Milligrams (mg)' },
+  { value: 'litre', label: 'Litres (L)' },
+  { value: 'ml', label: 'Millilitres (ml)' },
+  { value: 'meter', label: 'Meters (m)' },
+  { value: 'cm', label: 'Centimeters (cm)' },
+  { value: 'mm', label: 'Millimeters (mm)' },
+  { value: 'sqm', label: 'Square Meters (m²)' },
+  { value: 'cubic_meter', label: 'Cubic Meters (m³)' },
+  { value: 'dozen', label: 'Dozen' },
+  { value: 'pair', label: 'Pair' },
+  { value: 'set', label: 'Set' },
+  { value: 'box', label: 'Box' },
+  { value: 'pack', label: 'Pack' },
+  { value: 'roll', label: 'Roll' },
+  { value: 'sheet', label: 'Sheet' },
   'linens',
 ];
 

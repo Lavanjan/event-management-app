@@ -55,6 +55,7 @@ export function LoginPage() {
           email: response.user.email,
           firstName: response.user.firstName,
           lastName: response.user.lastName,
+          userType: response.user.userType,
           isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),

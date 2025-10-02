@@ -1,4 +1,12 @@
-import { IsString, IsEmail, IsOptional, IsUrl, IsEnum, ValidateNested, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsUrl,
+  IsEnum,
+  ValidateNested,
+  IsBoolean,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrganizationStatus } from '../../../database/entities';
@@ -16,7 +24,9 @@ export class CreateOrganizationAdminDto {
   @IsString()
   lastName: string;
 
-  @ApiPropertyOptional({ description: 'Organization admin password (if not provided, will be auto-generated)' })
+  @ApiPropertyOptional({
+    description: 'Organization admin password (if not provided, will be auto-generated)',
+  })
   @IsOptional()
   @IsString()
   password?: string;
@@ -25,6 +35,13 @@ export class CreateOrganizationAdminDto {
   @IsOptional()
   @IsBoolean()
   autoGeneratePassword?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Require email verification before activation (default: true)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  requiresVerification?: boolean;
 }
 
 export class CreateOrganizationDto {
@@ -32,7 +49,9 @@ export class CreateOrganizationDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ description: 'Organization slug (if not provided, will be auto-generated)' })
+  @ApiPropertyOptional({
+    description: 'Organization slug (if not provided, will be auto-generated)',
+  })
   @IsOptional()
   @IsString()
   slug?: string;
@@ -82,10 +101,19 @@ export class CreateOrganizationDto {
   @IsString()
   country?: string;
 
-  @ApiPropertyOptional({ 
+  @ApiPropertyOptional({
+    description: 'Organization currency code (ISO 4217)',
+    default: 'USD',
+    example: 'USD',
+  })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiPropertyOptional({
     description: 'Organization status',
     enum: OrganizationStatus,
-    default: OrganizationStatus.ACTIVE
+    default: OrganizationStatus.ACTIVE,
   })
   @IsOptional()
   @IsEnum(OrganizationStatus)

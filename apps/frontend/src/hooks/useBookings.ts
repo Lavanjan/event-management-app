@@ -152,6 +152,33 @@ export function useConfirmBooking() {
   });
 }
 
+export function useStartBooking() {
+  const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+
+  return useMutation({
+    mutationFn: (id: string) => bookingService.start(id),
+    onSuccess: (startedBooking) => {
+      queryClient.invalidateQueries({ queryKey: BOOKING_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: BOOKING_QUERY_KEYS.detail(startedBooking.id) });
+      queryClient.invalidateQueries({ queryKey: BOOKING_QUERY_KEYS.stats() });
+
+      dispatch(addNotification({
+        type: 'success',
+        title: 'Event Started',
+        message: `Event for ${startedBooking.customerName} has been started`,
+      }));
+    },
+    onError: (error: any) => {
+      dispatch(addNotification({
+        type: 'error',
+        title: 'Start Failed',
+        message: error.response?.data?.message || 'Failed to start event',
+      }));
+    },
+  });
+}
+
 export function useCompleteBooking() {
   const queryClient = useQueryClient();
   const dispatch = useDispatch();

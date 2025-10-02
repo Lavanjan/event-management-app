@@ -12,6 +12,7 @@ import { InventoryItem } from '../../database/entities/inventory-item.entity';
 import { InventoryModule } from '../inventory/inventory.module';
 import { EventsModule } from '../events/events.module';
 import { AuthModule } from '../auth/auth.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from '../auth/auth.module';
     InventoryModule,
     EventsModule,
     AuthModule,
+    EmailModule,
   ],
   controllers: [BookingsController],
   providers: [BookingsService],

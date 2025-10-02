@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { Request, Response } from 'express';
 
-import { User } from '../../database/entities/user.entity';
+import { User, UserType } from '../../database/entities';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -33,6 +33,7 @@ export interface SecureAuthResponse {
     email: string;
     firstName: string;
     lastName: string;
+    userType: UserType;
     roles: string[];
     permissions: string[];
   };
@@ -191,6 +192,7 @@ export class SecureAuthService {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          userType: user.userType,
           roles: session.roles,
           permissions: session.permissions,
         },
@@ -277,6 +279,7 @@ export class SecureAuthService {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          userType: user.userType,
           roles: user.roles?.map(role => role.name) || [],
           permissions: this.extractPermissions(user),
         },

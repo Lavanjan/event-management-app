@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   DollarSign,
   TrendingUp,
@@ -11,13 +10,22 @@ import {
   PieChart,
   FileText,
   CreditCard,
+  Activity,
+  Target,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { PageLoading, ErrorState } from '../../components/forms/LoadingSpinner';
 import { financialService } from '../../services/financialService';
+import { useFinancialReports } from '../../hooks/useFinancial';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 
 export function FinancialReportsPage() {
@@ -26,21 +34,35 @@ export function FinancialReportsPage() {
     to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
   });
 
-  const { data: financialSummary, isLoading, error } = useQuery({
-    queryKey: ['financial-summary', dateRange],
-    queryFn: () => financialService.getSummary(dateRange),
-  });
+  const {
+    summary,
+    revenue,
+    expenses,
+    profitLoss,
+    isLoading,
+    isError,
+    error,
+  } = useFinancialReports(dateRange);
 
-  const handleExportReport = (type: 'pdf' | 'excel') => {
-    // TODO: Implement export functionality
-    console.log(`Exporting ${type} report for`, dateRange);
+  const handleExportReport = async (type: 'pdf' | 'excel') => {
+    try {
+      const response = await financialService.exportReport(type, dateRange);
+
+      // For now, show a success message
+      // In a real implementation, this would trigger a file download
+      alert(`${type.toUpperCase()} export initiated for ${dateRange.from} to ${dateRange.to}`);
+      console.log('Export response:', response);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert(`Failed to export ${type.toUpperCase()} report`);
+    }
   };
 
   if (isLoading) {
     return <PageLoading message="Loading financial reports..." />;
   }
 
-  if (error) {
+  if (isError) {
     return (
       <ErrorState
         title="Failed to load financial reports"
@@ -50,7 +72,10 @@ export function FinancialReportsPage() {
     );
   }
 
-  const summary = financialSummary?.data || {};
+  const summaryData = summary.data?.data || {};
+  const revenueData = revenue.data?.data || {};
+  const expenseData = expenses.data?.data || {};
+  const profitLossData = profitLoss.data?.data || {};
 
   return (
     <div className="space-y-6">
@@ -85,14 +110,14 @@ export function FinancialReportsPage() {
             <Input
               type="date"
               value={dateRange.from}
-              onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+              onChange={e => setDateRange(prev => ({ ...prev, from: e.target.value }))}
               className="w-auto"
             />
             <span className="text-muted-foreground">to</span>
             <Input
               type="date"
               value={dateRange.to}
-              onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+              onChange={e => setDateRange(prev => ({ ...prev, to: e.target.value }))}
               className="w-auto"
             />
             <Button variant="outline" size="sm">
@@ -112,11 +137,11 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${summary.totalRevenue?.toLocaleString() || '0'}
+              ${summaryData.totalRevenue?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-muted-foreground">
-              <TrendingUp className="inline h-3 w-3 mr-1" />
-              +12.5% from last month
+              <Activity className="inline h-3 w-3 mr-1" />
+              {revenueData.bookingCount || 0} revenue transactions
             </p>
           </CardContent>
         </Card>
@@ -128,11 +153,11 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              ${summary.totalExpenses?.toLocaleString() || '0'}
+              ${summaryData.totalExpenses?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-muted-foreground">
-              <TrendingDown className="inline h-3 w-3 mr-1" />
-              -3.2% from last month
+              <Activity className="inline h-3 w-3 mr-1" />
+              {expenseData.bookingCount || 0} expense transactions
             </p>
           </CardContent>
         </Card>
@@ -144,11 +169,11 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              ${summary.netProfit?.toLocaleString() || '0'}
+              ${summaryData.netProfit?.toLocaleString() || '0'}
             </div>
             <p className="text-xs text-muted-foreground">
-              <TrendingUp className="inline h-3 w-3 mr-1" />
-              +18.7% from last month
+              <Target className="inline h-3 w-3 mr-1" />
+              ${profitLossData.averageProfit?.toLocaleString() || '0'} avg per booking
             </p>
           </CardContent>
         </Card>
@@ -159,12 +184,10 @@ export function FinancialReportsPage() {
             <PieChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {summary.profitMargin?.toFixed(1) || '0'}%
-            </div>
+            <div className="text-2xl font-bold">{summaryData.profitMargin?.toFixed(1) || '0'}%</div>
             <p className="text-xs text-muted-foreground">
-              <TrendingUp className="inline h-3 w-3 mr-1" />
-              +2.1% from last month
+              <Activity className="inline h-3 w-3 mr-1" />
+              {summaryData.totalBookings || 0} total bookings
             </p>
           </CardContent>
         </Card>
@@ -185,8 +208,13 @@ export function FinancialReportsPage() {
               <div className="text-center">
                 <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>Chart visualization will be implemented</p>
-                <p className="text-sm">Revenue: ${summary.totalRevenue?.toLocaleString() || '0'}</p>
-                <p className="text-sm">Expenses: ${summary.totalExpenses?.toLocaleString() || '0'}</p>
+                <p className="text-sm">Revenue: ${summaryData.totalRevenue?.toLocaleString() || '0'}</p>
+                <p className="text-sm">
+                  Expenses: ${summaryData.totalExpenses?.toLocaleString() || '0'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Monthly breakdown: {profitLossData.monthlyProfitLoss?.length || 0} months
+                </p>
               </div>
             </div>
           </CardContent>
@@ -202,7 +230,7 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {summary.expensesByCategory?.map((category: any, index: number) => (
+              {summaryData.expensesByCategory?.map((category: any, index: number) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 rounded-full bg-primary" />
@@ -210,7 +238,7 @@ export function FinancialReportsPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium">${category.amount?.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">{category.percentage}%</div>
+                    <div className="text-xs text-muted-foreground">{category.percentage?.toFixed(1)}%</div>
                   </div>
                 </div>
               )) || (
@@ -235,12 +263,14 @@ export function FinancialReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {summary.recentTransactions?.map((transaction: any, index: number) => (
+            {summaryData.recentTransactions?.map((transaction: any, index: number) => (
               <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center space-x-3">
-                  <div className={`w-2 h-2 rounded-full ${
-                    transaction.type === 'revenue' ? 'bg-green-500' : 'bg-red-500'
-                  }`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      transaction.type === 'revenue' ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                  />
                   <div>
                     <p className="font-medium">{transaction.description}</p>
                     <p className="text-sm text-muted-foreground">
@@ -249,10 +279,13 @@ export function FinancialReportsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className={`font-medium ${
-                    transaction.type === 'revenue' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {transaction.type === 'revenue' ? '+' : '-'}${transaction.amount?.toLocaleString()}
+                  <div
+                    className={`font-medium ${
+                      transaction.type === 'revenue' ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    {transaction.type === 'revenue' ? '+' : '-'}$
+                    {transaction.amount?.toLocaleString()}
                   </div>
                   <Badge variant="outline" className="text-xs">
                     {transaction.category}
@@ -268,6 +301,48 @@ export function FinancialReportsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Monthly Profit & Loss Breakdown */}
+      {profitLossData.monthlyProfitLoss && profitLossData.monthlyProfitLoss.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Activity className="mr-2 h-5 w-5" />
+              Monthly Profit & Loss
+            </CardTitle>
+            <CardDescription>Monthly breakdown of revenue, expenses, and profit</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {profitLossData.monthlyProfitLoss.map((month: any, index: number) => (
+                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex-1">
+                    <h4 className="font-medium">{month.label}</h4>
+                    <div className="flex items-center space-x-4 mt-2 text-sm">
+                      <span className="text-green-600">
+                        Revenue: ${month.revenue?.toLocaleString() || '0'}
+                      </span>
+                      <span className="text-red-600">
+                        Expenses: ${month.expenses?.toLocaleString() || '0'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-lg font-bold ${
+                      month.profit >= 0 ? 'text-blue-600' : 'text-orange-600'
+                    }`}>
+                      {month.profit >= 0 ? '+' : ''}${month.profit?.toLocaleString() || '0'}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {month.profitMargin?.toFixed(1) || '0'}% margin
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

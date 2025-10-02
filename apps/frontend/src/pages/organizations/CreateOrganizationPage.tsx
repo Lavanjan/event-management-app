@@ -26,6 +26,7 @@ export function CreateOrganizationPage() {
     state: '',
     postalCode: '',
     country: '',
+    currency: 'USD',
     status: 'active',
   });
 
@@ -317,6 +318,33 @@ export function CreateOrganizationPage() {
                     onChange={(e) => handleInputChange('country', e.target.value)}
                     placeholder="United States"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency *</Label>
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) => handleInputChange('currency', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD - US Dollar</SelectItem>
+                      <SelectItem value="EUR">EUR - Euro</SelectItem>
+                      <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                      <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
+                      <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                      <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                      <SelectItem value="INR">INR - Indian Rupee</SelectItem>
+                      <SelectItem value="CNY">CNY - Chinese Yuan</SelectItem>
+                      <SelectItem value="BRL">BRL - Brazilian Real</SelectItem>
+                      <SelectItem value="MXN">MXN - Mexican Peso</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    This currency will be used for all financial displays in your organization.
+                  </p>
                 </div>
               </div>
             </CardContent>

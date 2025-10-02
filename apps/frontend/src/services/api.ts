@@ -17,14 +17,14 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const state = store.getState();
     const token = state.auth.accessToken;
-    
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
   }
 );
@@ -34,28 +34,30 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     return response;
   },
-  async (error) => {
+  async error => {
     const originalRequest = error.config;
-    
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       const state = store.getState();
       const refreshToken = state.auth.refreshToken;
-      
+
       if (refreshToken) {
         try {
           const response = await axios.post('/api/auth/refresh', {
             refreshToken,
           });
-          
+
           const { accessToken, refreshToken: newRefreshToken } = response.data;
-          
-          store.dispatch(updateTokens({
-            accessToken,
-            refreshToken: newRefreshToken,
-          }));
-          
+
+          store.dispatch(
+            updateTokens({
+              accessToken,
+              refreshToken: newRefreshToken,
+            })
+          );
+
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
@@ -71,7 +73,7 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    
+
     return Promise.reject(error);
   }
 );

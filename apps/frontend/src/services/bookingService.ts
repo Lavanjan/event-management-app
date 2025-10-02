@@ -81,6 +81,11 @@ class BookingService {
     return response.data.data;
   }
 
+  async start(id: string): Promise<Booking> {
+    const response = await api.patch(`/bookings/${id}/start`);
+    return response.data.data;
+  }
+
   async complete(id: string): Promise<Booking> {
     const response = await api.patch(`/bookings/${id}/complete`);
     return response.data.data;

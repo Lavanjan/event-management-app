@@ -13,18 +13,19 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 
 import { RolesService } from './roles.service';
 import { SecureAuthGuard } from '../auth/guards/secure-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { RequirePermissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { RequireUserType } from '../auth/decorators/user-type.decorator';
+import { UserType } from '../../database/entities';
 
 @ApiTags('Roles')
 @Controller('roles')
-@UseGuards(SecureAuthGuard, PermissionsGuard)
+@UseGuards(SecureAuthGuard, RolesGuard)
 @ApiBearerAuth('JWT-auth')
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
-  @RequirePermissions({ resource: 'roles', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get all roles' })
   @ApiResponse({ status: 200, description: 'Roles retrieved successfully' })
   findAll() {
@@ -32,7 +33,7 @@ export class RolesController {
   }
 
   @Get('permissions')
-  @RequirePermissions({ resource: 'roles', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get all permissions' })
   @ApiResponse({ status: 200, description: 'Permissions retrieved successfully' })
   findAllPermissions() {
@@ -40,7 +41,7 @@ export class RolesController {
   }
 
   @Get(':id')
-  @RequirePermissions({ resource: 'roles', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get role by ID' })
   @ApiResponse({ status: 200, description: 'Role found' })
   @ApiResponse({ status: 404, description: 'Role not found' })
@@ -49,7 +50,7 @@ export class RolesController {
   }
 
   @Post()
-  @RequirePermissions({ resource: 'roles', action: 'create' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Create a new role' })
   @ApiResponse({ status: 201, description: 'Role created successfully' })
   create(@Body() createRoleDto: any) {
@@ -57,7 +58,7 @@ export class RolesController {
   }
 
   @Put(':id')
-  @RequirePermissions({ resource: 'roles', action: 'update' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Update role' })
   @ApiResponse({ status: 200, description: 'Role updated successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })
@@ -66,7 +67,7 @@ export class RolesController {
   }
 
   @Delete(':id')
-  @RequirePermissions({ resource: 'roles', action: 'delete' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Delete role' })
   @ApiResponse({ status: 200, description: 'Role deleted successfully' })
   @ApiResponse({ status: 404, description: 'Role not found' })

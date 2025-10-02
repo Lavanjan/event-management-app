@@ -36,9 +36,18 @@ export class CreateInventoryItemDto {
     minimum: 0,
   })
   @Type(() => Number)
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 3 })
   @Min(0)
   quantity: number;
+
+  @ApiProperty({
+    description: 'Unit of measurement for quantity',
+    example: 'pieces',
+    default: 'pieces',
+  })
+  @IsString()
+  @MaxLength(50)
+  quantityUnit: string;
 
   @ApiPropertyOptional({
     description: 'SKU (Stock Keeping Unit) for the item',
@@ -50,24 +59,33 @@ export class CreateInventoryItemDto {
   sku?: string;
 
   @ApiPropertyOptional({
-    description: 'Category of the inventory item',
-    example: 'furniture',
+    description: 'Category ID of the inventory item',
+    example: 'uuid-string',
+  })
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Brand of the inventory item',
+    example: 'IKEA',
   })
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  category?: string;
+  brand?: string;
 
   @ApiPropertyOptional({
-    description: 'Minimum quantity threshold for low stock alerts',
+    description: 'Low stock threshold for alerts',
     example: 5,
     minimum: 0,
+    default: 10,
   })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 3 })
   @Min(0)
-  minimumQuantity?: number;
+  lowStockThreshold?: number;
 
   @ApiPropertyOptional({
     description: 'Additional metadata for the item',

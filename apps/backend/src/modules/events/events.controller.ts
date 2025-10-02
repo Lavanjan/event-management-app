@@ -17,19 +17,20 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { SecureAuthGuard } from '../auth/guards/secure-auth.guard';
-import { PermissionsGuard } from '../../common/guards/permissions.guard';
-import { RequirePermissions } from '../../common/decorators/permissions.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { RequireUserType } from '../auth/decorators/user-type.decorator';
+import { UserType } from '../../database/entities';
 import { CurrentOrganization } from '../../common/decorators/current-organization.decorator';
 
 @ApiTags('Events')
 @Controller('events')
-@UseGuards(SecureAuthGuard, PermissionsGuard)
+@UseGuards(SecureAuthGuard, RolesGuard)
 @ApiBearerAuth('JWT-auth')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
   @Post()
-  @RequirePermissions({ resource: 'events', action: 'create' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Create a new event' })
   @ApiResponse({ status: 201, description: 'Event created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -39,7 +40,7 @@ export class EventsController {
   }
 
   @Get()
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get all events with pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -52,7 +53,7 @@ export class EventsController {
   }
 
   @Get('upcoming')
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get upcoming events' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -66,7 +67,7 @@ export class EventsController {
   }
 
   @Get('locations')
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get all event locations' })
   @ApiResponse({ status: 200, description: 'Event locations retrieved' })
   getLocations(@CurrentOrganization() organizationId: string) {
@@ -74,7 +75,7 @@ export class EventsController {
   }
 
   @Get('types')
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get all event types' })
   @ApiResponse({ status: 200, description: 'Event types retrieved' })
   getTypes() {
@@ -82,7 +83,7 @@ export class EventsController {
   }
 
   @Get('templates')
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get all event templates' })
   @ApiResponse({ status: 200, description: 'Event templates retrieved' })
   getTemplates() {
@@ -90,7 +91,7 @@ export class EventsController {
   }
 
   @Get('templates/stats')
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get event templates statistics' })
   @ApiResponse({ status: 200, description: 'Event templates statistics retrieved' })
   getTemplatesStats() {
@@ -98,7 +99,7 @@ export class EventsController {
   }
 
   @Get(':id')
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get event by ID' })
   @ApiResponse({ status: 200, description: 'Event found' })
   @ApiResponse({ status: 404, description: 'Event not found' })
@@ -107,7 +108,7 @@ export class EventsController {
   }
 
   @Get(':id/stats')
-  @RequirePermissions({ resource: 'events', action: 'read' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Get event statistics' })
   @ApiResponse({ status: 200, description: 'Event statistics retrieved' })
   getStats(@Param('id', ParseUUIDPipe) id: string, @CurrentOrganization() organizationId: string) {
@@ -115,7 +116,7 @@ export class EventsController {
   }
 
   @Patch(':id')
-  @RequirePermissions({ resource: 'events', action: 'update' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Update event' })
   @ApiResponse({ status: 200, description: 'Event updated successfully' })
   @ApiResponse({ status: 404, description: 'Event not found' })
@@ -129,7 +130,7 @@ export class EventsController {
   }
 
   @Delete(':id')
-  @RequirePermissions({ resource: 'events', action: 'delete' })
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
   @ApiOperation({ summary: 'Delete event' })
   @ApiResponse({ status: 200, description: 'Event deleted successfully' })
   @ApiResponse({ status: 404, description: 'Event not found' })

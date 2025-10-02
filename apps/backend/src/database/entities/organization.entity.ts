@@ -12,9 +12,11 @@ import { Event } from './event.entity';
 import { InventoryItem } from './inventory-item.entity';
 import { Booking } from './booking.entity';
 import { Role } from './role.entity';
+import { OrganizationPermission } from './organization-permission.entity';
 
 export enum OrganizationStatus {
   ACTIVE = 'active',
+  PENDING = 'pending',
   SUSPENDED = 'suspended',
   INACTIVE = 'inactive',
 }
@@ -59,6 +61,9 @@ export class Organization {
   @Column({ nullable: true })
   country: string;
 
+  @Column({ default: 'USD', length: 3 })
+  currency: string;
+
   @Column({
     type: 'enum',
     enum: OrganizationStatus,
@@ -75,7 +80,11 @@ export class Organization {
   @Column({ default: true, name: 'is_active' })
   isActive: boolean;
 
-  // Relationships - temporarily commented out for initial setup
+  // Relationships
+  @OneToMany(() => OrganizationPermission, permission => permission.organization)
+  permissions: OrganizationPermission[];
+
+  // Other relationships - temporarily commented out for initial setup
   // @OneToMany('User', 'organization')
   // users: User[];
 

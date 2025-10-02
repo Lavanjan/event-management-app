@@ -10,6 +10,20 @@ export interface DashboardStats {
     totalProfit: number;
     lowStockItems: number;
     overduePayments: number;
+    // Product Admin specific fields
+    totalOrganizations?: number;
+    totalUsers?: number;
+    systemHealth?: number;
+    organizationsGrowth?: number;
+    usersGrowth?: number;
+    revenueGrowth?: number;
+    healthChange?: number;
+    // Organization Admin specific fields
+    bookingsGrowth?: number;
+    averageBookingValue?: number;
+    avgBookingGrowth?: number;
+    profitMargin?: number;
+    profitMarginChange?: number;
   };
   recentActivity: Array<{
     id: string;
@@ -75,6 +89,12 @@ export interface DashboardStats {
     dueDate: string;
     type: 'advance' | 'balance';
     overdueDays: number;
+  }>;
+  systemAlerts?: Array<{
+    id: string;
+    type: 'warning' | 'info' | 'error';
+    message: string;
+    severity: 'low' | 'medium' | 'high';
   }>;
 }
 

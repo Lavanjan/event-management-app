@@ -14,7 +14,7 @@ const inventorySchema = z.object({
   name: z.string().min(1, 'Item name is required').max(255, 'Name too long'),
   description: z.string().optional(),
   sku: z.string().min(1, 'SKU is required').max(100, 'SKU too long'),
-  category: z.string().min(1, 'Category is required'),
+  categoryId: z.string().min(1, 'Category is required'),
   quantity: z.number().min(0, 'Quantity cannot be negative'),
   minimumQuantity: z.number().min(0, 'Minimum quantity cannot be negative').default(0),
   unitPrice: z.number().min(0, 'Price cannot be negative'),
@@ -23,15 +23,7 @@ const inventorySchema = z.object({
 
 type InventoryFormData = z.infer<typeof inventorySchema>;
 
-const defaultCategories = [
-  { value: 'furniture', label: 'Furniture' },
-  { value: 'lighting', label: 'Lighting' },
-  { value: 'audio-visual', label: 'Audio/Visual' },
-  { value: 'decorations', label: 'Decorations' },
-  { value: 'catering', label: 'Catering Equipment' },
-  { value: 'linens', label: 'Linens & Textiles' },
-  { value: 'other', label: 'Other' },
-];
+
 
 export function InventoryCreatePage() {
   const navigate = useNavigate();
@@ -66,19 +58,12 @@ export function InventoryCreatePage() {
     }
   };
 
-  // Combine default categories with existing ones
+  // Convert categories to options for the select field
   const categoryOptions = React.useMemo(() => {
-    const existingCategories = categories?.map(cat => ({ value: cat, label: cat })) || [];
-    const allCategories = [...defaultCategories];
-
-    // Add existing categories that aren't in defaults
-    existingCategories.forEach(cat => {
-      if (!allCategories.find(def => def.value === cat.value)) {
-        allCategories.push(cat);
-      }
-    });
-
-    return allCategories;
+    return categories?.map(cat => ({
+      value: cat.id,
+      label: cat.name
+    })) || [];
   }, [categories]);
 
   return (
@@ -143,7 +128,7 @@ export function InventoryCreatePage() {
                   />
 
                   <Controller
-                    name="category"
+                    name="categoryId"
                     control={control}
                     render={({ field }) => (
                       <SelectField
@@ -152,8 +137,9 @@ export function InventoryCreatePage() {
                         options={categoryOptions}
                         value={field.value}
                         onValueChange={field.onChange}
-                        error={errors.category?.message}
+                        error={errors.categoryId?.message}
                         required
+                        disabled={categoriesLoading}
                       />
                     )}
                   />

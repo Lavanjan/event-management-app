@@ -15,8 +15,11 @@ export interface CreateUserDto {
   email: string;
   firstName: string;
   lastName: string;
+  password?: string;
   roleIds: string[];
-  sendWelcomeEmail?: boolean;
+  sendEmail?: boolean;
+  autoGenerateCredentials?: boolean;
+  requiresVerification?: boolean;
 }
 
 export interface UpdateUserDto {
@@ -175,6 +178,21 @@ class UserService {
 
   async deleteRole(id: string): Promise<void> {
     await api.delete(`/roles/${id}`);
+  }
+
+  // User Verification Methods
+  async verifyUser(userId: string, otp: string): Promise<User> {
+    const response = await api.post('/users/verify', { userId, otp });
+    return response.data.data;
+  }
+
+  async verifyByToken(token: string, otp?: string): Promise<User> {
+    const response = await api.post('/users/verify-token', { token, otp });
+    return response.data.data;
+  }
+
+  async resendVerification(userId: string): Promise<void> {
+    await api.post('/users/resend-verification', { userId });
   }
 }
 

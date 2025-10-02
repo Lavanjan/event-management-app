@@ -8,6 +8,8 @@ import {
   ValidateNested,
   Min,
   MaxLength,
+  IsDateString,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -42,7 +44,7 @@ export class ExpenseDto {
 
   @ApiProperty({
     description: 'Expense amount',
-    example: 500.00,
+    example: 500.0,
     minimum: 0,
   })
   @Type(() => Number)
@@ -80,7 +82,7 @@ export class RevenueDto {
 
   @ApiProperty({
     description: 'Revenue amount',
-    example: 1500.00,
+    example: 1500.0,
     minimum: 0,
   })
   @Type(() => Number)
@@ -109,7 +111,7 @@ export class RevenueDto {
 
 export class CreateBookingDto {
   @ApiProperty({
-    description: 'Event ID',
+    description: 'Event Type ID',
     example: 'uuid-here',
   })
   @IsUUID()
@@ -138,6 +140,48 @@ export class CreateBookingDto {
   @IsString()
   @MaxLength(20)
   customerPhone?: string;
+
+  @ApiProperty({
+    description: 'Booking start date and time',
+    example: '2024-12-15T18:00:00Z',
+  })
+  @IsString()
+  startDate: string;
+
+  @ApiProperty({
+    description: 'Booking end date and time',
+    example: '2024-12-15T23:00:00Z',
+  })
+  @IsString()
+  endDate: string;
+
+  @ApiProperty({
+    description: 'Duration type for pricing',
+    example: 'full_day',
+    enum: ['hourly', 'half_day', 'full_day'],
+  })
+  @IsEnum(['hourly', 'half_day', 'full_day'])
+  durationType: 'hourly' | 'half_day' | 'full_day';
+
+  @ApiPropertyOptional({
+    description: 'Duration in hours (required for hourly bookings)',
+    example: 5,
+    minimum: 0,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  durationHours?: number;
+
+  @ApiPropertyOptional({
+    description: 'Half day slot (required for half_day bookings)',
+    example: 'morning',
+    enum: ['morning', 'evening'],
+  })
+  @IsOptional()
+  @IsEnum(['morning', 'evening'])
+  halfDaySlot?: 'morning' | 'evening';
 
   @ApiPropertyOptional({
     description: 'Inventory items to allocate',

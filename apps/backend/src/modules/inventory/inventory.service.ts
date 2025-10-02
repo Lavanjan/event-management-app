@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { InventoryItem } from '../../database/entities/inventory-item.entity';
+import { InventoryCategory } from '../../database/entities/inventory-category.entity';
 import { CreateInventoryItemDto } from './dto/create-inventory-item.dto';
 import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
 import { PaginationDto, PaginatedResponseDto } from '../../common/dto/pagination.dto';
@@ -16,7 +17,9 @@ import { PaginationDto, PaginatedResponseDto } from '../../common/dto/pagination
 export class InventoryService {
   constructor(
     @InjectRepository(InventoryItem)
-    private inventoryRepository: Repository<InventoryItem>
+    private inventoryRepository: Repository<InventoryItem>,
+    @InjectRepository(InventoryCategory)
+    private categoryRepository: Repository<InventoryCategory>
   ) {}
 
   async create(
@@ -32,42 +35,85 @@ export class InventoryService {
       throw new ConflictException('Inventory item with this name already exists');
     }
 
-    // Extract the new fields and store them in metadata
-    const { sku, category, minimumQuantity, metadata, ...baseFields } = createInventoryItemDto;
-
-    const enhancedMetadata = {
-      ...metadata,
-      ...(sku && { sku }),
-      ...(category && { category }),
-      ...(minimumQuantity !== undefined && { minimumQuantity }),
-    };
-
     const inventoryItem = this.inventoryRepository.create({
-      ...baseFields,
+      ...createInventoryItemDto,
       organizationId,
-      metadata: enhancedMetadata,
       availableQuantity: createInventoryItemDto.quantity, // Initially all quantity is available
+      lowStockThreshold: createInventoryItemDto.lowStockThreshold || 10,
     });
 
     return this.inventoryRepository.save(inventoryItem);
   }
 
   async findAll(
-    paginationDto: PaginationDto,
+    paginationDto: PaginationDto & {
+      category?: string;
+      brand?: string;
+      quantityUnit?: string;
+      stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock';
+    },
     organizationId: string
   ): Promise<PaginatedResponseDto<InventoryItem>> {
-    const { page, limit, search, sortBy, sortOrder } = paginationDto;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      sortBy,
+      sortOrder,
+      category,
+      brand,
+      quantityUnit,
+      stockStatus,
+    } = paginationDto;
+
+    // Ensure page and limit are numbers
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
 
     const queryBuilder = this.inventoryRepository.createQueryBuilder('item');
+    // .leftJoinAndSelect('item.category', 'category'); // temporarily disabled
 
     // Organization filter (most important - always applied)
     queryBuilder.where('item.organizationId = :organizationId', { organizationId });
 
     // Search functionality
     if (search) {
-      queryBuilder.andWhere('(item.name ILIKE :search OR item.description ILIKE :search)', {
-        search: `%${search}%`,
-      });
+      queryBuilder.andWhere(
+        '(item.name ILIKE :search OR item.description ILIKE :search OR item.sku ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    // Category filter - temporarily disabled until relationships are fixed
+    // if (category) {
+    //   queryBuilder.andWhere('category.name = :category', { category });
+    // }
+
+    // Brand filter
+    if (brand) {
+      queryBuilder.andWhere('item.brand = :brand', { brand });
+    }
+
+    // Quantity unit filter
+    if (quantityUnit) {
+      queryBuilder.andWhere('item.quantityUnit = :quantityUnit', { quantityUnit });
+    }
+
+    // Stock status filter
+    if (stockStatus) {
+      switch (stockStatus) {
+        case 'out_of_stock':
+          queryBuilder.andWhere('item.availableQuantity = 0');
+          break;
+        case 'low_stock':
+          queryBuilder.andWhere(
+            'item.availableQuantity > 0 AND item.availableQuantity <= item.lowStockThreshold'
+          );
+          break;
+        case 'in_stock':
+          queryBuilder.andWhere('item.availableQuantity > item.lowStockThreshold');
+          break;
+      }
     }
 
     // Filter active items by default
@@ -81,18 +127,22 @@ export class InventoryService {
     }
 
     // Pagination
-    queryBuilder.skip((page - 1) * limit).take(limit);
+    queryBuilder.skip((pageNum - 1) * limitNum).take(limitNum);
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    return new PaginatedResponseDto(items, total, page, limit);
+    return new PaginatedResponseDto(items, total, pageNum, limitNum);
   }
 
   async findAllAvailable(
     paginationDto: PaginationDto,
     organizationId: string
   ): Promise<PaginatedResponseDto<InventoryItem>> {
-    const { page, limit, search, sortBy, sortOrder } = paginationDto;
+    const { page = 1, limit = 20, search, sortBy, sortOrder } = paginationDto;
+
+    // Ensure page and limit are numbers
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 20;
 
     const queryBuilder = this.inventoryRepository.createQueryBuilder('item');
 
@@ -118,17 +168,17 @@ export class InventoryService {
     }
 
     // Pagination
-    queryBuilder.skip((page - 1) * limit).take(limit);
+    queryBuilder.skip((pageNum - 1) * limitNum).take(limitNum);
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    return new PaginatedResponseDto(items, total, page, limit);
+    return new PaginatedResponseDto(items, total, pageNum, limitNum);
   }
 
   async findById(id: string, organizationId: string): Promise<InventoryItem> {
     const item = await this.inventoryRepository.findOne({
       where: { id, organizationId },
-      relations: ['bookingAllocations'],
+      relations: ['bookingAllocations'], // 'category' temporarily disabled
     });
 
     if (!item) {
@@ -231,39 +281,65 @@ export class InventoryService {
     }
   }
 
-  async getLowStockItems(threshold: number = 10): Promise<InventoryItem[]> {
-    return this.inventoryRepository
-      .find({
-        where: {
-          isActive: true,
-        },
-        order: {
-          availableQuantity: 'ASC',
-        },
-      })
-      .then(items => items.filter(item => item.availableQuantity <= threshold));
+  async getLowStockItems(organizationId: string): Promise<InventoryItem[]> {
+    const queryBuilder = this.inventoryRepository.createQueryBuilder('item');
+    // .leftJoinAndSelect('item.category', 'category'); // temporarily disabled
+
+    queryBuilder
+      .where('item.organizationId = :organizationId', { organizationId })
+      .andWhere('item.isActive = :isActive', { isActive: true })
+      .andWhere('item.availableQuantity > 0')
+      .andWhere('item.availableQuantity <= item.lowStockThreshold')
+      .orderBy('item.availableQuantity', 'ASC');
+
+    return queryBuilder.getMany();
   }
 
-  async getInventoryStats(): Promise<{
+  async getOutOfStockItems(organizationId: string): Promise<InventoryItem[]> {
+    return this.inventoryRepository.find({
+      where: {
+        organizationId,
+        isActive: true,
+        availableQuantity: 0,
+      },
+      // relations: ['category'], // temporarily disabled
+      order: {
+        updatedAt: 'DESC',
+      },
+    });
+  }
+
+  async getInventoryStats(organizationId: string): Promise<{
     totalItems: number;
     activeItems: number;
     totalValue: number;
     lowStockItems: number;
     outOfStockItems: number;
+    categories: string[];
+    brands: string[];
+    quantityUnits: string[];
   }> {
     const [totalItems, activeItems, allItems] = await Promise.all([
-      this.inventoryRepository.count(),
-      this.inventoryRepository.count({ where: { isActive: true } }),
-      this.inventoryRepository.find({ where: { isActive: true } }),
+      this.inventoryRepository.count({ where: { organizationId } }),
+      this.inventoryRepository.count({ where: { organizationId, isActive: true } }),
+      this.inventoryRepository.find({
+        where: { organizationId, isActive: true },
+        // relations: ['category'], // temporarily disabled
+      }),
     ]);
 
-    const totalValue = allItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+    const totalValue = allItems.reduce(
+      (sum, item) => sum + Number(item.quantity) * Number(item.unitPrice),
+      0
+    );
 
-    const lowStockItems = allItems.filter(
-      item => item.availableQuantity > 0 && item.availableQuantity <= 10
-    ).length;
-
+    const lowStockItems = allItems.filter(item => item.isLowStock()).length;
     const outOfStockItems = allItems.filter(item => item.availableQuantity === 0).length;
+
+    // Extract unique values for filters - temporarily disabled until relationships are fixed
+    const categories: string[] = [];
+    const brands = [...new Set(allItems.map(item => item.brand).filter(Boolean))].sort();
+    const quantityUnits = [...new Set(allItems.map(item => item.quantityUnit))].sort();
 
     return {
       totalItems,
@@ -271,6 +347,9 @@ export class InventoryService {
       totalValue,
       lowStockItems,
       outOfStockItems,
+      categories,
+      brands,
+      quantityUnits,
     };
   }
 

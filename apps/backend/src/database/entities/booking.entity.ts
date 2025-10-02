@@ -20,6 +20,7 @@ import { BookingRevenue } from './booking-revenue.entity';
 export enum BookingStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
+  STARTED = 'started',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }
@@ -37,10 +38,15 @@ export enum PaymentStatus {
 @Index(['eventId'])
 @Index(['status'])
 @Index(['paymentStatus'])
+@Index(['startDate'])
+@Index(['endDate'])
 @Check('"total_amount" >= 0')
 @Check('"advance_amount" >= 0')
 @Check('"balance_amount" >= 0')
 @Check('"advance_amount" + "balance_amount" = "total_amount"')
+@Check('"start_date" < "end_date"')
+@Check("\"duration_type\" IN ('hourly', 'half_day', 'full_day')")
+@Check("\"status\" IN ('pending', 'confirmed', 'started', 'cancelled', 'completed')")
 export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -60,6 +66,31 @@ export class Booking {
 
   @Column({ nullable: true, name: 'customer_phone' })
   customerPhone: string;
+
+  @Column('timestamp', { name: 'start_date' })
+  startDate: Date;
+
+  @Column('timestamp', { name: 'end_date' })
+  endDate: Date;
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true, name: 'duration_hours' })
+  durationHours?: number;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'hourly',
+    name: 'duration_type',
+  })
+  durationType: 'hourly' | 'half_day' | 'full_day';
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+    name: 'half_day_slot',
+  })
+  halfDaySlot?: 'morning' | 'evening';
 
   @Column({
     type: 'enum',

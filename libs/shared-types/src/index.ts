@@ -124,6 +124,7 @@ export interface UpdateEventRequest {
 export enum BookingStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
+  STARTED = 'started',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }

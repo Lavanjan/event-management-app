@@ -48,8 +48,17 @@ export const financialService = {
     const params = new URLSearchParams();
     if (dateRange?.from) params.append('from', dateRange.from);
     if (dateRange?.to) params.append('to', dateRange.to);
-    
+
     const response = await api.get(`/financial/expenses?${params.toString()}`);
+    return response.data;
+  },
+
+  async getProfitLossReport(dateRange?: DateRange): Promise<{ success: boolean; data: any }> {
+    const params = new URLSearchParams();
+    if (dateRange?.from) params.append('from', dateRange.from);
+    if (dateRange?.to) params.append('to', dateRange.to);
+
+    const response = await api.get(`/financial/profit-loss?${params.toString()}`);
     return response.data;
   },
 
@@ -58,7 +67,7 @@ export const financialService = {
     if (dateRange?.from) params.append('from', dateRange.from);
     if (dateRange?.to) params.append('to', dateRange.to);
     params.append('format', type);
-    
+
     const response = await api.get(`/financial/export?${params.toString()}`, {
       responseType: 'blob',
     });

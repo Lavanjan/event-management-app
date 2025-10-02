@@ -13,6 +13,7 @@ export interface Organization {
   state?: string;
   postalCode?: string;
   country?: string;
+  currency: string;
   status: 'active' | 'suspended' | 'inactive';
   settings?: Record<string, any>;
   metadata?: Record<string, any>;
@@ -23,7 +24,7 @@ export interface Organization {
 
 export interface CreateOrganizationRequest {
   name: string;
-  slug: string;
+  slug?: string;
   description?: string;
   website?: string;
   phone?: string;
@@ -33,9 +34,17 @@ export interface CreateOrganizationRequest {
   state?: string;
   postalCode?: string;
   country?: string;
+  currency?: string;
   status?: 'active' | 'suspended' | 'inactive';
   settings?: Record<string, any>;
   metadata?: Record<string, any>;
+  admin: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    password?: string;
+    autoGeneratePassword?: boolean;
+  };
 }
 
 export interface UpdateOrganizationRequest extends Partial<CreateOrganizationRequest> {}
@@ -57,11 +66,33 @@ export interface OrganizationQueryParams {
   sortOrder?: 'asc' | 'desc';
 }
 
+export interface OrganizationFilters extends OrganizationQueryParams {}
+
+export interface OrganizationStats {
+  totalOrganizations: number;
+  activeOrganizations: number;
+  suspendedOrganizations: number;
+  inactiveOrganizations: number;
+  totalUsers: number;
+  totalRevenue: number;
+  averageRevenue: number;
+}
+
 class OrganizationService {
   private baseUrl = '/organizations';
 
+  async getAll(params?: OrganizationFilters): Promise<OrganizationListResponse> {
+    const response = await api.get(this.baseUrl, { params });
+    return response.data;
+  }
+
   async getOrganizations(params?: OrganizationQueryParams): Promise<OrganizationListResponse> {
     const response = await api.get(this.baseUrl, { params });
+    return response.data;
+  }
+
+  async getById(id: string): Promise<Organization> {
+    const response = await api.get(`${this.baseUrl}/${id}`);
     return response.data;
   }
 
@@ -75,9 +106,28 @@ class OrganizationService {
     return response.data;
   }
 
+  async create(data: CreateOrganizationRequest): Promise<Organization> {
+    const response = await api.post(this.baseUrl, data);
+    return response.data.data || response.data;
+  }
+
+  async update(id: string, data: UpdateOrganizationRequest): Promise<Organization> {
+    const response = await api.patch(`${this.baseUrl}/${id}`, data);
+    return response.data;
+  }
+
+  async delete(id: string): Promise<void> {
+    await api.delete(`${this.baseUrl}/${id}`);
+  }
+
+  async getStats(): Promise<OrganizationStats> {
+    const response = await api.get(`${this.baseUrl}/stats`);
+    return response.data;
+  }
+
   async createOrganization(data: CreateOrganizationRequest): Promise<Organization> {
     const response = await api.post(this.baseUrl, data);
-    return response.data;
+    return response.data.data || response.data;
   }
 
   async updateOrganization(id: string, data: UpdateOrganizationRequest): Promise<Organization> {
@@ -89,13 +139,18 @@ class OrganizationService {
     await api.delete(`${this.baseUrl}/${id}`);
   }
 
-  async activateOrganization(id: string): Promise<Organization> {
-    const response = await api.patch(`${this.baseUrl}/${id}`, { status: 'active', isActive: true });
+  async suspendOrganization(id: string): Promise<Organization> {
+    const response = await api.patch(`${this.baseUrl}/${id}/suspend`);
     return response.data;
   }
 
-  async suspendOrganization(id: string): Promise<Organization> {
-    const response = await api.patch(`${this.baseUrl}/${id}`, { status: 'suspended', isActive: false });
+  async resendVerificationEmail(id: string): Promise<{ success: boolean; message: string }> {
+    const response = await api.post(`${this.baseUrl}/${id}/resend-verification`);
+    return response.data;
+  }
+
+  async activateOrganization(id: string): Promise<Organization> {
+    const response = await api.patch(`${this.baseUrl}/${id}`, { status: 'active', isActive: true });
     return response.data;
   }
 

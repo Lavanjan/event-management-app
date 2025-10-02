@@ -5,10 +5,13 @@ import { RootState } from './store';
 import { Layout } from './components/layout/Layout';
 import { AuthLayout } from './components/layout/AuthLayout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { PermissionRoute } from './components/auth/PermissionRoute';
 
 // Auth Pages
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
+import { VerifyOtpPage } from './pages/auth/VerifyOtpPage';
+import { VerificationSuccessPage } from './pages/auth/VerificationSuccessPage';
 
 // Dashboard
 import { DashboardPage } from './pages/dashboard/DashboardPage';
@@ -18,6 +21,8 @@ import { InventoryListPage } from './pages/inventory/InventoryListPage';
 import { InventoryCreatePage } from './pages/inventory/InventoryCreatePage';
 import { InventoryEditPage } from './pages/inventory/InventoryEditPage';
 import { InventoryDetailPage } from './pages/inventory/InventoryDetailPage';
+import { LowStockAlertsPage } from './pages/inventory/LowStockAlertsPage';
+import { InventoryCategoriesPage } from './pages/inventory/InventoryCategoriesPage';
 
 // Event Pages
 import { EventListPage } from './pages/events/EventListPage';
@@ -84,6 +89,35 @@ function App() {
           }
         />
 
+        <Route
+          path="/verify"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <VerifyOtpPage />
+            )
+          }
+        />
+        <Route
+          path="/verify-otp"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <VerifyOtpPage />
+            )
+          }
+        />
+        <Route
+          path="/auth/verification-success"
+          element={<VerificationSuccessPage />}
+        />
+        <Route
+          path="/auth/verification-error"
+          element={<VerificationSuccessPage />}
+        />
+
         {/* Protected Routes */}
         <Route
           path="/*"
@@ -95,46 +129,160 @@ function App() {
                   <Route path="/dashboard" element={<DashboardPage />} />
 
                   {/* Inventory Routes */}
-                  <Route path="/inventory" element={<InventoryListPage />} />
-                  <Route path="/inventory/create" element={<InventoryCreatePage />} />
-                  <Route path="/inventory/:id" element={<InventoryDetailPage />} />
-                  <Route path="/inventory/:id/edit" element={<InventoryEditPage />} />
+                  <Route path="/inventory" element={
+                    <PermissionRoute permission="inventory:read">
+                      <InventoryListPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/inventory/create" element={
+                    <PermissionRoute permission="inventory:create">
+                      <InventoryCreatePage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/inventory/:id" element={
+                    <PermissionRoute permission="inventory:read">
+                      <InventoryDetailPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/inventory/:id/edit" element={
+                    <PermissionRoute permission="inventory:update">
+                      <InventoryEditPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/inventory/alerts" element={
+                    <PermissionRoute permission="inventory:read">
+                      <LowStockAlertsPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/inventory/categories" element={
+                    <PermissionRoute permission="inventory:create">
+                      <InventoryCategoriesPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* Event Routes */}
-                  <Route path="/events" element={<EventListPage />} />
-                  <Route path="/events/create" element={<EventCreatePage />} />
-                  <Route path="/events/:id" element={<EventDetailPage />} />
-                  <Route path="/events/:id/edit" element={<EventEditPage />} />
+                  <Route path="/events" element={
+                    <PermissionRoute permission="events:read">
+                      <EventListPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/events/create" element={
+                    <PermissionRoute permission="events:create">
+                      <EventCreatePage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/events/:id" element={
+                    <PermissionRoute permission="events:read">
+                      <EventDetailPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/events/:id/edit" element={
+                    <PermissionRoute permission="events:update">
+                      <EventEditPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* Booking Routes */}
-                  <Route path="/bookings" element={<BookingListPage />} />
-                  <Route path="/bookings/create" element={<BookingCreatePage />} />
-                  <Route path="/bookings/:id" element={<BookingDetailPage />} />
+                  <Route path="/bookings" element={
+                    <PermissionRoute permission="bookings:read">
+                      <BookingListPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/bookings/create" element={
+                    <PermissionRoute permission="bookings:create">
+                      <BookingCreatePage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/bookings/:id" element={
+                    <PermissionRoute permission="bookings:read">
+                      <BookingDetailPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* Organization Management Routes */}
-                  <Route path="/organizations" element={<OrganizationListPage />} />
-                  <Route path="/organizations/create" element={<CreateOrganizationPage />} />
-                  <Route path="/organizations/:id" element={<OrganizationDetailPage />} />
-                  <Route path="/organizations/:id/edit" element={<EditOrganizationPage />} />
+                  <Route path="/organizations" element={
+                    <PermissionRoute permission="organizations:read">
+                      <OrganizationListPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/organizations/create" element={
+                    <PermissionRoute permission="organizations:create">
+                      <CreateOrganizationPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/organizations/:id" element={
+                    <PermissionRoute permission="organizations:read">
+                      <OrganizationDetailPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/organizations/:id/edit" element={
+                    <PermissionRoute permission="organizations:update">
+                      <EditOrganizationPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* User Management Routes */}
-                  <Route path="/users" element={<UserListPage />} />
-                  <Route path="/users/create" element={<UserCreatePage />} />
-                  <Route path="/users/:id/edit" element={<UserEditPage />} />
+                  <Route path="/users" element={
+                    <PermissionRoute permission="users:read">
+                      <UserListPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/users/create" element={
+                    <PermissionRoute permission="users:create">
+                      <UserCreatePage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/users/:id/edit" element={
+                    <PermissionRoute permission="users:update">
+                      <UserEditPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* Role Management Routes */}
-                  <Route path="/roles" element={<RoleListPage />} />
-                  <Route path="/roles/create" element={<RoleCreatePage />} />
-                  <Route path="/roles/permissions" element={<RoleListPage />} />
+                  <Route path="/roles" element={
+                    <PermissionRoute permission="roles:read">
+                      <RoleListPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/roles/create" element={
+                    <PermissionRoute permission="roles:create">
+                      <RoleCreatePage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/roles/permissions" element={
+                    <PermissionRoute permission="roles:read">
+                      <RoleListPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* User Roles Route */}
-                  <Route path="/users/roles" element={<RoleListPage />} />
+                  <Route path="/users/roles" element={
+                    <PermissionRoute permission="roles:read">
+                      <RoleListPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* Financial Reports Routes */}
-                  <Route path="/financial" element={<FinancialReportsPage />} />
-                  <Route path="/financial/revenue" element={<FinancialReportsPage />} />
-                  <Route path="/financial/expenses" element={<FinancialReportsPage />} />
-                  <Route path="/financial/profit-loss" element={<FinancialReportsPage />} />
+                  <Route path="/financial" element={
+                    <PermissionRoute permission="reports:read">
+                      <FinancialReportsPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/financial/revenue" element={
+                    <PermissionRoute permission="reports:read">
+                      <FinancialReportsPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/financial/expenses" element={
+                    <PermissionRoute permission="reports:read">
+                      <FinancialReportsPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/financial/profit-loss" element={
+                    <PermissionRoute permission="reports:read">
+                      <FinancialReportsPage />
+                    </PermissionRoute>
+                  } />
 
                   {/* Settings Routes */}
                   <Route path="/settings" element={<SettingsPage />} />

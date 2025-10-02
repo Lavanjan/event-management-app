@@ -47,6 +47,14 @@ export class CreateUserDto {
   lastName: string;
 
   @ApiPropertyOptional({
+    description: 'User phone number',
+    example: '+1234567890',
+  })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional({
     description: 'Array of role IDs to assign to the user',
     type: [String],
   })
@@ -56,10 +64,34 @@ export class CreateUserDto {
   roleIds?: string[];
 
   @ApiPropertyOptional({
+    description: 'Whether the user is active',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiPropertyOptional({
     description: 'Whether to send email with credentials',
     default: false,
   })
   @IsOptional()
   @IsBoolean()
   sendEmail?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Auto-generate secure password instead of manual entry',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  autoGenerateCredentials?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Require email verification before account activation',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  requiresVerification?: boolean;
 }
