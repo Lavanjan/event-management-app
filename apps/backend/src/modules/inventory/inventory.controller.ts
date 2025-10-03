@@ -111,14 +111,6 @@ export class InventoryController {
     return this.inventoryService.getOutOfStockItems(organizationId);
   }
 
-  @Get('categories')
-  @RequireOrganizationPermission('inventory.read')
-  @ApiOperation({ summary: 'Get all inventory categories' })
-  @ApiResponse({ status: 200, description: 'Inventory categories retrieved' })
-  getCategories() {
-    return this.inventoryService.getCategories();
-  }
-
   @Get(':id')
   @RequireOrganizationPermission('inventory.read')
   @ApiOperation({ summary: 'Get inventory item by ID' })

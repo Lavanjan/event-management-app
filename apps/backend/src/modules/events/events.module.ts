@@ -3,13 +3,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { EventsController } from './events.controller';
 import { EventsService } from './events.service';
-import { Event } from '../../database/entities/event.entity';
+import { EventTemplatesController } from './event-templates.controller';
+import { EventTemplatesService } from './event-templates.service';
+import { Event, EventTemplate } from '../../database/entities';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event]), AuthModule],
-  controllers: [EventsController],
-  providers: [EventsService],
-  exports: [EventsService],
+  imports: [TypeOrmModule.forFeature([Event, EventTemplate]), AuthModule],
+  controllers: [EventsController, EventTemplatesController],
+  providers: [EventsService, EventTemplatesService],
+  exports: [EventsService, EventTemplatesService],
 })
 export class EventsModule {}

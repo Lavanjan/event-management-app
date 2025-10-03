@@ -70,27 +70,22 @@ export interface Event {
   id: string;
   name: string;
   description?: string;
-  location?: string; // Venue/Hall name (e.g., "Wedding Hall", "Conference Room")
+  startDate: Date;
+  endDate: Date;
+  location?: string;
   maxAttendees?: number;
-  hourlyPrice?: number; // Price per hour
-  halfDayPrice?: number; // Price for half day (4-6 hours)
-  fullDayPrice?: number; // Price for full day (8-12 hours)
   requiredAdvancePercentage: number;
   balancePaymentWindowDays: number;
   allowInventoryAllocation: boolean;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  // Deprecated fields (kept for backward compatibility)
-  startDate?: Date;
-  endDate?: Date;
 }
 
 // Booking Types
 export enum BookingStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
-  STARTED = 'started',
   CANCELLED = 'cancelled',
   COMPLETED = 'completed',
 }
@@ -109,10 +104,6 @@ export interface Booking {
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
-  startDate: Date; // Booking start date and time
-  endDate: Date; // Booking end date and time
-  durationHours?: number; // Duration in hours (for hourly bookings)
-  durationType: 'hourly' | 'half_day' | 'full_day'; // Duration type for pricing
   status: BookingStatus;
   paymentStatus: PaymentStatus;
   totalAmount: number;
@@ -226,11 +217,10 @@ export interface UpdateInventoryItemDto {
 export interface CreateEventDto {
   name: string;
   description?: string;
-  location?: string; // Venue/Hall name
+  startDate: Date;
+  endDate: Date;
+  location?: string;
   maxAttendees?: number;
-  hourlyPrice?: number; // Price per hour
-  halfDayPrice?: number; // Price for half day (4-6 hours)
-  fullDayPrice?: number; // Price for full day (8-12 hours)
   requiredAdvancePercentage?: number;
   balancePaymentWindowDays?: number;
   allowInventoryAllocation?: boolean;
@@ -239,11 +229,10 @@ export interface CreateEventDto {
 export interface UpdateEventDto {
   name?: string;
   description?: string;
+  startDate?: Date;
+  endDate?: Date;
   location?: string;
   maxAttendees?: number;
-  hourlyPrice?: number;
-  halfDayPrice?: number;
-  fullDayPrice?: number;
   requiredAdvancePercentage?: number;
   balancePaymentWindowDays?: number;
   allowInventoryAllocation?: boolean;
@@ -255,26 +244,18 @@ export interface CreateBookingDto {
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
-  startDate: Date | string; // Booking start date and time
-  endDate: Date | string; // Booking end date and time
-  durationType: 'hourly' | 'half_day' | 'full_day'; // Duration type for pricing
-  durationHours?: number; // Duration in hours (required for hourly bookings)
-  halfDaySlot?: 'morning' | 'evening'; // Half day slot (required for half_day bookings)
+  totalAmount: number;
+  advanceAmount: number;
   notes?: string;
   inventoryAllocations?: {
     inventoryItemId: string;
     quantity: number;
+    unitPrice: number;
   }[];
-  expenses?: {
+  customItems?: {
     name: string;
-    amount: number;
-    category?: string;
-    description?: string;
-  }[];
-  revenues?: {
-    name: string;
-    amount: number;
-    category?: string;
+    quantity: number;
+    unitPrice: number;
     description?: string;
   }[];
 }

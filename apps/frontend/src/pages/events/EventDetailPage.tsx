@@ -26,9 +26,15 @@ export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
+  // Check if ID is a valid UUID (not "templates" or other non-UUID strings)
+  const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
   const { data: event, isLoading, error } = useEvent(id!);
   const { data: stats, isLoading: statsLoading } = useEventStats(id!);
-  const { data: bookings, isLoading: bookingsLoading } = useBookingsByEvent(id!, { limit: 5 });
+  const { data: bookings, isLoading: bookingsLoading } = useBookingsByEvent(
+    isValidUUID ? id! : '',
+    { limit: 5 }
+  );
   const duplicateEvent = useDuplicateEvent();
   const deleteEvent = useDeleteEvent();
 
@@ -39,7 +45,8 @@ export function EventDetailPage() {
     }).format(amount);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return 'secondary';
     switch (status.toLowerCase()) {
       case 'active':
       case 'published':
@@ -157,12 +164,14 @@ export function EventDetailPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Start Date</label>
-                  <p className="text-lg">{format(new Date(event.startDate), 'PPP p')}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Event Type</label>
+                  <p className="text-lg">Template Event</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">End Date</label>
-                  <p className="text-lg">{format(new Date(event.endDate), 'PPP p')}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Created</label>
+                  <p className="text-lg">
+                    {event.createdAt ? format(new Date(event.createdAt), 'PPP') : 'Unknown'}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Location</label>
@@ -396,7 +405,7 @@ export function EventDetailPage() {
                 <div>
                   <p className="text-sm font-medium">Event Created</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(event.createdAt), 'MMM dd, yyyy')}
+                    {event.createdAt ? format(new Date(event.createdAt), 'MMM dd, yyyy') : 'Unknown'}
                   </p>
                 </div>
               </div>
@@ -412,21 +421,11 @@ export function EventDetailPage() {
               )}
 
               <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
                 <div>
-                  <p className="text-sm font-medium">Event Starts</p>
+                  <p className="text-sm font-medium">Event Template</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(event.startDate), 'MMM dd, yyyy p')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                <div>
-                  <p className="text-sm font-medium">Event Ends</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(event.endDate), 'MMM dd, yyyy p')}
+                    Pricing configured for bookings
                   </p>
                 </div>
               </div>

@@ -54,21 +54,8 @@ export class InventoryService {
     },
     organizationId: string
   ): Promise<PaginatedResponseDto<InventoryItem>> {
-    const {
-      page = 1,
-      limit = 20,
-      search,
-      sortBy,
-      sortOrder,
-      category,
-      brand,
-      quantityUnit,
-      stockStatus,
-    } = paginationDto;
-
-    // Ensure page and limit are numbers
-    const pageNum = Number(page) || 1;
-    const limitNum = Number(limit) || 20;
+    const { page, limit, search, sortBy, sortOrder, category, brand, quantityUnit, stockStatus } =
+      paginationDto;
 
     const queryBuilder = this.inventoryRepository.createQueryBuilder('item');
     // .leftJoinAndSelect('item.category', 'category'); // temporarily disabled
@@ -127,22 +114,18 @@ export class InventoryService {
     }
 
     // Pagination
-    queryBuilder.skip((pageNum - 1) * limitNum).take(limitNum);
+    queryBuilder.skip((page - 1) * limit).take(limit);
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    return new PaginatedResponseDto(items, total, pageNum, limitNum);
+    return new PaginatedResponseDto(items, total, page, limit);
   }
 
   async findAllAvailable(
     paginationDto: PaginationDto,
     organizationId: string
   ): Promise<PaginatedResponseDto<InventoryItem>> {
-    const { page = 1, limit = 20, search, sortBy, sortOrder } = paginationDto;
-
-    // Ensure page and limit are numbers
-    const pageNum = Number(page) || 1;
-    const limitNum = Number(limit) || 20;
+    const { page, limit, search, sortBy, sortOrder } = paginationDto;
 
     const queryBuilder = this.inventoryRepository.createQueryBuilder('item');
 
@@ -168,11 +151,11 @@ export class InventoryService {
     }
 
     // Pagination
-    queryBuilder.skip((pageNum - 1) * limitNum).take(limitNum);
+    queryBuilder.skip((page - 1) * limit).take(limit);
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    return new PaginatedResponseDto(items, total, pageNum, limitNum);
+    return new PaginatedResponseDto(items, total, page, limit);
   }
 
   async findById(id: string, organizationId: string): Promise<InventoryItem> {
@@ -350,26 +333,6 @@ export class InventoryService {
       categories,
       brands,
       quantityUnits,
-    };
-  }
-
-  async getCategories(): Promise<{ success: boolean; data: string[] }> {
-    const items = await this.inventoryRepository.find({
-      where: { isActive: true },
-      select: ['metadata'],
-    });
-
-    const categories = new Set<string>();
-
-    items.forEach(item => {
-      if (item.metadata && item.metadata.category && typeof item.metadata.category === 'string') {
-        categories.add(item.metadata.category);
-      }
-    });
-
-    return {
-      success: true,
-      data: Array.from(categories).sort(),
     };
   }
 }

@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InventoryCategory } from '../database/entities/inventory-category.entity';
@@ -28,42 +22,19 @@ export interface UpdateInventoryCategoryDto {
 
 @Injectable()
 export class InventoryCategoryService {
-  private readonly logger = new Logger(InventoryCategoryService.name);
-
   constructor(
     @InjectRepository(InventoryCategory)
     private readonly categoryRepository: Repository<InventoryCategory>
   ) {}
 
   async findAll(organizationId: string): Promise<InventoryCategory[]> {
-    if (!organizationId) {
-      this.logger.error('findAll called with undefined organizationId');
-      throw new BadRequestException('Organization ID is required');
-    }
-
-    this.logger.debug(`Finding all categories for organization: ${organizationId}`);
-
-    try {
-      const categories = await this.categoryRepository.find({
-        where: { organizationId, isActive: true },
-        order: { sortOrder: 'ASC', name: 'ASC' },
-      });
-
-      this.logger.debug(
-        `Found ${categories.length} categories for organization: ${organizationId}`
-      );
-      return categories;
-    } catch (error) {
-      this.logger.error(`Error finding categories for organization ${organizationId}:`, error);
-      throw error;
-    }
+    return this.categoryRepository.find({
+      where: { organizationId, isActive: true },
+      order: { sortOrder: 'ASC', name: 'ASC' },
+    });
   }
 
   async findById(id: string, organizationId: string): Promise<InventoryCategory> {
-    if (!organizationId) {
-      throw new BadRequestException('Organization ID is required');
-    }
-
     const category = await this.categoryRepository.findOne({
       where: { id, organizationId },
       relations: ['items'],
@@ -80,12 +51,6 @@ export class InventoryCategoryService {
     createDto: CreateInventoryCategoryDto,
     organizationId: string
   ): Promise<InventoryCategory> {
-    if (!organizationId) {
-      throw new BadRequestException('Organization ID is required');
-    }
-
-    this.logger.debug(`Creating category for organization: ${organizationId}`, createDto);
-
     // Check if category name already exists for this organization
     const existingCategory = await this.categoryRepository.findOne({
       where: { name: createDto.name, organizationId },
@@ -108,10 +73,6 @@ export class InventoryCategoryService {
     updateDto: UpdateInventoryCategoryDto,
     organizationId: string
   ): Promise<InventoryCategory> {
-    if (!organizationId) {
-      throw new BadRequestException('Organization ID is required');
-    }
-
     const category = await this.findById(id, organizationId);
 
     // Check if name is being updated and doesn't conflict
@@ -130,10 +91,6 @@ export class InventoryCategoryService {
   }
 
   async delete(id: string, organizationId: string): Promise<void> {
-    if (!organizationId) {
-      throw new BadRequestException('Organization ID is required');
-    }
-
     const category = await this.categoryRepository.findOne({
       where: { id, organizationId },
       relations: ['items'],
@@ -154,10 +111,6 @@ export class InventoryCategoryService {
   }
 
   async reorder(categoryIds: string[], organizationId: string): Promise<InventoryCategory[]> {
-    if (!organizationId) {
-      throw new BadRequestException('Organization ID is required');
-    }
-
     const categories = await this.categoryRepository.find({
       where: { organizationId },
     });

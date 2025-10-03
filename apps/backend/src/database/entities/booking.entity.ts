@@ -15,6 +15,7 @@ import { Event } from './event.entity';
 import { BookingInventoryAllocation } from './booking-inventory-allocation.entity';
 import { BookingExpense } from './booking-expense.entity';
 import { BookingRevenue } from './booking-revenue.entity';
+import { PrintAudit } from './print-audit.entity';
 // import { Organization } from './organization.entity';
 
 export enum BookingStatus {
@@ -160,6 +161,9 @@ export class Booking {
     eager: true,
   })
   revenues: BookingRevenue[];
+
+  // @OneToMany(() => PrintAudit, printAudit => printAudit.booking)
+  // printAudits: PrintAudit[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

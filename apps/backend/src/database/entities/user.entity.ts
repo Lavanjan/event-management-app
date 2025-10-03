@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   JoinTable,
   JoinColumn,
   BeforeInsert,
@@ -15,6 +16,7 @@ import {
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
 import { Role } from './role.entity';
+import { PrintAudit } from './print-audit.entity';
 // import { Organization } from './organization.entity';
 
 export enum UserType {
@@ -101,6 +103,9 @@ export class User {
     inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
   roles: Role[];
+
+  // @OneToMany(() => PrintAudit, printAudit => printAudit.user)
+  // printAudits: PrintAudit[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

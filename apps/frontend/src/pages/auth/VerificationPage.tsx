@@ -47,7 +47,7 @@ export function VerificationPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/verify/email', {
+      const response = await fetch('http://localhost:3002/api/verify/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ export function VerificationPage() {
     setResendLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3001/api/verify/resend', {
+      const response = await fetch('http://localhost:3002/api/verify/resend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

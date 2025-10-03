@@ -6,6 +6,8 @@ import {
   Booking,
   CreateBookingDto,
   UpdateBookingDto,
+  AddExpenseDto,
+  AddRevenueDto,
   PaymentStatus
 } from '../types';
 
@@ -39,20 +41,18 @@ export function useBooking(id: string) {
 }
 
 export function useBookingsByEvent(eventId: string, filters: BookingFilters = {}) {
+  // Check if eventId is a valid UUID
+  const isValidUUID = eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId);
+
   return useQuery({
     queryKey: BOOKING_QUERY_KEYS.byEvent(eventId, filters),
     queryFn: () => bookingService.getByEvent(eventId, filters),
-    enabled: !!eventId,
+    enabled: !!eventId && isValidUUID,
     keepPreviousData: true,
   });
 }
 
-export function useOverdueBookings() {
-  return useQuery({
-    queryKey: BOOKING_QUERY_KEYS.overdue(),
-    queryFn: () => bookingService.getOverdue(),
-  });
-}
+
 
 export function useBookingStats() {
   return useQuery({
@@ -316,5 +316,14 @@ export function useAddRevenue() {
         message: error.response?.data?.message || 'Failed to add revenue',
       }));
     },
+  });
+}
+
+// Get overdue bookings
+export function useOverdueBookings() {
+  return useQuery({
+    queryKey: BOOKING_QUERY_KEYS.overdue(),
+    queryFn: () => bookingService.getOverdue(),
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
 }
