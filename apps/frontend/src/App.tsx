@@ -44,6 +44,9 @@ import { UserEditPage } from './pages/users/UserEditPage';
 import { RoleListPage } from './pages/roles/RoleListPage';
 import { RoleCreatePage } from './pages/roles/RoleCreatePage';
 
+// Payment Management Pages
+import { PaymentListPage } from './pages/payments/PaymentListPage';
+
 // Financial Pages
 import { FinancialReportsPage } from './pages/financial/FinancialReportsPage';
 
@@ -259,6 +262,13 @@ function App() {
                   <Route path="/users/roles" element={
                     <PermissionRoute permission="roles:read">
                       <RoleListPage />
+                    </PermissionRoute>
+                  } />
+
+                  {/* Payment Management Routes */}
+                  <Route path="/payments" element={
+                    <PermissionRoute permission="payments.read">
+                      <PaymentListPage />
                     </PermissionRoute>
                   } />
 

@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, LessThan } from 'typeorm';
 
-import { Booking, BookingStatus, PaymentStatus } from '../../database/entities/booking.entity';
+import { Booking, BookingStatus, BookingPaymentStatus } from '../../database/entities/booking.entity';
 import { BookingInventoryAllocation } from '../../database/entities/booking-inventory-allocation.entity';
 import { BookingExpense } from '../../database/entities/booking-expense.entity';
 import { BookingRevenue } from '../../database/entities/booking-revenue.entity';
@@ -716,7 +716,7 @@ Thank you for choosing our services!
 
       // Update booking status
       booking.status = BookingStatus.CANCELLED;
-      booking.paymentStatus = PaymentStatus.REFUNDED;
+      booking.paymentStatus = BookingPaymentStatus.REFUNDED;
       if (reason) {
         booking.notes = booking.notes
           ? `${booking.notes}\nCancellation reason: ${reason}`
@@ -770,7 +770,7 @@ Thank you for choosing our services!
 
   async updatePaymentStatus(
     id: string,
-    paymentStatus: PaymentStatus,
+    paymentStatus: BookingPaymentStatus,
     organizationId: string
   ): Promise<Booking> {
     const booking = await this.findById(id, organizationId);
@@ -867,11 +867,11 @@ Thank you for choosing our services!
     return this.bookingRepository.find({
       where: [
         {
-          paymentStatus: PaymentStatus.PENDING,
+          paymentStatus: BookingPaymentStatus.PENDING,
           advanceDueDate: LessThan(now),
         },
         {
-          paymentStatus: PaymentStatus.ADVANCE_PAID,
+          paymentStatus: BookingPaymentStatus.ADVANCE_PAID,
           balanceDueDate: LessThan(now),
         },
       ],

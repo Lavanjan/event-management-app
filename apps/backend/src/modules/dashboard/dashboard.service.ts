@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InventoryItem } from '../../database/entities/inventory-item.entity';
 import { Event } from '../../database/entities/event.entity';
-import { Booking, PaymentStatus } from '../../database/entities/booking.entity';
+import { Booking, BookingPaymentStatus } from '../../database/entities/booking.entity';
 import { BookingExpense } from '../../database/entities/booking-expense.entity';
 import { BookingRevenue } from '../../database/entities/booking-revenue.entity';
 
@@ -56,7 +56,7 @@ export class DashboardService {
         where: { availableQuantity: 5, isActive: true }, // Less than or equal to 5
       }),
       this.bookingRepository.count({
-        where: { paymentStatus: PaymentStatus.OVERDUE },
+        where: { paymentStatus: BookingPaymentStatus.OVERDUE },
       }),
     ]);
 
@@ -200,7 +200,7 @@ export class DashboardService {
 
   async getPaymentAlerts() {
     const overdueBookings = await this.bookingRepository.find({
-      where: { paymentStatus: PaymentStatus.OVERDUE },
+      where: { paymentStatus: BookingPaymentStatus.OVERDUE },
       relations: ['event'],
       take: 20,
     });

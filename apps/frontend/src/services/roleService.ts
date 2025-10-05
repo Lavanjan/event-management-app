@@ -38,4 +38,9 @@ export const roleService = {
   async removeRole(userId: string, roleId: string): Promise<void> {
     await api.delete(`/users/${userId}/roles/${roleId}`);
   },
+
+  async updateRolePermissions(roleId: string, permissionKeys: string[]): Promise<Role> {
+    const response = await api.put(`/roles/${roleId}/permissions`, { permissionKeys });
+    return response.data.data;
+  },
 };

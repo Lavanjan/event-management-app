@@ -17,6 +17,7 @@ import { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { SecureAuthService } from './secure-auth.service';
+import { PermissionCheckService } from './permission-check.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -26,6 +27,7 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SecureAuthGuard, AuthenticatedRequest } from './guards/secure-auth.guard';
+import { User, UserType } from '../../database/entities';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -33,7 +35,8 @@ import { SecureAuthGuard, AuthenticatedRequest } from './guards/secure-auth.guar
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly secureAuthService: SecureAuthService
+    private readonly secureAuthService: SecureAuthService,
+    private readonly permissionCheckService: PermissionCheckService
   ) {}
 
   @Public()
@@ -147,5 +150,39 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   async refreshToken(@Body('refreshToken') refreshToken: string) {
     return this.authService.refreshToken(refreshToken);
+  }
+
+  @Get('permissions')
+  @UseGuards(SecureAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get current user permissions' })
+  @ApiResponse({ status: 200, description: 'User permissions retrieved successfully' })
+  async getUserPermissions(@CurrentUser() user: User) {
+    try {
+      const permissions = await this.permissionCheckService.getUserPermissions(user);
+
+      return {
+        success: true,
+        data: {
+          userId: user.id,
+          userType: user.userType,
+          organizationId: user.organizationId,
+          permissions,
+          isProductAdmin: user.userType === UserType.PRODUCT_ADMIN,
+        },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to get user permissions',
+        data: {
+          userId: user.id,
+          userType: user.userType,
+          organizationId: user.organizationId,
+          permissions: [],
+          isProductAdmin: user.userType === UserType.PRODUCT_ADMIN,
+        },
+      };
+    }
   }
 }

@@ -5,7 +5,7 @@ async function testLogin() {
     // First, let's get the user's current password from database
     // We know the user was created and verified, so let's try to login
     
-    const response = await fetch('http://localhost:3001/api/auth/login', {
+    const response = await fetch('http://localhost:3002/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ async function testLogin() {
       console.log('Cookies received:', cookies);
 
       // Test inventory API with the session
-      const inventoryResponse = await fetch('http://localhost:3001/api/inventory?page=1&limit=20&search=&sortBy=name&sortOrder=ASC', {
+      const inventoryResponse = await fetch('http://localhost:3002/api/inventory?page=1&limit=20&search=&sortBy=name&sortOrder=ASC', {
         method: 'GET',
         headers: {
           'Cookie': cookies ? cookies.join('; ') : ''

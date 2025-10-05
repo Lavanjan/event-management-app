@@ -356,3 +356,6 @@ export interface FinancialSummary {
   expensesByCategory: { category: string; amount: number }[];
   topEvents: { eventName: string; revenue: number }[];
 }
+
+// Document Types
+export * from './document';

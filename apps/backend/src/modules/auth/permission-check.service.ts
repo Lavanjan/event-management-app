@@ -1,5 +1,8 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { User, UserType } from '../../database/entities';
+import { MasterPermissionsService } from '../permissions/master-permissions.service';
+import { OrganizationPermissionsService } from '../organizations/organization-permissions.service';
+import { EnhancedPermissionCheckService } from '../permissions/enhanced-permission-check.service';
 
 export interface PermissionCheckResult {
   hasPermission: boolean;
@@ -19,14 +22,10 @@ export class PermissionCheckService {
   private readonly logger = new Logger(PermissionCheckService.name);
 
   constructor(
-    @Inject(
-      forwardRef(() =>
-        import('../organizations/organization-permissions.service').then(
-          m => m.OrganizationPermissionsService
-        )
-      )
-    )
-    private organizationPermissionsService: any
+    private masterPermissionsService: MasterPermissionsService,
+    @Inject(forwardRef(() => OrganizationPermissionsService))
+    private organizationPermissionsService: OrganizationPermissionsService,
+    private enhancedPermissionService: EnhancedPermissionCheckService
   ) {}
 
   /**
@@ -42,7 +41,7 @@ export class PermissionCheckService {
         };
       }
 
-      // Organization users need to check organization permissions
+      // Organization users need to check organization permissions (including role-based)
       if (
         user.userType === UserType.ORGANIZATION_ADMIN ||
         user.userType === UserType.ORGANIZATION_USER
@@ -54,7 +53,9 @@ export class PermissionCheckService {
           };
         }
 
-        const hasPermission = await this.organizationPermissionsService.hasPermission(
+        // Use enhanced permission service that includes role-based permissions
+        const hasPermission = await this.enhancedPermissionService.hasPermission(
+          user.id,
           user.organizationId,
           permission
         );
@@ -62,8 +63,8 @@ export class PermissionCheckService {
         return {
           hasPermission,
           reason: hasPermission
-            ? 'Permission granted by organization'
-            : 'Permission not granted by organization',
+            ? 'Permission granted (direct or role-based)'
+            : 'Permission not granted',
         };
       }
 
@@ -97,10 +98,12 @@ export class PermissionCheckService {
         (user.userType === UserType.ORGANIZATION_ADMIN ||
           user.userType === UserType.ORGANIZATION_USER)
       ) {
-        // Get organization-specific permissions
-        permissions = await this.organizationPermissionsService.getEnabledPermissions(
+        // Get user's actual permissions (including role-based)
+        const userPermissions = await this.enhancedPermissionService.getUserPermissions(
+          user.id,
           user.organizationId
         );
+        permissions = userPermissions.allPermissions;
       }
 
       return {
@@ -142,32 +145,20 @@ export class PermissionCheckService {
    * Get all available permissions in the system
    */
   private async getAllAvailablePermissions(): Promise<string[]> {
-    // This would typically come from a configuration or database
-    // For now, return the default permissions
-    return [
-      'dashboard.view',
-      'dashboard.analytics',
-      'dashboard.reports',
-      'events.read',
-      'events.create',
-      'events.update',
-      'events.delete',
-      'events.publish',
-      'bookings.read',
-      'bookings.create',
-      'bookings.update',
-      'bookings.cancel',
-      'bookings.refund',
-      'financial.read',
-      'financial.transactions',
-      'financial.payouts',
-      'users.read',
-      'users.create',
-      'users.update',
-      'users.delete',
-      'settings.read',
-      'settings.update',
-      'settings.integrations',
-    ];
+    try {
+      return await this.masterPermissionsService.getAllKeys();
+    } catch (error) {
+      this.logger.error('Failed to get permissions from database, using fallback', error);
+      // Fallback to basic permissions if database is not available
+      return [
+        'dashboard.view',
+        'events.read',
+        'bookings.read',
+        'inventory.read',
+        'documents.read',
+        'users.read',
+        'settings.read',
+      ];
+    }
   }
 }

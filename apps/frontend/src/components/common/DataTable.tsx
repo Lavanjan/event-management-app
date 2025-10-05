@@ -217,7 +217,7 @@ export function DataTable<TData, TValue>({
               </div>
 
               {/* Filters */}
-              {filters.map((filter) => (
+              {Array.isArray(filters) && filters.map((filter) => (
                 <DataTableFacetedFilter
                   key={filter.key}
                   column={table.getColumn(filter.key)}

@@ -8,7 +8,9 @@ import { Badge } from '../ui/badge';
 import { useToast } from '../../hooks/use-toast';
 import { Organization } from '../../services/organizationService';
 import { LoadingSpinner } from '../ui/loading-spinner';
-import { Shield, Users, Calendar, DollarSign, Settings, BarChart3, Package } from 'lucide-react';
+import { api } from '../../services/api';
+
+import { Shield, Users, Calendar, DollarSign, Settings, BarChart3, Package, FileText } from 'lucide-react';
 
 interface ManagePermissionsModalProps {
   open: boolean;
@@ -45,12 +47,13 @@ export function ManagePermissionsModal({ open, onOpenChange, organization, onSuc
       dashboard: <BarChart3 className="h-4 w-4" />,
       events: <Calendar className="h-4 w-4" />,
       bookings: <Users className="h-4 w-4" />,
+      inventory: <Package className="h-4 w-4" />,
+      documents: <FileText className="h-4 w-4" />,
       financial: <DollarSign className="h-4 w-4" />,
       users: <Users className="h-4 w-4" />,
       settings: <Settings className="h-4 w-4" />,
-      inventory: <Package className="h-4 w-4" />,
     };
-    return iconMap[category] || <Settings className="h-4 w-4" />;
+    return iconMap[category.toLowerCase()] || <Settings className="h-4 w-4" />;
   };
 
   useEffect(() => {
@@ -64,76 +67,55 @@ export function ManagePermissionsModal({ open, onOpenChange, organization, onSuc
 
     setLoading(true);
     try {
-      // Load permissions from API
-      const response = await fetch(`http://localhost:3001/api/organizations/${organization.id}/permissions`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      // Load organization permissions using centralized API service
+      const response = await api.get(`/organizations/${organization.id}/permissions`);
+      const result = response.data;
+      console.log('Organization permissions API response:', result);
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Loaded permissions from API:', result);
+      if (result.success && result.data && result.data.permissions) {
+        // Group permissions by category
+        const permissionsByCategory: Record<string, Permission[]> = {};
 
-        if (result.success && result.data && result.data.permissions) {
-          const { data } = result;
-
-          // Group permissions by category
-          const permissionsByCategory: Record<string, any[]> = {};
-          data.permissions.forEach((perm: any) => {
-            if (!permissionsByCategory[perm.category]) {
-              permissionsByCategory[perm.category] = [];
-            }
-            permissionsByCategory[perm.category].push(perm);
-          });
-
-          console.log('Permissions by category:', permissionsByCategory);
-
-          // Convert to our permission categories format using only API data
-          const loadedPermissions: PermissionCategory[] = Object.keys(permissionsByCategory).map(categoryKey => {
-            const categoryPermissions = permissionsByCategory[categoryKey];
-            const categoryName = categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
-
-            return {
-              id: categoryKey,
-              name: categoryName,
-              description: `Manage ${categoryName.toLowerCase()} related permissions`,
-              icon: getCategoryIcon(categoryKey),
-              permissions: categoryPermissions.map((perm: any) => ({
-                id: perm.id,
-                name: perm.name,
-                description: perm.description,
-                category: perm.category,
-                enabled: Boolean(perm.enabled)
-              }))
-            };
-          });
-
-          console.log('Final loaded permissions from API:', loadedPermissions);
-
-          // Debug specific permission that's causing issues
-          const dashboardCategory = loadedPermissions.find(cat => cat.id === 'dashboard');
-          if (dashboardCategory) {
-            const reportsPermission = dashboardCategory.permissions.find((p: any) => p.id === 'dashboard.reports');
-            if (reportsPermission) {
-              console.log('Dashboard reports permission final state:', reportsPermission);
-            }
+        result.data.permissions.forEach((perm: any) => {
+          const category = perm.category;
+          if (!permissionsByCategory[category]) {
+            permissionsByCategory[category] = [];
           }
+          permissionsByCategory[category].push({
+            id: perm.id,
+            name: perm.name,
+            description: perm.description,
+            category: perm.category,
+            enabled: Boolean(perm.enabled)
+          });
+        });
 
-          setPermissions(loadedPermissions);
-        } else {
-          console.log('No permissions data in response');
-          setPermissions([]);
-        }
+        // Convert to PermissionCategory format
+        const loadedPermissions: PermissionCategory[] = Object.keys(permissionsByCategory).map(categoryKey => {
+          const categoryName = categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1);
+
+          return {
+            id: categoryKey.toLowerCase(),
+            name: categoryName,
+            description: `Manage ${categoryName.toLowerCase()} related permissions`,
+            icon: getCategoryIcon(categoryKey.toLowerCase()),
+            permissions: permissionsByCategory[categoryKey]
+          };
+        });
+
+        setPermissions(loadedPermissions);
       } else {
-        console.error('Failed to load permissions:', response.status, response.statusText);
+        console.error('Invalid API response format:', result);
         setPermissions([]);
       }
     } catch (error) {
       console.error('Error loading permissions:', error);
       setPermissions([]);
+      toast({
+        title: 'Error',
+        description: 'Failed to load permissions. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -183,19 +165,10 @@ export function ManagePermissionsModal({ open, onOpenChange, organization, onSuc
         }))
       );
 
-      // Call the API to update permissions
-      const response = await fetch(`http://localhost:3001/api/organizations/${organization.id}/permissions`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ permissions: permissionsToSave }),
+      // Call the API to update permissions using centralized API service
+      await api.put(`/organizations/${organization.id}/permissions`, {
+        permissions: permissionsToSave
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update permissions');
-      }
 
       toast({
         title: 'Success',
@@ -279,10 +252,7 @@ export function ManagePermissionsModal({ open, onOpenChange, organization, onSuc
                       </div>
                       <Switch
                         checked={Boolean(permission.enabled)}
-                        onCheckedChange={(checked) => {
-                          console.log(`Toggle ${permission.id}: current=${permission.enabled} (type=${typeof permission.enabled}), Boolean=${Boolean(permission.enabled)}, new=${checked}`);
-                          handlePermissionToggle(category.id, permission.id, checked);
-                        }}
+                        onCheckedChange={(checked) => handlePermissionToggle(category.id, permission.id, checked)}
                       />
                     </div>
                   ))}

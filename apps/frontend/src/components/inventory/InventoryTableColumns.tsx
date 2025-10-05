@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { ArrowUpDown, Package, XCircle, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ArrowUpDown, Package, XCircle, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
 import { InventoryItem } from '../../types';
 import {
   commonColumns,
@@ -13,6 +13,9 @@ import {
   ActionHandlers,
   statusVariants
 } from '../common/DataTableColumns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
+import { DocumentManager } from '../documents/DocumentManager';
+import { useState } from 'react';
 
 export const createInventoryColumns = (handlers: ActionHandlers<InventoryItem>): ColumnDef<InventoryItem>[] => [
   {
@@ -32,19 +35,14 @@ export const createInventoryColumns = (handlers: ActionHandlers<InventoryItem>):
     cell: ({ row }) => {
       const item = row.original;
       return (
-        <div className="flex items-center space-x-3">
-          <div className="flex-shrink-0">
-            <Package className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-foreground truncate">{item.name}</p>
-            {item.description && (
-              <p className="text-sm text-muted-foreground truncate">{item.description}</p>
-            )}
-            {item.sku && (
-              <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
-            )}
-          </div>
+        <div className="min-w-0">
+          <p className="font-medium text-foreground truncate">{item.name}</p>
+          {item.description && (
+            <p className="text-sm text-muted-foreground truncate">{item.description}</p>
+          )}
+          {item.sku && (
+            <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
+          )}
         </div>
       );
     },
@@ -173,5 +171,40 @@ export const createInventoryColumns = (handlers: ActionHandlers<InventoryItem>):
     },
   },
   createDateColumn<InventoryItem>('createdAt', 'Created', { showTime: true }),
+  {
+    id: 'documents',
+    header: 'Documents',
+    cell: ({ row }) => {
+      const item = row.original;
+      const [isOpen, setIsOpen] = useState(false);
+
+      return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              Manage
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle>Documents - {item.name}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-hidden">
+              <DocumentManager
+                entityType="inventory_item"
+                entityId={item.id}
+                className="h-full"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
+    },
+  },
   createActionsColumn<InventoryItem>(handlers),
 ];

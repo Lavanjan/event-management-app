@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Alert, AlertDescription } from '../../components/ui/alert';
 import { Loader2, Mail, ArrowLeft } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
+import { api } from '../../services/api';
 
 export function VerifyOtpPage() {
   const [otp, setOtp] = useState('');
@@ -37,31 +38,20 @@ export function VerifyOtpPage() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/verify/email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token,
-          otp,
-        }),
+      const response = await api.post('/verify/email', {
+        token,
+        otp,
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Email verified successfully! You can now log in.',
-        });
-        navigate('/login?verified=true');
-      } else {
-        setError(data.message || 'Verification failed. Please try again.');
-      }
-    } catch (error) {
+      toast({
+        title: 'Success',
+        description: 'Email verified successfully! You can now log in.',
+      });
+      navigate('/login?verified=true');
+    } catch (error: any) {
       console.error('Verification error:', error);
-      setError('An error occurred. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Verification failed. Please try again.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -72,32 +62,18 @@ export function VerifyOtpPage() {
 
     setResendLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/verify/resend', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
+      await api.post('/verify/resend', { token });
 
-      if (response.ok) {
-        toast({
-          title: 'OTP Sent',
-          description: 'A new verification code has been sent to your email.',
-        });
-      } else {
-        const data = await response.json();
-        toast({
-          title: 'Error',
-          description: data.message || 'Failed to resend OTP. Please try again.',
-          variant: 'destructive',
-        });
-      }
-    } catch (error) {
+      toast({
+        title: 'OTP Sent',
+        description: 'A new verification code has been sent to your email.',
+      });
+    } catch (error: any) {
       console.error('Resend error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to resend OTP. Please try again.';
       toast({
         title: 'Error',
-        description: 'An error occurred. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

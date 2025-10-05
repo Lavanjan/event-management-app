@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
-import { Organization, OrganizationPermission } from '../../database/entities';
+import { Organization, OrganizationPermission, MasterPermission } from '../../database/entities';
+import { MasterPermissionsService } from '../permissions/master-permissions.service';
 
 export interface PermissionDefinition {
   id: string;
@@ -27,8 +28,59 @@ export class OrganizationPermissionsService {
     private organizationRepository: Repository<Organization>,
     @InjectRepository(OrganizationPermission)
     private organizationPermissionRepository: Repository<OrganizationPermission>,
-    private dataSource: DataSource
+    private dataSource: DataSource,
+    private masterPermissionsService: MasterPermissionsService
   ) {}
+
+  /**
+   * Sync organization permissions with master permissions
+   */
+  async syncWithMasterPermissions(organizationId: string): Promise<void> {
+    try {
+      // Get all master permissions
+      const masterPermissions = await this.masterPermissionsService.findAll();
+
+      // Get existing organization permissions
+      const existingPermissions = await this.organizationPermissionRepository.find({
+        where: { organizationId },
+      });
+
+      // Create a map of existing permissions by key
+      const existingMap = new Map(existingPermissions.map(p => [p.permissionKey, p]));
+
+      // Prepare permissions to upsert
+      const permissionsToUpsert = masterPermissions.map(masterPerm => {
+        const existing = existingMap.get(masterPerm.key);
+
+        const orgPermission = new OrganizationPermission();
+        orgPermission.organizationId = organizationId;
+        orgPermission.permissionKey = masterPerm.key;
+        orgPermission.name = masterPerm.name;
+        orgPermission.description = masterPerm.description;
+        orgPermission.category = masterPerm.category;
+        // Keep existing enabled state, or use master default
+        orgPermission.enabled = existing ? existing.enabled : masterPerm.defaultEnabled;
+
+        return orgPermission;
+      });
+
+      // Use transaction to ensure consistency
+      await this.dataSource.transaction(async manager => {
+        const permissionRepo = manager.getRepository(OrganizationPermission);
+
+        // Delete existing permissions
+        await permissionRepo.delete({ organizationId });
+
+        // Insert updated permissions
+        await permissionRepo.save(permissionsToUpsert);
+      });
+
+      this.logger.log(`Synced ${permissionsToUpsert.length} permissions for organization ${organizationId}`);
+    } catch (error) {
+      this.logger.error(`Failed to sync permissions for organization ${organizationId}:`, error);
+      throw error;
+    }
+  }
 
   /**
    * Get all permissions for an organization
@@ -46,68 +98,30 @@ export class OrganizationPermissionsService {
       throw new NotFoundException('Organization not found');
     }
 
-    // Get existing permissions from database
-    const existingPermissions = await this.organizationPermissionRepository.find({
+    // Sync with master permissions first
+    await this.syncWithMasterPermissions(organizationId);
+
+    // Get updated permissions from database
+    const permissions = await this.organizationPermissionRepository.find({
       where: { organizationId },
       order: { category: 'ASC', name: 'ASC' },
     });
 
-    // If no permissions exist, initialize default permissions
-    if (existingPermissions.length === 0) {
-      this.logger.log(
-        `No permissions found for organization ${organizationId}, initializing defaults`
-      );
-      await this.initializeDefaultPermissions(organizationId);
-
-      // Fetch the newly created permissions
-      const newPermissions = await this.organizationPermissionRepository.find({
-        where: { organizationId },
-        order: { category: 'ASC', name: 'ASC' },
-      });
-
-      const mergedPermissions: PermissionDefinition[] = newPermissions.map(permission => ({
-        id: permission.permissionKey,
-        name: permission.name,
-        description: permission.description,
-        category: permission.category,
-        enabled: permission.enabled,
-      }));
-
-      this.logger.log(
-        `Initialized ${mergedPermissions.length} permissions for organization ${organizationId}`
-      );
-
-      return {
-        organizationId,
-        permissions: mergedPermissions,
-      };
-    }
-
-    // Get default permission definitions
-    const defaultPermissions = this.getDefaultPermissions();
-
-    // Create a map of existing permissions by key
-    const existingPermissionsMap = new Map(existingPermissions.map(p => [p.permissionKey, p]));
-
-    // Merge default permissions with existing ones
-    const mergedPermissions: PermissionDefinition[] = defaultPermissions.map(permission => {
-      const existing = existingPermissionsMap.get(permission.id);
-      return {
-        id: permission.id,
-        name: permission.name,
-        description: permission.description,
-        category: permission.category,
-        enabled: existing ? existing.enabled : permission.enabled,
-      };
-    });
+    const permissionDefinitions: PermissionDefinition[] = permissions.map(permission => ({
+      id: permission.permissionKey,
+      name: permission.name,
+      description: permission.description,
+      category: permission.category,
+      enabled: permission.enabled,
+    }));
 
     this.logger.log(
-      `Retrieved ${mergedPermissions.length} permissions for organization ${organizationId}`
+      `Retrieved ${permissionDefinitions.length} permissions for organization ${organizationId}`
     );
 
     return {
       organizationId,
-      permissions: mergedPermissions,
+      permissions: permissionDefinitions,
     };
   }
 
@@ -131,7 +145,7 @@ export class OrganizationPermissionsService {
     }
 
     // Validate permissions
-    this.validatePermissions(permissions);
+    await this.validatePermissions(permissions);
 
     // Use transaction to ensure data consistency
     return await this.dataSource.transaction(async manager => {
@@ -165,41 +179,13 @@ export class OrganizationPermissionsService {
     });
   }
 
-  /**
-   * Check if an organization has a specific permission
-   */
-  async hasPermission(organizationId: string, permissionKey: string): Promise<boolean> {
-    const permission = await this.organizationPermissionRepository.findOne({
-      where: {
-        organizationId,
-        permissionKey,
-        enabled: true,
-      },
-    });
 
-    return !!permission;
-  }
-
-  /**
-   * Get enabled permissions for an organization
-   */
-  async getEnabledPermissions(organizationId: string): Promise<string[]> {
-    const permissions = await this.organizationPermissionRepository.find({
-      where: {
-        organizationId,
-        enabled: true,
-      },
-      select: ['permissionKey'],
-    });
-
-    return permissions.map(p => p.permissionKey);
-  }
 
   /**
    * Initialize default permissions for a new organization
    */
   async initializeDefaultPermissions(organizationId: string): Promise<void> {
-    const defaultPermissions = this.getDefaultPermissions();
+    const defaultPermissions = await this.getDefaultPermissions();
 
     const permissionEntities = defaultPermissions.map(permission => {
       const entity = new OrganizationPermission();
@@ -220,9 +206,30 @@ export class OrganizationPermissionsService {
   }
 
   /**
-   * Get default permission definitions
+   * Get default permission definitions from master permissions
    */
-  private getDefaultPermissions(): PermissionDefinition[] {
+  private async getDefaultPermissions(): Promise<PermissionDefinition[]> {
+    try {
+      const masterPermissions = await this.masterPermissionsService.findAll();
+
+      return masterPermissions.map(permission => ({
+        id: permission.key,
+        name: permission.name,
+        description: permission.description,
+        category: permission.category,
+        enabled: permission.defaultEnabled,
+      }));
+    } catch (error) {
+      this.logger.error('Failed to get master permissions, using fallback', error);
+      // Fallback to basic permissions if master permissions are not available
+      return this.getFallbackPermissions();
+    }
+  }
+
+  /**
+   * Fallback permissions if master permissions are not available
+   */
+  private getFallbackPermissions(): PermissionDefinition[] {
     return [
       // Dashboard permissions
       {
@@ -244,7 +251,7 @@ export class OrganizationPermissionsService {
         name: 'Generate Reports',
         description: 'Generate and export reports',
         category: 'Dashboard',
-        enabled: false,
+        enabled: true,
       },
 
       // Events permissions
@@ -274,7 +281,7 @@ export class OrganizationPermissionsService {
         name: 'Delete Events',
         description: 'Delete events',
         category: 'Events',
-        enabled: false,
+        enabled: true,
       },
       {
         id: 'events.publish',
@@ -318,7 +325,7 @@ export class OrganizationPermissionsService {
         name: 'Process Refunds',
         description: 'Process booking refunds',
         category: 'Bookings',
-        enabled: false,
+        enabled: true,
       },
 
       // Inventory permissions
@@ -348,7 +355,37 @@ export class OrganizationPermissionsService {
         name: 'Delete Inventory',
         description: 'Remove inventory items',
         category: 'Inventory',
-        enabled: false,
+        enabled: true,
+      },
+
+      // Documents permissions
+      {
+        id: 'documents.read',
+        name: 'View Documents',
+        description: 'View and download documents',
+        category: 'Documents',
+        enabled: true,
+      },
+      {
+        id: 'documents.create',
+        name: 'Upload Documents',
+        description: 'Upload new documents',
+        category: 'Documents',
+        enabled: true,
+      },
+      {
+        id: 'documents.update',
+        name: 'Edit Documents',
+        description: 'Edit document metadata',
+        category: 'Documents',
+        enabled: true,
+      },
+      {
+        id: 'documents.delete',
+        name: 'Delete Documents',
+        description: 'Remove documents',
+        category: 'Documents',
+        enabled: true,
       },
 
       // Financial permissions
@@ -357,21 +394,21 @@ export class OrganizationPermissionsService {
         name: 'View Financial Data',
         description: 'View revenue and financial reports',
         category: 'Financial',
-        enabled: false,
+        enabled: true,
       },
       {
         id: 'financial.transactions',
         name: 'View Transactions',
         description: 'View transaction history',
         category: 'Financial',
-        enabled: false,
+        enabled: true,
       },
       {
         id: 'financial.payouts',
         name: 'Manage Payouts',
         description: 'Process payouts and settlements',
         category: 'Financial',
-        enabled: false,
+        enabled: true,
       },
 
       // Users permissions
@@ -387,21 +424,21 @@ export class OrganizationPermissionsService {
         name: 'Create Users',
         description: 'Add new users to organization',
         category: 'Users',
-        enabled: false,
+        enabled: true,
       },
       {
         id: 'users.update',
         name: 'Edit Users',
         description: 'Edit user details and roles',
         category: 'Users',
-        enabled: false,
+        enabled: true,
       },
       {
         id: 'users.delete',
         name: 'Remove Users',
         description: 'Remove users from organization',
         category: 'Users',
-        enabled: false,
+        enabled: true,
       },
 
       // Settings permissions
@@ -417,14 +454,14 @@ export class OrganizationPermissionsService {
         name: 'Update Settings',
         description: 'Update organization settings',
         category: 'Settings',
-        enabled: false,
+        enabled: true,
       },
       {
         id: 'settings.integrations',
         name: 'Manage Integrations',
         description: 'Configure third-party integrations',
         category: 'Settings',
-        enabled: false,
+        enabled: true,
       },
     ];
   }
@@ -432,8 +469,8 @@ export class OrganizationPermissionsService {
   /**
    * Validate permission definitions
    */
-  private validatePermissions(permissions: PermissionDefinition[]): void {
-    const defaultPermissions = this.getDefaultPermissions();
+  private async validatePermissions(permissions: PermissionDefinition[]): Promise<void> {
+    const defaultPermissions = await this.getDefaultPermissions();
     const validPermissionIds = new Set(defaultPermissions.map(p => p.id));
 
     for (const permission of permissions) {
@@ -444,6 +481,85 @@ export class OrganizationPermissionsService {
       if (!permission.name || !permission.category) {
         throw new BadRequestException(`Permission ${permission.id} is missing required fields`);
       }
+    }
+  }
+
+  /**
+   * Check if an organization has a specific permission
+   */
+  async hasPermission(organizationId: string, permissionKey: string): Promise<boolean> {
+    try {
+      const permission = await this.organizationPermissionRepository.findOne({
+        where: {
+          organizationId,
+          permissionKey,
+          enabled: true
+        },
+      });
+
+      return !!permission;
+    } catch (error) {
+      this.logger.error(`Error checking permission ${permissionKey} for organization ${organizationId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Get all enabled permissions for an organization
+   */
+  async getEnabledPermissions(organizationId: string): Promise<string[]> {
+    try {
+      const permissions = await this.organizationPermissionRepository.find({
+        where: {
+          organizationId,
+          enabled: true
+        },
+        select: ['permissionKey'],
+      });
+
+      return permissions.map(p => p.permissionKey);
+    } catch (error) {
+      this.logger.error(`Error getting enabled permissions for organization ${organizationId}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if an organization has access to a specific module
+   */
+  async hasModuleAccess(organizationId: string, module: string): Promise<boolean> {
+    try {
+      const permission = await this.organizationPermissionRepository.findOne({
+        where: {
+          organizationId,
+          category: module.charAt(0).toUpperCase() + module.slice(1),
+          enabled: true
+        },
+      });
+
+      return !!permission;
+    } catch (error) {
+      this.logger.error(`Error checking module access ${module} for organization ${organizationId}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Get enabled modules for an organization
+   */
+  async getEnabledModules(organizationId: string): Promise<string[]> {
+    try {
+      const permissions = await this.organizationPermissionRepository
+        .createQueryBuilder('permission')
+        .select('DISTINCT permission.category', 'category')
+        .where('permission.organizationId = :organizationId', { organizationId })
+        .andWhere('permission.enabled = :enabled', { enabled: true })
+        .getRawMany();
+
+      return permissions.map(p => p.category.toLowerCase());
+    } catch (error) {
+      this.logger.error(`Error getting enabled modules for organization ${organizationId}:`, error);
+      return [];
     }
   }
 }

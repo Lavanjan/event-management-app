@@ -11,8 +11,8 @@ async function bootstrap() {
       credentials: true,
     });
     
-    await app.listen(3001);
-    console.log('Application is running on: http://localhost:3001');
+    await app.listen(3002);
+    console.log('Application is running on: http://localhost:3002');
   } catch (error) {
     console.error('Error starting application:', error);
     process.exit(1);

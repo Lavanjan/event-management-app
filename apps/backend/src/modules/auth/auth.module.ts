@@ -14,6 +14,8 @@ import { SecureAuthGuard } from './guards/secure-auth.guard';
 import { User, Organization } from '../../database/entities';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
+import { PermissionsModule } from '../permissions/permissions.module';
+import { PermissionCheckService } from './permission-check.service';
 
 @Module({
   imports: [
@@ -31,9 +33,10 @@ import { EmailModule } from '../email/email.module';
     }),
     forwardRef(() => UsersModule),
     EmailModule,
+    PermissionsModule,
   ],
   controllers: [AuthController, VerificationController],
-  providers: [AuthService, SecureAuthService, SecureAuthGuard, JwtStrategy, LocalStrategy],
-  exports: [AuthService, SecureAuthService, SecureAuthGuard, JwtModule],
+  providers: [AuthService, SecureAuthService, SecureAuthGuard, JwtStrategy, LocalStrategy, PermissionCheckService],
+  exports: [AuthService, SecureAuthService, SecureAuthGuard, JwtModule, PermissionCheckService],
 })
 export class AuthModule {}

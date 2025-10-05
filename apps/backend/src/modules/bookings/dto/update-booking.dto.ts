@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/swagger';
 import { IsOptional, IsEnum, IsNumber, IsBoolean } from 'class-validator';
 import { CreateBookingDto } from './create-booking.dto';
-import { BookingStatus, PaymentStatus } from '../../../database/entities/booking.entity';
+import { BookingStatus, BookingPaymentStatus } from '../../../database/entities/booking.entity';
 
 export class UpdateBookingDto extends PartialType(CreateBookingDto) {
   @IsOptional()
@@ -9,8 +9,8 @@ export class UpdateBookingDto extends PartialType(CreateBookingDto) {
   status?: BookingStatus;
 
   @IsOptional()
-  @IsEnum(PaymentStatus)
-  paymentStatus?: PaymentStatus;
+  @IsEnum(BookingPaymentStatus)
+  paymentStatus?: BookingPaymentStatus;
 
   @IsOptional()
   @IsNumber()

@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 
 import { Role } from '../../database/entities/role.entity';
 import { Permission } from '../../database/entities/permission.entity';
+import { RolePermission } from '../../database/entities/role-permission.entity';
 
 @Injectable()
 export class RolesService {
@@ -11,12 +12,14 @@ export class RolesService {
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
     @InjectRepository(Permission)
-    private permissionRepository: Repository<Permission>
+    private permissionRepository: Repository<Permission>,
+    @InjectRepository(RolePermission)
+    private rolePermissionRepository: Repository<RolePermission>
   ) {}
 
   async findAll(): Promise<Role[]> {
     return this.roleRepository.find({
-      relations: ['permissions'],
+      relations: ['rolePermissions'],
       order: { name: 'ASC' },
     });
   }
@@ -24,7 +27,7 @@ export class RolesService {
   async findById(id: string): Promise<Role> {
     const role = await this.roleRepository.findOne({
       where: { id },
-      relations: ['permissions'],
+      relations: ['rolePermissions'],
     });
 
     if (!role) {
@@ -66,20 +69,30 @@ export class RolesService {
 
   async update(id: string, updateRoleDto: any): Promise<Role> {
     const role = await this.findById(id);
-    const { permissions: permissionIds, ...roleData } = updateRoleDto;
+    const { permissionKeys, ...roleData } = updateRoleDto;
 
     // Update basic role data
     Object.assign(role, roleData);
 
     // Update permissions if provided
-    if (permissionIds) {
-      const permissions = await this.permissionRepository.find({
-        where: { id: In(permissionIds) },
+    if (permissionKeys && Array.isArray(permissionKeys)) {
+      // Remove existing role permissions
+      await this.rolePermissionRepository.delete({ roleId: id });
+
+      // Create new role permissions
+      const rolePermissions = permissionKeys.map(permissionKey => {
+        const rolePermission = new RolePermission();
+        rolePermission.roleId = id;
+        rolePermission.permissionKey = permissionKey;
+        rolePermission.enabled = true;
+        rolePermission.organizationId = role.organizationId;
+        return rolePermission;
       });
-      role.permissions = permissions;
+
+      await this.rolePermissionRepository.save(rolePermissions);
     }
 
-    return this.roleRepository.save(role);
+    return this.findById(id); // Return with updated relations
   }
 
   async remove(id: string): Promise<void> {

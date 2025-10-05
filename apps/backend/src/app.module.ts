@@ -17,6 +17,9 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { FinancialModule } from './modules/financial/financial.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { PermissionsModule } from './modules/permissions/permissions.module';
+import { PaymentModule } from './modules/payments/payment.module';
 
 import { createWinstonLogger } from './common/config/winston.config';
 import { validationSchema } from './common/config/validation.schema';
@@ -76,6 +79,7 @@ import { validationSchema } from './common/config/validation.schema';
     AuthModule,
     UsersModule,
     RolesModule,
+    PermissionsModule,
     OrganizationsModule,
     EmailModule,
     InventoryModule,
@@ -84,6 +88,8 @@ import { validationSchema } from './common/config/validation.schema';
     FinancialModule,
     NotificationsModule,
     DashboardModule,
+    DocumentsModule,
+    PaymentModule,
   ],
   controllers: [],
   providers: [],

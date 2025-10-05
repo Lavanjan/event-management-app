@@ -7,12 +7,14 @@ import { Organization, User, Role, OrganizationPermission } from '../../database
 import { EmailModule } from '../email/email.module';
 import { EmailUtil } from '../../common/utils/email.util';
 import { AuthModule } from '../auth/auth.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Organization, User, Role, OrganizationPermission]),
     EmailModule,
     AuthModule,
+    PermissionsModule,
   ],
   controllers: [OrganizationsController],
   providers: [OrganizationsService, OrganizationPermissionsService, EmailUtil],

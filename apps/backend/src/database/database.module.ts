@@ -5,6 +5,7 @@ import {
   User,
   Role,
   Permission,
+  MasterPermission,
   Organization,
   OrganizationPermission,
   InventoryItem,
@@ -14,6 +15,11 @@ import {
   BookingInventoryAllocation,
   BookingExpense,
   BookingRevenue,
+  Document,
+  Payment,
+  PaymentPlan,
+  PaymentTransaction,
+  RolePermission,
 } from './entities';
 
 @Module({
@@ -31,6 +37,7 @@ import {
           User,
           Role,
           Permission,
+          MasterPermission,
           Organization,
           OrganizationPermission,
           InventoryItem,
@@ -40,6 +47,11 @@ import {
           BookingInventoryAllocation,
           BookingExpense,
           BookingRevenue,
+          Document,
+          Payment,
+          PaymentPlan,
+          PaymentTransaction,
+          RolePermission,
         ],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
         synchronize: false, // Disabled to use migrations instead

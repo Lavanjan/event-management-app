@@ -25,7 +25,7 @@ export class Permission {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToMany(() => Role, role => role.permissions)
+  @ManyToMany(() => Role, role => role.rolePermissions)
   roles: Role[];
 
   @CreateDateColumn({ name: 'created_at' })

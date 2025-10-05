@@ -5,13 +5,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToMany,
-  ManyToOne,
+  OneToMany,
   JoinTable,
   JoinColumn,
   Index,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Permission } from './permission.entity';
+import { RolePermission } from './role-permission.entity';
 // import { Organization } from './organization.entity';
 
 export enum RoleScope {
@@ -40,7 +41,7 @@ export class Role {
   })
   scope: RoleScope;
 
-  @Column({ nullable: true, name: 'organization_id' })
+  @Column({ nullable: true, name: 'organization_id', type: 'uuid' })
   organizationId: string;
 
   // @ManyToOne('Organization', 'roles', {
@@ -56,13 +57,24 @@ export class Role {
   @ManyToMany(() => User, user => user.roles)
   users: User[];
 
-  @ManyToMany(() => Permission, permission => permission.roles, { eager: true })
-  @JoinTable({
-    name: 'role_permissions',
-    joinColumn: { name: 'role_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
-  })
-  permissions: Permission[];
+  // Note: Using OneToMany relationship with RolePermission entity instead of ManyToMany
+  // This allows for more granular permission management with additional metadata
+  @OneToMany(() => RolePermission, rolePermission => rolePermission.role, { eager: true })
+  rolePermissions: RolePermission[];
+
+  // Computed property to get permission keys for backward compatibility
+  get permissionKeys(): string[] {
+    return this.rolePermissions?.map(rp => rp.permissionKey) || [];
+  }
+
+  // Legacy permissions property for backward compatibility (deprecated)
+  // @ManyToMany(() => Permission, permission => permission.roles, { eager: false })
+  // @JoinTable({
+  //   name: 'role_permissions_legacy',
+  //   joinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  //   inverseJoinColumn: { name: 'permission_id', referencedColumnName: 'id' },
+  // })
+  // permissions: Permission[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -71,9 +83,15 @@ export class Role {
   updatedAt: Date;
 
   hasPermission(resource: string, action: string): boolean {
-    return this.permissions.some(
-      permission => permission.resource === resource && permission.action === action
-    );
+    return this.rolePermissions?.some(
+      rolePermission => rolePermission.module === resource && rolePermission.action === action && rolePermission.enabled
+    ) || false;
+  }
+
+  hasPermissionByKey(permissionKey: string): boolean {
+    return this.rolePermissions?.some(
+      rolePermission => rolePermission.permissionKey === permissionKey && rolePermission.enabled
+    ) || false;
   }
 
   isGlobalRole(): boolean {

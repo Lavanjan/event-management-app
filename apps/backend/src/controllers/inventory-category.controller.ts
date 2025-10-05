@@ -12,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { SecureAuthGuard } from '../modules/auth/guards/secure-auth.guard';
-import { OrganizationPermissionGuard } from '../common/guards/organization-permission.guard';
-import { RequireOrganizationPermission } from '../common/guards/organization-permission.guard';
+import { SimplePermissionsGuard } from '../common/guards/simple-permissions.guard';
+import { RequirePermission } from '../common/decorators/permissions.decorator';
 import { CurrentOrganization } from '../common/decorators/current-organization.decorator';
 import {
   InventoryCategoryService,
@@ -23,13 +23,13 @@ import {
 
 @ApiTags('Inventory Categories')
 @Controller('inventory-categories')
-@UseGuards(SecureAuthGuard, OrganizationPermissionGuard)
+@UseGuards(SecureAuthGuard, SimplePermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class InventoryCategoryController {
   constructor(private readonly categoryService: InventoryCategoryService) {}
 
   @Get()
-  @RequireOrganizationPermission('inventory.read')
+  @RequirePermission('inventory.read')
   @ApiOperation({ summary: 'Get all inventory categories' })
   @ApiResponse({ status: 200, description: 'Inventory categories retrieved successfully' })
   async findAll(@CurrentOrganization() organizationId: string) {
@@ -37,7 +37,7 @@ export class InventoryCategoryController {
   }
 
   @Post()
-  @RequireOrganizationPermission('inventory.create')
+  @RequirePermission('inventory.create')
   @ApiOperation({ summary: 'Create a new inventory category' })
   @ApiResponse({ status: 201, description: 'Inventory category created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
@@ -50,7 +50,7 @@ export class InventoryCategoryController {
   }
 
   @Put('reorder')
-  @RequireOrganizationPermission('inventory.update')
+  @RequirePermission('inventory.update')
   @ApiOperation({ summary: 'Reorder inventory categories' })
   @ApiResponse({ status: 200, description: 'Inventory categories reordered successfully' })
   async reorder(
@@ -61,7 +61,7 @@ export class InventoryCategoryController {
   }
 
   @Get(':id')
-  @RequireOrganizationPermission('inventory.read')
+  @RequirePermission('inventory.read')
   @ApiOperation({ summary: 'Get inventory category by ID' })
   @ApiResponse({ status: 200, description: 'Inventory category retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Inventory category not found' })
@@ -70,7 +70,7 @@ export class InventoryCategoryController {
   }
 
   @Put(':id')
-  @RequireOrganizationPermission('inventory.update')
+  @RequirePermission('inventory.update')
   @ApiOperation({ summary: 'Update an inventory category' })
   @ApiResponse({ status: 200, description: 'Inventory category updated successfully' })
   @ApiResponse({ status: 404, description: 'Inventory category not found' })
@@ -84,7 +84,7 @@ export class InventoryCategoryController {
   }
 
   @Delete(':id')
-  @RequireOrganizationPermission('inventory.delete')
+  @RequirePermission('inventory.delete')
   @ApiOperation({ summary: 'Delete an inventory category' })
   @ApiResponse({ status: 204, description: 'Inventory category deleted successfully' })
   @ApiResponse({ status: 404, description: 'Inventory category not found' })

@@ -115,9 +115,34 @@ const navigation: NavigationItem[] = [
 
       {
         name: 'Payment Tracking',
-        href: '/bookings/payments',
+        href: '/payments',
         icon: CreditCard,
-        permission: 'bookings:read',
+        permission: 'payments.read',
+      },
+    ],
+  },
+  {
+    name: 'Payment Management',
+    icon: CreditCard,
+    permission: 'payments.read',
+    children: [
+      {
+        name: 'All Payments',
+        href: '/payments',
+        icon: List,
+        permission: 'payments.read',
+      },
+      {
+        name: 'Payment Plans',
+        href: '/payments/plans',
+        icon: FileText,
+        permission: 'payments.read',
+      },
+      {
+        name: 'Refunds',
+        href: '/payments/refunds',
+        icon: TrendingUp,
+        permission: 'payments.refund',
       },
     ],
   },

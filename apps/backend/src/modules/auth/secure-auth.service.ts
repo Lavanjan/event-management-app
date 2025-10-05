@@ -310,10 +310,10 @@ export class SecureAuthService {
 
     if (user.roles) {
       user.roles.forEach(role => {
-        if (role.permissions) {
-          role.permissions.forEach(permission => {
-            const permissionString = `${permission.resource}:${permission.action}`;
-            if (!permissions.includes(permissionString)) {
+        if (role.rolePermissions) {
+          role.rolePermissions.forEach(rolePermission => {
+            const permissionString = `${rolePermission.module}:${rolePermission.action}`;
+            if (!permissions.includes(permissionString) && rolePermission.enabled) {
               permissions.push(permissionString);
             }
           });

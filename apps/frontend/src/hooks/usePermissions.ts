@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { api } from '../services/api';
 
 export interface UserPermissions {
   userId: string;
@@ -23,24 +24,18 @@ export const usePermissions = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/auth/permissions', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
+      try {
+        const response = await api.get('/auth/permissions');
+        const permissions = response.data;
+        setUserPermissions(permissions);
+      } catch (error: any) {
+        if (error.response?.status === 401) {
           // User not authenticated
           setUserPermissions(null);
           return;
         }
-        throw new Error(`Failed to fetch permissions: ${response.status}`);
+        throw error;
       }
-
-      const permissions = await response.json();
       setUserPermissions(permissions);
     } catch (err) {
       console.error('Error fetching user permissions:', err);
@@ -135,6 +130,18 @@ export const PERMISSIONS = {
   BOOKINGS_UPDATE: 'bookings.update',
   BOOKINGS_CANCEL: 'bookings.cancel',
   BOOKINGS_REFUND: 'bookings.refund',
+
+  // Inventory
+  INVENTORY_READ: 'inventory.read',
+  INVENTORY_CREATE: 'inventory.create',
+  INVENTORY_UPDATE: 'inventory.update',
+  INVENTORY_DELETE: 'inventory.delete',
+
+  // Documents
+  DOCUMENTS_READ: 'documents.read',
+  DOCUMENTS_CREATE: 'documents.create',
+  DOCUMENTS_UPDATE: 'documents.update',
+  DOCUMENTS_DELETE: 'documents.delete',
 
   // Financial
   FINANCIAL_READ: 'financial.read',

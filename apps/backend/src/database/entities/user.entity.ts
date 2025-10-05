@@ -52,7 +52,7 @@ export class User {
   })
   userType: UserType;
 
-  @Column({ nullable: true, name: 'organization_id' })
+  @Column({ nullable: true, name: 'organization_id', type: 'uuid' })
   organizationId: string;
 
   // @ManyToOne('Organization', 'users', {
@@ -130,9 +130,13 @@ export class User {
 
   hasPermission(resource: string, action: string): boolean {
     return this.roles.some(role =>
-      role.permissions.some(
-        permission => permission.resource === resource && permission.action === action
-      )
+      role.hasPermission(resource, action)
+    );
+  }
+
+  hasPermissionByKey(permissionKey: string): boolean {
+    return this.roles.some(role =>
+      role.hasPermissionByKey(permissionKey)
     );
   }
 

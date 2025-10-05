@@ -11,6 +11,7 @@ import {
   Users,
   Eye,
   UserCheck,
+  Settings,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -34,13 +35,16 @@ import {
 } from '../../components/ui/table';
 import { useRoles } from '../../hooks/useRoles';
 import { format } from 'date-fns';
+import { ManageRolePermissionsModal } from '../../components/roles/ManageRolePermissionsModal';
 
 export function RoleListPage() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
 
-  const { data: roles, isLoading, error } = useRoles();
+  const { data: roles, isLoading, error, refetch } = useRoles();
 
   const filteredRoles = roles?.filter(role => {
     const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,6 +54,15 @@ export function RoleListPage() {
                          (statusFilter === 'inactive' && !role.isActive);
     return matchesSearch && matchesStatus;
   }) || [];
+
+  const handleManagePermissions = (role: any) => {
+    setSelectedRole(role);
+    setIsPermissionsModalOpen(true);
+  };
+
+  const handlePermissionsUpdated = () => {
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -250,6 +263,10 @@ export function RoleListPage() {
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Role
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleManagePermissions(role)}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Manage Permissions
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" />
@@ -282,6 +299,19 @@ export function RoleListPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Manage Permissions Modal */}
+      {selectedRole && (
+        <ManageRolePermissionsModal
+          isOpen={isPermissionsModalOpen}
+          onClose={() => {
+            setIsPermissionsModalOpen(false);
+            setSelectedRole(null);
+          }}
+          role={selectedRole}
+          onPermissionsUpdated={handlePermissionsUpdated}
+        />
+      )}
     </div>
   );
 }

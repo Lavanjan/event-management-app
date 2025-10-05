@@ -13,6 +13,7 @@ import { InventoryModule } from '../inventory/inventory.module';
 import { EventsModule } from '../events/events.module';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
+import { DocumentsModule } from '../documents/documents.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { EmailModule } from '../email/email.module';
     EventsModule,
     AuthModule,
     EmailModule,
+    DocumentsModule,
   ],
   controllers: [BookingsController],
   providers: [BookingsService],

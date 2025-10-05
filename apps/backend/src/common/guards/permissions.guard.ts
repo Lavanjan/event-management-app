@@ -1,13 +1,17 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY, RequiredPermission } from '../decorators/permissions.decorator';
-import { SecureSession } from '../../modules/auth/secure-auth.service';
+import { PermissionCheckService } from '../../modules/auth/permission-check.service';
+import { User } from '../../database/entities';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private permissionCheckService: PermissionCheckService
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredPermissions = this.reflector.getAllAndOverride<RequiredPermission[]>(
       PERMISSIONS_KEY,
       [context.getHandler(), context.getClass()]
@@ -17,22 +21,23 @@ export class PermissionsGuard implements CanActivate {
       return true;
     }
 
-    const { user }: { user: SecureSession } = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest();
+    const user: User = request.user;
 
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const hasPermission = requiredPermissions.every(permission => {
-      const permissionString = `${permission.resource}:${permission.action}`;
-      return user.permissions.includes(permissionString);
-    });
+    // Check each required permission using the new permission system
+    for (const permission of requiredPermissions) {
+      const permissionKey = `${permission.resource}.${permission.action}`;
+      const result = await this.permissionCheckService.checkPermission(user, permissionKey);
 
-    if (!hasPermission) {
-      const permissionStrings = requiredPermissions.map(p => `${p.action} on ${p.resource}`);
-      throw new ForbiddenException(
-        `Access denied. Required permissions: ${permissionStrings.join(', ')}`
-      );
+      if (!result.hasPermission) {
+        throw new ForbiddenException(
+          `Insufficient permissions. Required permission: ${permissionKey}. Reason: ${result.reason}`
+        );
+      }
     }
 
     return true;

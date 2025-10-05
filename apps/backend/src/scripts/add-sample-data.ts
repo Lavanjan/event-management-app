@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { InventoryItem } from '../database/entities/inventory-item.entity';
 import { Event } from '../database/entities/event.entity';
-import { Booking, BookingStatus, PaymentStatus } from '../database/entities/booking.entity';
+import { Booking, BookingStatus, BookingPaymentStatus } from '../database/entities/booking.entity';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
@@ -155,7 +155,7 @@ async function addSampleData() {
           customerEmail: event.name.includes('Wedding') ? 'sarah.smith@email.com' : 'michael.j@email.com',
           customerPhone: event.name.includes('Wedding') ? '+1-555-0123' : '+1-555-0456',
           status: BookingStatus.CONFIRMED,
-          paymentStatus: PaymentStatus.ADVANCE_PAID,
+          paymentStatus: BookingPaymentStatus.ADVANCE_PAID,
           totalAmount: event.name.includes('Wedding') ? 8500.00 : 3200.00,
           advanceAmount: event.name.includes('Wedding') ? 5100.00 : 1600.00,
           balanceAmount: event.name.includes('Wedding') ? 3400.00 : 1600.00,

@@ -25,7 +25,7 @@ export enum BookingStatus {
   COMPLETED = 'completed',
 }
 
-export enum PaymentStatus {
+export enum BookingPaymentStatus {
   PENDING = 'pending',
   ADVANCE_PAID = 'advance_paid',
   FULLY_PAID = 'fully_paid',
@@ -101,11 +101,11 @@ export class Booking {
 
   @Column({
     type: 'enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING,
+    enum: BookingPaymentStatus,
+    default: BookingPaymentStatus.PENDING,
     name: 'payment_status',
   })
-  paymentStatus: PaymentStatus;
+  paymentStatus: BookingPaymentStatus;
 
   @Column('decimal', { precision: 10, scale: 2, name: 'total_amount' })
   totalAmount: number;
@@ -186,11 +186,11 @@ export class Booking {
   }
 
   isAdvanceOverdue(): boolean {
-    return this.paymentStatus === PaymentStatus.PENDING && new Date() > this.advanceDueDate;
+    return this.paymentStatus === BookingPaymentStatus.PENDING && new Date() > this.advanceDueDate;
   }
 
   isBalanceOverdue(): boolean {
-    return this.paymentStatus === PaymentStatus.ADVANCE_PAID && new Date() > this.balanceDueDate;
+    return this.paymentStatus === BookingPaymentStatus.ADVANCE_PAID && new Date() > this.balanceDueDate;
   }
 
   canBeCancelled(): boolean {
@@ -199,7 +199,7 @@ export class Booking {
 
   canBeCompleted(): boolean {
     return (
-      this.status === BookingStatus.CONFIRMED && this.paymentStatus === PaymentStatus.FULLY_PAID
+      this.status === BookingStatus.CONFIRMED && this.paymentStatus === BookingPaymentStatus.FULLY_PAID
     );
   }
 }

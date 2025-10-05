@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { User, Role, Permission } from '../entities';
 import * as bcrypt from 'bcrypt';
+import { MasterPermissionsSeed } from './master-permissions.seed';
 
 export class InitialDataSeed {
   constructor(private dataSource: DataSource) {}
@@ -11,12 +12,16 @@ export class InitialDataSeed {
     await queryRunner.startTransaction();
 
     try {
+      // Create master permissions first
+      const masterPermissionsSeed = new MasterPermissionsSeed(this.dataSource);
+      await masterPermissionsSeed.run();
+
       // Create permissions
       const permissions = await this.createPermissions(queryRunner);
-      
+
       // Create Product Admin role
       const adminRole = await this.createAdminRole(queryRunner, permissions);
-      
+
       // Create initial admin user
       await this.createAdminUser(queryRunner, adminRole);
 

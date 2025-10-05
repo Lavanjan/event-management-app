@@ -37,6 +37,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../../components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../components/ui/dialog';
 import { DataTable } from '../../components/ui/data-table';
 import { DataTableFacetedFilter } from '../../components/ui/data-table-faceted-filter';
 import { BookingStatus, PaymentStatus, Booking } from '../../types';
@@ -46,6 +53,7 @@ import CreateBookingDialog from '../../components/modals/CreateBookingDialog';
 import EditBookingDialog from '../../components/modals/EditBookingDialog';
 import { BookingDetailsModal } from '../../components/modals/BookingDetailsModal';
 import { BookingReportsModal } from '../../components/modals/BookingReportsModal';
+import { DocumentManager } from '../../components/documents';
 import { useToast } from '../../hooks/use-toast';
 
 interface BookingFilters {
@@ -356,6 +364,38 @@ const createColumns = (
           >
             <BarChart3 className={`h-4 w-4 ${isCompleted ? (hasData ? 'text-primary' : 'text-muted-foreground') : 'text-gray-300'}`} />
           </Button>
+        </div>
+      );
+    },
+  },
+  {
+    id: 'documents',
+    header: 'Documents',
+    cell: ({ row }) => {
+      const booking = row.original;
+      return (
+        <div className="flex justify-center">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <FileText className="mr-2 h-4 w-4" />
+                Manage
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Documents - {booking.customerName}</DialogTitle>
+              </DialogHeader>
+              <DocumentManager
+                entityType="booking"
+                entityId={booking.id}
+                title="Booking Documents"
+                description="Upload and manage documents related to this booking (invoices, contracts, receipts, etc.)"
+                allowUpload={true}
+                showFilters={true}
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       );
     },

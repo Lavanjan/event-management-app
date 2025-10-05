@@ -23,7 +23,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { RequireUserType } from '../auth/decorators/user-type.decorator';
 import { UserType } from '../../database/entities';
 import { CurrentOrganization } from '../../common/decorators/current-organization.decorator';
-import { PaymentStatus } from '../../database/entities/booking.entity';
+import { BookingPaymentStatus } from '../../database/entities/booking.entity';
 
 @ApiTags('Bookings')
 @Controller('bookings')
@@ -143,7 +143,7 @@ export class BookingsController {
   @ApiResponse({ status: 200, description: 'Payment status updated' })
   updatePaymentStatus(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body('paymentStatus') paymentStatus: PaymentStatus,
+    @Body('paymentStatus') paymentStatus: BookingPaymentStatus,
     @CurrentOrganization() organizationId: string
   ) {
     return this.bookingsService.updatePaymentStatus(id, paymentStatus, organizationId);
