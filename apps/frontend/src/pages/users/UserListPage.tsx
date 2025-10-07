@@ -12,7 +12,10 @@ import {
   Phone,
   Calendar,
   ArrowUpDown,
-  Users
+  Users,
+  Shield,
+  Clock,
+  Download
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -27,10 +30,16 @@ import { useUsers, useUpdateUser, useDeleteUser } from '../../hooks/useUsers';
 import { User } from '../../types';
 import { format } from 'date-fns';
 import { useToast } from '../../hooks/use-toast';
+import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
+import { CreateUserModal } from '../../components/users/CreateUserModal';
+import { EditUserModal } from '../../components/users/EditUserModal';
 
 export function UserListPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [filters, setFilters] = useState({
     page: 1,
     limit: 20,
@@ -49,6 +58,11 @@ export function UserListPage() {
 
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
+
+  const handleCreateSuccess = () => {
+    // Refresh the users list
+    setFilters(prev => ({ ...prev }));
+  };
 
   const formatDate = (date: string | Date) => {
     return format(new Date(date), 'MMM dd, yyyy');
@@ -83,16 +97,16 @@ export function UserListPage() {
     }
   };
 
-  const handleStatusToggle = async (userId: string, currentStatus: string) => {
+  const handleStatusToggle = async (userId: string, currentIsActive: boolean) => {
     try {
-      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      const newIsActive = !currentIsActive;
       await updateUser.mutateAsync({
         id: userId,
-        data: { status: newStatus }
+        data: { isActive: newIsActive }
       });
       toast({
         title: 'User Updated',
-        description: `User status changed to ${newStatus}`,
+        description: `User ${newIsActive ? 'activated' : 'deactivated'} successfully`,
       });
     } catch (error) {
       toast({
@@ -122,11 +136,13 @@ export function UserListPage() {
   };
 
   const handleEdit = (user: User) => {
-    navigate(`/users/${user.id}/edit`);
+    setSelectedUser(user);
+    setShowEditModal(true);
   };
 
   const handleView = (user: User) => {
-    navigate(`/users/${user.id}`);
+    setSelectedUser(user);
+    setShowEditModal(true);
   };
 
   // Table columns definition
@@ -207,13 +223,14 @@ export function UserListPage() {
       },
     },
     {
-      accessorKey: 'status',
+      accessorKey: 'isActive',
       header: 'Status',
       cell: ({ row }) => {
-        const status = row.getValue('status') as string;
+        const user = row.original;
+        const isActive = user.isActive;
         return (
-          <Badge variant={getStatusColor(status)}>
-            {status || 'Unknown'}
+          <Badge variant={isActive ? 'default' : 'secondary'} className={isActive ? 'bg-green-100 text-green-800' : ''}>
+            {isActive ? 'Active' : 'Inactive'}
           </Badge>
         );
       },
@@ -236,9 +253,9 @@ export function UserListPage() {
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => handleStatusToggle(user.id, user.status || 'inactive')}
+                onClick={() => handleStatusToggle(user.id, user.isActive)}
               >
-                {user.status === 'active' ? (
+                {user.isActive ? (
                   <>
                     <UserX className="mr-2 h-4 w-4" />
                     Deactivate
@@ -266,34 +283,98 @@ export function UserListPage() {
 
   const users = usersData?.data || [];
 
+  const stats: StatCard[] = [
+    {
+      icon: Users,
+      label: 'Total Users',
+      value: usersData?.total || 0,
+      iconColor: 'text-primary',
+    },
+    {
+      icon: UserCheck,
+      label: 'Active Users',
+      value: users.filter(u => u.isActive).length,
+      iconColor: 'text-green-600',
+    },
+    {
+      icon: Shield,
+      label: 'Admins',
+      value: users.filter(u => u.userType.includes('admin')).length,
+      iconColor: 'text-blue-600',
+    },
+    {
+      icon: Clock,
+      label: 'Recent Signups',
+      value: users.filter(u => {
+        const createdAt = new Date(u.createdAt);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return createdAt > thirtyDaysAgo;
+      }).length,
+      iconColor: 'text-orange-600',
+    },
+  ];
+
+  const actions: ActionButton[] = [
+    {
+      icon: Download,
+      label: 'Export',
+      onClick: () => {
+        // Export functionality
+        console.log('Export users');
+      },
+      variant: 'outline',
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Users</h1>
-          <p className="text-muted-foreground">
-            Manage user accounts and permissions
-          </p>
+      <ManagementLayout
+        title="Users"
+        description="Manage user accounts and permissions"
+        stats={stats}
+        actions={actions}
+        tableTitle="All Users"
+        tableDescription="Manage and track all user accounts with advanced filtering and search capabilities."
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-end">
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </div>
+          <DataTable
+            columns={columns}
+            data={users}
+            searchPlaceholder="Search users..."
+            isLoading={isLoading}
+            emptyStateIcon={Users}
+            emptyStateTitle="No users found"
+            emptyStateDescription="Create your first user to get started."
+            filters={filters}
+            onFiltersChange={setFilters}
+            totalCount={usersData?.total || 0}
+          />
         </div>
-        <Button onClick={() => navigate('/users/create')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </div>
+      </ManagementLayout>
 
-      {/* Users Table */}
-      <DataTable
-        columns={columns}
-        data={users}
-        searchPlaceholder="Search users..."
-        isLoading={isLoading}
-        emptyStateIcon={Users}
-        emptyStateTitle="No users found"
-        emptyStateDescription="Create your first user to get started."
-        filters={filters}
-        onFiltersChange={setFilters}
-        totalCount={usersData?.total || 0}
+      {/* Create User Modal */}
+      <CreateUserModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onSuccess={handleCreateSuccess}
+      />
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        user={selectedUser}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedUser(null);
+        }}
+        onSuccess={handleCreateSuccess}
       />
     </div>
   );

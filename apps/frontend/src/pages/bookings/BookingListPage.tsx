@@ -55,6 +55,8 @@ import { BookingDetailsModal } from '../../components/modals/BookingDetailsModal
 import { BookingReportsModal } from '../../components/modals/BookingReportsModal';
 import { DocumentManager } from '../../components/documents';
 import { useToast } from '../../hooks/use-toast';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
 
 interface BookingFilters {
   page: number;
@@ -66,12 +68,7 @@ interface BookingFilters {
   sortOrder?: 'ASC' | 'DESC';
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
-};
+
 
 const getStatusBadgeVariant = (status: BookingStatus) => {
   switch (status) {
@@ -230,7 +227,8 @@ const createColumns = (
   onViewDetails: (booking: Booking) => void,
   onOpenReports: (booking: Booking) => void,
   onStartEvent: (booking: Booking) => void,
-  onCompleteEvent: (booking: Booking) => void
+  onCompleteEvent: (booking: Booking) => void,
+  formatAmount: (amount: number) => string
 ): ColumnDef<Booking>[] => [
   {
     accessorKey: 'customerName',
@@ -287,9 +285,9 @@ const createColumns = (
       const booking = row.original;
       return (
         <div className="space-y-1">
-          <div className="font-medium">{formatCurrency(booking.totalAmount)}</div>
+          <div className="font-medium">{formatAmount(booking.totalAmount)}</div>
           <div className="text-sm text-muted-foreground">
-            Advance: {formatCurrency(booking.advanceAmount)}
+            Advance: {formatAmount(booking.advanceAmount)}
           </div>
         </div>
       );
@@ -382,18 +380,21 @@ const createColumns = (
                 Manage
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
+            <DialogContent className="max-w-6xl max-h-[90vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle>Documents - {booking.customerName}</DialogTitle>
               </DialogHeader>
-              <DocumentManager
-                entityType="booking"
-                entityId={booking.id}
-                title="Booking Documents"
-                description="Upload and manage documents related to this booking (invoices, contracts, receipts, etc.)"
-                allowUpload={true}
-                showFilters={true}
-              />
+              <div className="flex-1 overflow-hidden">
+                <DocumentManager
+                  entityType="booking"
+                  entityId={booking.id}
+                  title="Booking Documents"
+                  description="Upload and manage documents related to this booking (invoices, contracts, receipts, etc.)"
+                  allowUpload={true}
+                  showFilters={true}
+                  className="h-full"
+                />
+              </div>
             </DialogContent>
           </Dialog>
         </div>
@@ -449,6 +450,7 @@ const createColumns = (
 
 export function BookingListPage() {
   const { toast } = useToast();
+  const { formatAmount } = useCurrency();
   const [filters, setFilters] = useState<BookingFilters>({
     page: 1,
     limit: 20,
@@ -492,8 +494,9 @@ export function BookingListPage() {
     handleViewDetails,
     handleOpenReports,
     handleStartEvent,
-    handleCompleteEvent
-  ), []);
+    handleCompleteEvent,
+    formatAmount
+  ), [formatAmount]);
 
   const handleSearch = (search: string) => {
     setFilters(prev => ({
@@ -558,114 +561,69 @@ export function BookingListPage() {
     );
   }
 
+  const stats: StatCard[] = [
+    {
+      icon: BookOpen,
+      label: 'Total Bookings',
+      value: bookingData?.total || 0,
+      iconColor: 'text-primary',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Total Revenue',
+      value: formatAmount(
+        bookings.reduce((sum: number, booking: Booking) => {
+          const amount = typeof booking.totalAmount === 'string'
+            ? parseFloat(booking.totalAmount)
+            : booking.totalAmount;
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0)
+      ),
+      iconColor: 'text-green-600',
+    },
+    {
+      icon: Calendar,
+      label: 'Upcoming Events',
+      value: bookings.filter(b =>
+        (b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.STARTED) &&
+        new Date(b.startDate) > new Date()
+      ).length,
+      iconColor: 'text-blue-600',
+    },
+    {
+      icon: CheckCircle,
+      label: 'Completed',
+      value: bookings.filter(b => b.status === BookingStatus.COMPLETED).length,
+      iconColor: 'text-green-600',
+    },
+  ];
+
+  const actions: ActionButton[] = [
+    {
+      icon: Download,
+      label: 'Export',
+      onClick: () => {
+        // Export functionality
+        console.log('Export bookings');
+      },
+      variant: 'outline',
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Booking Management</h1>
-          <p className="text-muted-foreground">Manage customer bookings and track payments</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <CreateBookingDialog onBookingCreated={handleBookingUpdated} />
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <BookOpen className="h-8 w-8 text-primary" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Bookings</p>
-                <p className="text-2xl font-bold">{bookingData?.total || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <TrendingUp className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Revenue</p>
-                <p className="text-2xl font-bold">
-                  {formatCurrency(
-                    bookings.reduce((sum: number, booking: Booking) => {
-                      const amount = typeof booking.totalAmount === 'string'
-                        ? parseFloat(booking.totalAmount)
-                        : booking.totalAmount;
-                      return sum + (isNaN(amount) ? 0 : amount);
-                    }, 0)
-                  )}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Upcoming Events</p>
-                <p className="text-2xl font-bold">
-                  {bookings.filter(b =>
-                    (b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.STARTED) &&
-                    new Date(b.startDate) > new Date()
-                  ).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Play className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Started Today</p>
-                <p className="text-2xl font-bold">
-                  {bookings.filter(b => {
-                    const today = new Date();
-                    const startDate = new Date(b.startDate);
-                    return b.status === BookingStatus.STARTED &&
-                           startDate.toDateString() === today.toDateString();
-                  }).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold">
-                  {bookings.filter(b => b.status === BookingStatus.COMPLETED).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bookings Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Bookings</CardTitle>
-          <CardDescription>
-            Manage and track all customer bookings with advanced filtering and search capabilities.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <ManagementLayout
+        title="Booking Management"
+        description="Manage customer bookings and track payments"
+        stats={stats}
+        actions={actions}
+        tableTitle="All Bookings"
+        tableDescription="Manage and track all customer bookings with advanced filtering and search capabilities."
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-end">
+            <CreateBookingDialog onBookingCreated={handleBookingUpdated} />
+          </div>
           <DataTable
             columns={columns}
             data={bookings}
@@ -687,8 +645,8 @@ export function BookingListPage() {
               />
             }
           />
-        </CardContent>
-      </Card>
+        </div>
+      </ManagementLayout>
 
       {/* Booking Details Modal */}
       {selectedBooking && (

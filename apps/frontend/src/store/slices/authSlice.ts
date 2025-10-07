@@ -8,6 +8,7 @@ interface AuthState {
   refreshToken: string | null;
   loading: boolean;
   error: string | null;
+  hasLoggedOut: boolean; // Track if user has explicitly logged out
 }
 
 const initialState: AuthState = {
@@ -17,6 +18,7 @@ const initialState: AuthState = {
   refreshToken: null,
   loading: false,
   error: null,
+  hasLoggedOut: false,
 };
 
 const authSlice = createSlice({
@@ -41,6 +43,7 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.refreshToken;
       state.loading = false;
       state.error = null;
+      state.hasLoggedOut = false; // Reset logout flag on successful login
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.isAuthenticated = false;
@@ -57,6 +60,7 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.loading = false;
       state.error = null;
+      state.hasLoggedOut = true; // Set logout flag to prevent auto-login
     },
     updateTokens: (
       state,

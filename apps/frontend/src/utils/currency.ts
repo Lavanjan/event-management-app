@@ -68,23 +68,36 @@ export const SUPPORTED_CURRENCIES: Record<string, CurrencyConfig> = {
     name: 'Mexican Peso',
     locale: 'es-MX',
   },
+  LKR: {
+    code: 'LKR',
+    symbol: 'Rs.',
+    name: 'Sri Lankan Rupee',
+    locale: 'en-LK',
+  },
 };
+
+/**
+ * Get all supported currencies as an array
+ */
+export function getSupportedCurrencies(): CurrencyConfig[] {
+  return Object.values(SUPPORTED_CURRENCIES);
+}
 
 /**
  * Format an amount using the organization's currency
  */
 export function formatCurrency(
   amount: number | string,
-  currencyCode: string = 'USD',
+  currencyCode: string = 'LKR',
   options: Intl.NumberFormatOptions = {}
 ): string {
   const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   
   if (isNaN(numericAmount)) {
-    return `${SUPPORTED_CURRENCIES[currencyCode]?.symbol || '$'}0.00`;
+    return `${SUPPORTED_CURRENCIES[currencyCode]?.symbol || 'Rs.'}0.00`;
   }
 
-  const currency = SUPPORTED_CURRENCIES[currencyCode] || SUPPORTED_CURRENCIES.USD;
+  const currency = SUPPORTED_CURRENCIES[currencyCode] || SUPPORTED_CURRENCIES.LKR;
   
   try {
     return new Intl.NumberFormat(currency.locale, {
@@ -95,10 +108,10 @@ export function formatCurrency(
       ...options,
     }).format(numericAmount);
   } catch (error) {
-    // Fallback to USD formatting if currency is not supported
-    return new Intl.NumberFormat('en-US', {
+    // Fallback to LKR formatting if currency is not supported
+    return new Intl.NumberFormat('en-LK', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'LKR',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
       ...options,
@@ -110,14 +123,14 @@ export function formatCurrency(
  * Get currency symbol for a given currency code
  */
 export function getCurrencySymbol(currencyCode: string): string {
-  return SUPPORTED_CURRENCIES[currencyCode]?.symbol || '$';
+  return SUPPORTED_CURRENCIES[currencyCode]?.symbol || 'Rs.';
 }
 
 /**
  * Get currency name for a given currency code
  */
 export function getCurrencyName(currencyCode: string): string {
-  return SUPPORTED_CURRENCIES[currencyCode]?.name || 'US Dollar';
+  return SUPPORTED_CURRENCIES[currencyCode]?.name || 'Sri Lankan Rupee';
 }
 
 /**
@@ -142,7 +155,7 @@ export function parseCurrency(currencyString: string): number {
  */
 export function formatCurrencyCompact(
   amount: number | string,
-  currencyCode: string = 'USD'
+  currencyCode: string = 'LKR'
 ): string {
   return formatCurrency(amount, currencyCode, {
     notation: 'compact',
@@ -157,9 +170,4 @@ export function isSupportedCurrency(currencyCode: string): boolean {
   return currencyCode in SUPPORTED_CURRENCIES;
 }
 
-/**
- * Get all supported currency codes
- */
-export function getSupportedCurrencies(): CurrencyConfig[] {
-  return Object.values(SUPPORTED_CURRENCIES);
-}
+

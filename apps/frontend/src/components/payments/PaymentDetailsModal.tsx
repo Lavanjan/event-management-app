@@ -9,6 +9,8 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { useToast } from '../../hooks/use-toast';
+import { api } from '../../services/api';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { 
   Eye, 
   CreditCard, 
@@ -82,6 +84,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   const [paymentDetails, setPaymentDetails] = useState<Payment | null>(null);
 
   const { toast } = useToast();
+  const { formatAmount } = useCurrency();
 
   useEffect(() => {
     if (isOpen && payment) {
@@ -92,17 +95,9 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
 
   const loadPaymentDetails = async () => {
     try {
-      const response = await fetch(`/api/payments/${payment.id}`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load payment details');
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setPaymentDetails(result.data);
+      const response = await api.get(`/payments/${payment.id}`);
+      if (response.data.success) {
+        setPaymentDetails(response.data.data);
       }
     } catch (error) {
       console.error('Error loading payment details:', error);
@@ -117,17 +112,9 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   const loadTransactionHistory = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/payments/${payment.id}/transactions`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load transaction history');
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setTransactions(result.data);
+      const response = await api.get(`/payments/${payment.id}/transactions`);
+      if (response.data.success) {
+        setTransactions(response.data.data);
       }
     } catch (error) {
       console.error('Error loading transaction history:', error);
@@ -141,11 +128,8 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
     }
   };
 
-  const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
-    }).format(amount);
+  const formatCurrencyAmount = (amount: number, currency?: string) => {
+    return formatAmount(amount, currency);
   };
 
   const formatDate = (dateString: string) => {
@@ -239,7 +223,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-gray-500">Amount:</span>
                     <span className="font-medium text-lg">
-                      {formatAmount(currentPayment.amount, currentPayment.currency)}
+                      {formatCurrencyAmount(currentPayment.amount, currentPayment.currency)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

@@ -47,7 +47,15 @@ export class UsersService {
       if (roles.length !== createUserDto.roleIds.length) {
         throw new BadRequestException('One or more roles not found');
       }
+
+      // Check if any of the roles are system roles (only Product Admin can assign system roles)
+      const systemRoles = roles.filter(role => role.isSystemRoleType());
+      if (systemRoles.length > 0) {
+        throw new BadRequestException('Cannot assign system roles (Product Admin, Organization Admin) to users. These are static roles.');
+      }
     }
+
+    // Organization admins can only create organization users (userType is set automatically to ORGANIZATION_USER)
 
     // Handle password generation
     let password = createUserDto.password;
@@ -106,7 +114,7 @@ export class UsersService {
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'roles')
-      .leftJoinAndSelect('roles.permissions', 'permissions');
+      .leftJoinAndSelect('roles.rolePermissions', 'rolePermissions');
 
     // Filter users based on current user's context
     if (currentUser) {
@@ -164,6 +172,51 @@ export class UsersService {
     return new PaginatedResponseDto(users, total, page, limit);
   }
 
+  async findByOrganization(
+    organizationId: string,
+    findUsersDto: FindUsersDto
+  ): Promise<PaginatedResponseDto<User>> {
+    const { page = 1, limit = 10, search, sortBy = 'firstName', sortOrder = 'ASC', role, status } = findUsersDto;
+
+    const queryBuilder = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'roles')
+      .leftJoinAndSelect('roles.rolePermissions', 'rolePermissions')
+      .where('user.organizationId = :organizationId', { organizationId });
+
+    // Role filter
+    if (role) {
+      queryBuilder.andWhere('user.userType = :role', { role });
+    }
+
+    // Status filter
+    if (status) {
+      const isActive = status === 'active';
+      queryBuilder.andWhere('user.isActive = :isActive', { isActive });
+    }
+
+    // Search functionality
+    if (search) {
+      queryBuilder.andWhere(
+        '(user.firstName ILIKE :search OR user.lastName ILIKE :search OR user.email ILIKE :search)',
+        { search: `%${search}%` }
+      );
+    }
+
+    // Sorting
+    const validSortFields = ['firstName', 'lastName', 'email', 'createdAt', 'userType'];
+    const sortField = validSortFields.includes(sortBy) ? sortBy : 'firstName';
+    const order = sortOrder === 'DESC' ? 'DESC' : 'ASC';
+    queryBuilder.orderBy(`user.${sortField}`, order);
+
+    // Pagination
+    queryBuilder.skip((page - 1) * limit).take(limit);
+
+    const [users, total] = await queryBuilder.getManyAndCount();
+
+    return new PaginatedResponseDto(users, total, page, limit);
+  }
+
   async findById(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id },
@@ -205,8 +258,16 @@ export class UsersService {
         throw new BadRequestException('One or more roles not found');
       }
 
+      // Check if any of the roles are system roles (only Product Admin can assign system roles)
+      const systemRoles = roles.filter(role => role.isSystemRoleType());
+      if (systemRoles.length > 0) {
+        throw new BadRequestException('Cannot assign system roles (Product Admin, Organization Admin) to users. These are static roles.');
+      }
+
       user.roles = roles;
     }
+
+    // Organization admins can only manage organization users (userType cannot be changed)
 
     // Update other fields
     Object.assign(user, updateUserDto);

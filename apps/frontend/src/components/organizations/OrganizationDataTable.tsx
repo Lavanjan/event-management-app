@@ -49,7 +49,6 @@ interface OrganizationDataTableProps {
   onPageSizeChange?: (size: number) => void;
   onView: (organization: Organization) => void;
   onEdit: (organization: Organization) => void;
-  onManagePermissions: (organization: Organization) => void;
   onDelete?: (organization: Organization) => void;
   onSuspend?: (organization: Organization) => void;
   onResendVerification?: (organization: Organization) => void;
@@ -66,7 +65,6 @@ export function OrganizationDataTable({
   onPageSizeChange,
   onView,
   onEdit,
-  onManagePermissions,
   onDelete,
   onSuspend,
   onResendVerification,
@@ -80,7 +78,6 @@ export function OrganizationDataTable({
   const columns = OrganizationTableColumns({
     onView,
     onEdit,
-    onManagePermissions,
     onDelete,
     onSuspend,
     onResendVerification

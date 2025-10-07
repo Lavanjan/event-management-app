@@ -13,6 +13,7 @@ import { Label } from '../ui/label';
 import { useCreateBooking } from '../../hooks/useBookings';
 import { useEventList } from '../../hooks/useEvents';
 import { useInventoryList } from '../../hooks/useInventory';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { useToast } from '../../hooks/use-toast';
 import { Event } from '../../types';
 
@@ -39,6 +40,7 @@ interface CreateBookingFormProps {
 
 export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
   const { toast } = useToast();
+  const { formatAmount } = useCurrency();
   const createBooking = useCreateBooking();
   const { data: eventsData } = useEventList({ limit: 100 });
   const { data: inventoryData } = useInventoryList({ limit: 100 });
@@ -567,7 +569,7 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
                     <SelectContent>
                       {inventoryItems.map(item => (
                         <SelectItem key={item.id} value={item.id}>
-                          {item.name} - ${item.unitPrice || 0} ({item.availableQuantity} available)
+                          {item.name} - {formatAmount(item.unitPrice || 0)} ({item.availableQuantity} available)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -597,15 +599,12 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
                         <div className="flex-1">
                           <span className="font-medium">{allocation.name}</span>
                           <span className="text-sm text-muted-foreground ml-2">
-                            x{allocation.quantity} @ ${allocation.unitPrice}
+                            x{allocation.quantity} @ {formatAmount(allocation.unitPrice)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">
-                            $
-                            {(Number(allocation.quantity) * Number(allocation.unitPrice)).toFixed(
-                              2
-                            )}
+                            {formatAmount(Number(allocation.quantity) * Number(allocation.unitPrice))}
                           </span>
                           <Button
                             type="button"
@@ -630,7 +629,7 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
                   <div className="flex justify-between">
                     <span>Event Booking Fee:</span>
                     <span className="font-medium text-green-600">
-                      ${Number(totalAmount).toFixed(2)}
+                      {formatAmount(Number(totalAmount))}
                     </span>
                   </div>
                   {inventoryAllocations.length > 0 && (
@@ -638,10 +637,8 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
                       <div className="flex justify-between text-muted-foreground">
                         <span>Inventory Allocated:</span>
                         <span className="font-medium">
-                          $
-                          {inventoryAllocations
-                            .reduce((sum, a) => sum + Number(a.quantity) * Number(a.unitPrice), 0)
-                            .toFixed(2)}
+                          {formatAmount(inventoryAllocations
+                            .reduce((sum, a) => sum + Number(a.quantity) * Number(a.unitPrice), 0))}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground italic">
@@ -662,7 +659,7 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
                 </FormLabel>
                 <Input
                   type="text"
-                  value={`$${Number(totalAmount || 0).toFixed(2)}`}
+                  value={formatAmount(Number(totalAmount || 0))}
                   disabled
                   className="!h-[48px] bg-muted font-semibold"
                 />
@@ -735,12 +732,10 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
                   <FormMessage />
                   {!watchedUseCustomAdvance && selectedEvent && (
                     <p className="text-xs text-muted-foreground">
-                      Auto-calculated: $
-                      {(
+                      Auto-calculated: {formatAmount(
                         (Number(totalAmount) * Number(selectedEvent.requiredAdvancePercentage)) /
                         100
-                      ).toFixed(2)}{' '}
-                      ({selectedEvent.requiredAdvancePercentage}%)
+                      )} ({selectedEvent.requiredAdvancePercentage}%)
                     </p>
                   )}
                 </FormItem>
@@ -753,7 +748,7 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Balance Amount:</span>
                   <span className="text-lg font-bold">
-                    ${(Number(totalAmount) - Number(watchedAdvanceAmount || 0)).toFixed(2)}
+                    {formatAmount(Number(totalAmount) - Number(watchedAdvanceAmount || 0))}
                   </span>
                 </div>
               </div>

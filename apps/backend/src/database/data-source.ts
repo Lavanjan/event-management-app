@@ -19,6 +19,9 @@ import {
   PaymentPlan,
   PaymentTransaction,
   RolePermission,
+  FeaturePackage,
+  OrganizationPackage,
+  UserPermission,
 } from './entities';
 
 config();
@@ -49,6 +52,9 @@ export const AppDataSource = new DataSource({
     PaymentPlan,
     PaymentTransaction,
     RolePermission,
+    FeaturePackage,
+    OrganizationPackage,
+    UserPermission,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,

@@ -10,14 +10,15 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { 
-  EnhancedRoleService, 
-  CreateRoleDto, 
-  UpdateRoleDto, 
-  RoleFilters 
+import {
+  EnhancedRoleService,
+  CreateRoleDto,
+  UpdateRoleDto
 } from './enhanced-role.service';
+import { RoleFiltersDto } from './dto/role-filters.dto';
 import { SecureAuthGuard } from '../auth/guards/secure-auth.guard';
 import { SimplePermissionsGuard } from '../../common/guards/simple-permissions.guard';
 import { RequirePermission } from '../../common/decorators/permissions.decorator';
@@ -27,7 +28,7 @@ import { User } from '../../database/entities/user.entity';
 import { RoleScope } from '../../database/entities/role.entity';
 
 @ApiTags('Enhanced Roles')
-@Controller('roles/enhanced')
+@Controller('enhanced-roles')
 @UseGuards(SecureAuthGuard, SimplePermissionsGuard)
 @ApiBearerAuth('JWT-auth')
 export class EnhancedRoleController {
@@ -51,6 +52,17 @@ export class EnhancedRoleController {
     };
   }
 
+  @Get('test')
+  @RequirePermission('users.read')
+  @ApiOperation({ summary: 'Test endpoint' })
+  @ApiResponse({ status: 200, description: 'Test successful' })
+  async test() {
+    return {
+      success: true,
+      message: 'Test endpoint working',
+    };
+  }
+
   @Get()
   @RequirePermission('users.read')
   @ApiOperation({ summary: 'Get all roles for organization' })
@@ -61,8 +73,8 @@ export class EnhancedRoleController {
   @ApiQuery({ name: 'page', type: 'number', required: false })
   @ApiQuery({ name: 'limit', type: 'number', required: false })
   async findAll(
+    @Query() filters: RoleFiltersDto,
     @CurrentOrganization() organizationId: string,
-    @Query() filters: RoleFilters,
   ) {
     const result = await this.enhancedRoleService.findAll(organizationId, filters);
     return {

@@ -18,9 +18,11 @@ import {
 } from 'lucide-react';
 import { useDashboardStats } from '../../hooks/useDashboard';
 import { useOrganizations } from '../../hooks/useOrganizations';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export function ProductAdminDashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { formatAmount } = useCurrency();
   const navigate = useNavigate();
 
   // Use real API data instead of mock data
@@ -59,12 +61,7 @@ export function ProductAdminDashboard() {
   const recentOrganizations = Array.isArray(organizationsData?.data) ? organizationsData.data : [];
   const systemAlerts = dashboardStats?.systemAlerts || [];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
@@ -167,7 +164,7 @@ export function ProductAdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(systemStats.totalRevenue.value)}</div>
+            <div className="text-2xl font-bold">{formatAmount(systemStats.totalRevenue.value)}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {getTrendIcon(systemStats.totalRevenue.trend)}
               <span className="ml-1">
@@ -251,7 +248,7 @@ export function ProductAdminDashboard() {
                     </p>
                   </div>
                   <div className="text-right space-y-1">
-                    <p className="text-sm font-medium">{formatCurrency(org.revenue)}</p>
+                    <p className="text-sm font-medium">{formatAmount(org.revenue)}</p>
                     <Badge variant={getStatusColor(org.status)}>
                       {org.status}
                     </Badge>

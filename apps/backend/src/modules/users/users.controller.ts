@@ -23,6 +23,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { RequireUserType } from '../auth/decorators/user-type.decorator';
 import { UserType, User } from '../../database/entities';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CurrentOrganization } from '../../common/decorators/current-organization.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -54,6 +55,17 @@ export class UsersController {
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
   findAll(@Query() findUsersDto: FindUsersDto, @CurrentUser() currentUser: User) {
     return this.usersService.findAll(findUsersDto, currentUser);
+  }
+
+  @Get('organization')
+  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @ApiOperation({ summary: 'Get users for current organization' })
+  @ApiResponse({ status: 200, description: 'Organization users retrieved successfully' })
+  findOrganizationUsers(
+    @CurrentOrganization() organizationId: string,
+    @Query() findUsersDto: FindUsersDto
+  ) {
+    return this.usersService.findByOrganization(organizationId, findUsersDto);
   }
 
   @Get(':id')

@@ -19,6 +19,7 @@ import {
 } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
 import { useCreatePayment, useBookingsWithOutstandingBalance } from '../../hooks/usePayments';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Loader2, CreditCard, DollarSign } from 'lucide-react';
 
 interface Booking {
@@ -58,13 +59,14 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
     bookingId: bookingId || '',
     paymentMethod: '',
     amount: 0,
-    currency: 'USD',
+    currency: currency,
     description: '',
     notes: '',
     dueDate: '',
   });
 
   const { toast } = useToast();
+  const { currency, formatAmount } = useCurrency();
 
   // Use hooks for data fetching and mutations
   const { data: bookingsData, isLoading: bookingsLoading } = useBookingsWithOutstandingBalance();
@@ -136,11 +138,8 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: formData.currency,
-    }).format(amount);
+  const formatCurrencyAmount = (amount: number) => {
+    return formatAmount(amount);
   };
 
   return (
@@ -171,7 +170,7 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                       <div>
                         <div className="font-medium">{booking.eventName}</div>
                         <div className="text-sm text-gray-500">
-                          {booking.customerName} - Outstanding: {formatAmount(booking.remainingAmount)}
+                          {booking.customerName} - Outstanding: {formatCurrencyAmount(booking.remainingAmount)}
                         </div>
                       </div>
                     </SelectItem>
@@ -219,7 +218,7 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
               </div>
               {selectedBooking && (
                 <div className="text-sm text-gray-500">
-                  Outstanding: {formatAmount(selectedBooking.remainingAmount)}
+                  Outstanding: {formatCurrencyAmount(selectedBooking.remainingAmount)}
                 </div>
               )}
             </div>
@@ -288,20 +287,20 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                 </div>
                 <div>
                   <span className="text-gray-500">Total Amount:</span>
-                  <div className="font-medium">{formatAmount(selectedBooking.totalAmount)}</div>
+                  <div className="font-medium">{formatCurrencyAmount(selectedBooking.totalAmount)}</div>
                 </div>
                 <div>
                   <span className="text-gray-500">Paid Amount:</span>
-                  <div className="font-medium">{formatAmount(selectedBooking.paidAmount)}</div>
+                  <div className="font-medium">{formatCurrencyAmount(selectedBooking.paidAmount)}</div>
                 </div>
                 <div>
                   <span className="text-gray-500">Outstanding:</span>
-                  <div className="font-medium text-orange-600">{formatAmount(selectedBooking.remainingAmount)}</div>
+                  <div className="font-medium text-orange-600">{formatCurrencyAmount(selectedBooking.remainingAmount)}</div>
                 </div>
                 <div>
                   <span className="text-gray-500">After Payment:</span>
                   <div className="font-medium text-green-600">
-                    {formatAmount(selectedBooking.remainingAmount - formData.amount)}
+                    {formatCurrencyAmount(selectedBooking.remainingAmount - formData.amount)}
                   </div>
                 </div>
               </div>

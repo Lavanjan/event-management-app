@@ -18,6 +18,7 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { AddExpenseDto } from './dto/add-expense.dto';
 import { AddRevenueDto } from './dto/add-revenue.dto';
 import { PaginationDto, PaginatedResponseDto } from '../../common/dto/pagination.dto';
+import { BookingFiltersDto } from './dto/booking-filters.dto';
 import { InventoryService } from '../inventory/inventory.service';
 import { EventsService } from '../events/events.service';
 import { EmailService } from '../email/email.service';
@@ -519,10 +520,10 @@ Thank you for choosing our services!
   }
 
   async findAll(
-    paginationDto: PaginationDto,
+    filtersDto: BookingFiltersDto,
     organizationId: string
   ): Promise<PaginatedResponseDto<Booking>> {
-    const { page, limit, search, sortBy, sortOrder } = paginationDto;
+    const { page, limit, search, sortBy, sortOrder, paymentStatus, status, eventId, customer } = filtersDto;
 
     const queryBuilder = this.bookingRepository
       .createQueryBuilder('booking')
@@ -540,6 +541,29 @@ Thank you for choosing our services!
       queryBuilder.andWhere(
         '(booking.customerName ILIKE :search OR booking.customerEmail ILIKE :search OR event.name ILIKE :search)',
         { search: `%${search}%` }
+      );
+    }
+
+    // Payment status filter
+    if (paymentStatus && paymentStatus.length > 0) {
+      queryBuilder.andWhere('booking.paymentStatus IN (:...paymentStatus)', { paymentStatus });
+    }
+
+    // Booking status filter
+    if (status) {
+      queryBuilder.andWhere('booking.status = :status', { status });
+    }
+
+    // Event filter
+    if (eventId) {
+      queryBuilder.andWhere('booking.eventId = :eventId', { eventId });
+    }
+
+    // Customer filter
+    if (customer) {
+      queryBuilder.andWhere(
+        '(booking.customerName ILIKE :customer OR booking.customerEmail ILIKE :customer)',
+        { customer: `%${customer}%` }
       );
     }
 

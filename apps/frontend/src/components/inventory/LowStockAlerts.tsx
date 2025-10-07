@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Separator } from '../ui/separator';
 import { InventoryItem } from '../../types';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 interface LowStockAlertsProps {
   lowStockItems: InventoryItem[];
@@ -22,18 +23,14 @@ export function LowStockAlerts({
   onDismiss,
   className,
 }: LowStockAlertsProps) {
+  const { formatAmount } = useCurrency();
   const totalAlerts = lowStockItems.length + outOfStockItems.length;
 
   if (totalAlerts === 0) {
     return null;
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+
 
   const getStockPercentage = (item: InventoryItem) => {
     return Math.round((item.availableQuantity / item.quantity) * 100);
@@ -88,7 +85,7 @@ export function LowStockAlerts({
                       <div className="text-right">
                         <Badge variant="destructive">Out of Stock</Badge>
                         <p className="text-xs text-red-600 mt-1">
-                          Value: {formatCurrency(item.quantity * item.unitPrice)}
+                          Value: {formatAmount(item.quantity * item.unitPrice)}
                         </p>
                       </div>
                     </div>
@@ -148,7 +145,7 @@ export function LowStockAlerts({
                             Threshold: {item.lowStockThreshold} {item.quantityUnit}
                           </p>
                           <p className="text-xs text-orange-600">
-                            Value: {formatCurrency(item.availableQuantity * item.unitPrice)}
+                            Value: {formatAmount(item.availableQuantity * item.unitPrice)}
                           </p>
                         </div>
                       </div>

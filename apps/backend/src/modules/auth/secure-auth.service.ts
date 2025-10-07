@@ -10,6 +10,7 @@ import { Request, Response } from 'express';
 
 import { User, UserType } from '../../database/entities';
 import { UsersService } from '../users/users.service';
+import { EnhancedPermissionCheckService } from '../permissions/enhanced-permission-check.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -51,7 +52,8 @@ export class SecureAuthService {
     private userRepository: Repository<User>,
     private usersService: UsersService,
     private jwtService: JwtService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private enhancedPermissionService: EnhancedPermissionCheckService
   ) {
     this.initializeRedis();
   }
@@ -149,13 +151,37 @@ export class SecureAuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
+      // Get permissions using comprehensive permission service for organization users
+      let permissions: string[] = [];
+      try {
+        if (user.userType === UserType.ORGANIZATION_ADMIN || user.userType === UserType.ORGANIZATION_USER) {
+          if (user.organizationId) {
+            const userPermissions = await this.enhancedPermissionService.getUserPermissions(
+              user.id,
+              user.organizationId
+            );
+            permissions = userPermissions.allPermissions;
+            this.logger.log(`Got ${permissions.length} permissions for user ${user.email} from enhanced service: ${JSON.stringify(permissions.slice(0, 5))}`);
+          }
+        } else {
+          // Fallback to role-based permissions for other user types
+          permissions = this.extractPermissions(user);
+          this.logger.log(`Got ${permissions.length} permissions for user ${user.email} from role extraction`);
+        }
+      } catch (error) {
+        this.logger.error(`Error getting permissions for user ${user.email}:`, error);
+        // Fallback to role-based permissions
+        permissions = this.extractPermissions(user);
+        this.logger.log(`Fallback: Got ${permissions.length} permissions for user ${user.email} from role extraction`);
+      }
+
       // Create secure session
       const sessionId = uuidv4();
       const session: SecureSession = {
         userId: user.id,
         email: user.email,
         roles: user.roles?.map(role => role.name) || [],
-        permissions: this.extractPermissions(user),
+        permissions,
         sessionId,
         createdAt: new Date(),
         lastActivity: new Date(),

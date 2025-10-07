@@ -135,6 +135,9 @@ export class EnhancedRoleService {
       queryBuilder.andWhere('role.isActive = :isActive', { isActive: filters.isActive });
     }
 
+    // Filter out system roles for organization admins (they can only manage dynamic roles)
+    queryBuilder.andWhere('(role.isSystemRole = false OR role.isSystemRole IS NULL)');
+
     // Pagination
     const page = filters.page || 1;
     const limit = filters.limit || 20;
@@ -212,6 +215,11 @@ export class EnhancedRoleService {
 
     if (!role) {
       throw new NotFoundException('Role not found');
+    }
+
+    // Prevent editing of system roles
+    if (role.isSystemRoleType()) {
+      throw new BadRequestException('Cannot edit system roles (Product Admin, Organization Admin)');
     }
 
     // Check if new name conflicts with existing roles
@@ -344,6 +352,11 @@ export class EnhancedRoleService {
 
     if (!role) {
       throw new NotFoundException('Role not found');
+    }
+
+    // Prevent deletion of system roles
+    if (role.isSystemRoleType()) {
+      throw new BadRequestException('Cannot delete system roles (Product Admin, Organization Admin)');
     }
 
     if (role.users && role.users.length > 0) {

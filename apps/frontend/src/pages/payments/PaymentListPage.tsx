@@ -1,21 +1,80 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PaymentList } from '../../components/payments/PaymentList';
+import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
+import { DollarSign, CreditCard, TrendingUp, Download, Plus } from 'lucide-react';
+import { ProcessPaymentModal } from '../../components/payments/ProcessPaymentModal';
 
 export function PaymentListPage() {
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Payment Management</h1>
-          <p className="text-muted-foreground">
-            Track and manage all payment transactions
-          </p>
-        </div>
-      </div>
+  const [showProcessModal, setShowProcessModal] = useState(false);
 
-      {/* Payment List Component */}
-      <PaymentList />
-    </div>
+  const stats: StatCard[] = [
+    {
+      icon: DollarSign,
+      label: 'Total Payments',
+      value: '0', // This would come from API
+      iconColor: 'text-primary',
+    },
+    {
+      icon: CreditCard,
+      label: 'Processed Today',
+      value: '0', // This would come from API
+      iconColor: 'text-green-600',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Total Revenue',
+      value: '$0.00', // This would come from API
+      iconColor: 'text-blue-600',
+    },
+    {
+      icon: DollarSign,
+      label: 'Pending',
+      value: '0', // This would come from API
+      iconColor: 'text-orange-600',
+    },
+  ];
+
+  const actions: ActionButton[] = [
+    {
+      icon: Plus,
+      label: 'Process Payment',
+      onClick: () => setShowProcessModal(true),
+      variant: 'default',
+    },
+    {
+      icon: Download,
+      label: 'Export',
+      onClick: () => {
+        // Export functionality
+        console.log('Export payments');
+      },
+      variant: 'outline',
+    },
+  ];
+
+  return (
+    <>
+      <ManagementLayout
+        title="Payment Management"
+        description="Track and manage all payment transactions"
+        stats={stats}
+        actions={actions}
+        tableTitle="All Payments"
+        tableDescription="Manage and track all payment transactions with advanced filtering and search capabilities."
+      >
+        <PaymentList />
+      </ManagementLayout>
+
+      {showProcessModal && (
+        <ProcessPaymentModal
+          isOpen={showProcessModal}
+          onClose={() => setShowProcessModal(false)}
+          onSuccess={() => {
+            setShowProcessModal(false);
+            // Refresh will be handled by the PaymentList component
+          }}
+        />
+      )}
+    </>
   );
 }

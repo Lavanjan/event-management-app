@@ -8,7 +8,6 @@ import { Organization } from '../../services/organizationService';
 interface OrganizationTableColumnsProps {
   onView: (organization: Organization) => void;
   onEdit: (organization: Organization) => void;
-  onManagePermissions: (organization: Organization) => void;
   onDelete?: (organization: Organization) => void;
   onSuspend?: (organization: Organization) => void;
   onResendVerification?: (organization: Organization) => void;
@@ -17,7 +16,6 @@ interface OrganizationTableColumnsProps {
 export function OrganizationTableColumns({
   onView,
   onEdit,
-  onManagePermissions,
   onDelete,
   onSuspend,
   onResendVerification
@@ -136,10 +134,6 @@ export function OrganizationTableColumns({
               <DropdownMenuItem onClick={() => onEdit(organization)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onManagePermissions(organization)}>
-                <Shield className="mr-2 h-4 w-4" />
-                Manage Permissions
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />

@@ -44,6 +44,7 @@ import { format } from 'date-fns';
 import CreateEventDialog from '../../components/modals/CreateEventDialog';
 import EditEventDialog from '../../components/modals/EditEventDialog';
 import { useToast } from '../../hooks/use-toast';
+import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
 
 // Filter options
 const statusOptions = [
@@ -274,111 +275,80 @@ export function EventListPage() {
     );
   }
 
+  const stats: StatCard[] = [
+    {
+      icon: CalendarDays,
+      label: 'Total Events',
+      value: eventData?.total || 0,
+      iconColor: 'text-primary',
+    },
+    {
+      icon: Eye,
+      label: 'Published',
+      value: events.filter(e => e.isActive).length,
+      iconColor: 'text-green-600',
+    },
+    {
+      icon: Edit,
+      label: 'Draft',
+      value: events.filter(e => !e.isActive).length,
+      iconColor: 'text-blue-600',
+    },
+    {
+      icon: Users,
+      label: 'Total Capacity',
+      value: events.reduce((sum, event) => sum + (event.maxAttendees || 0), 0),
+      iconColor: 'text-orange-600',
+    },
+  ];
+
+  const actions: ActionButton[] = [
+    {
+      icon: TrendingUp,
+      label: 'Export',
+      onClick: () => {
+        // Export functionality
+        console.log('Export events');
+      },
+      variant: 'outline',
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-          <p className="text-muted-foreground">
-            Manage and organize your events
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+    <ManagementLayout
+      title="Events"
+      description="Manage and organize your events"
+      stats={stats}
+      actions={actions}
+      tableTitle="All Events"
+      tableDescription="Manage and track all your events with advanced filtering and search capabilities."
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-end">
           <CreateEventDialog onEventCreated={handleEventUpdated} />
         </div>
+        <DataTable
+          columns={columns}
+          data={events}
+          isLoading={isLoading}
+          pagination={{
+            totalCount: eventData?.total || 0,
+            pageNumber: filters.page || 1,
+            pageSize: filters.limit || 20,
+          }}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          filtersToolbar={
+            <EventFiltersToolbar
+              filters={filters}
+              onSearchChange={handleSearch}
+              onStatusChange={handleStatusFilter}
+              onResetFilters={handleResetFilters}
+            />
+          }
+        />
       </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CalendarDays className="h-8 w-8 text-primary" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Events</p>
-                <p className="text-2xl font-bold">{eventData?.total || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Eye className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Published</p>
-                <p className="text-2xl font-bold">
-                  {events.filter(e => e.isActive).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Edit className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Draft</p>
-                <p className="text-2xl font-bold">
-                  {events.filter(e => !e.isActive).length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Capacity</p>
-                <p className="text-2xl font-bold">
-                  {events.reduce((sum, event) => sum + (event.maxAttendees || 0), 0)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Events Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Events</CardTitle>
-          <CardDescription>
-            Manage and track all your events with advanced filtering and search capabilities.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            columns={columns}
-            data={events}
-            isLoading={isLoading}
-            pagination={{
-              totalCount: eventData?.total || 0,
-              pageNumber: filters.page || 1,
-              pageSize: filters.limit || 20,
-            }}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            filtersToolbar={
-              <EventFiltersToolbar
-                filters={filters}
-                onSearchChange={handleSearch}
-                onStatusChange={handleStatusFilter}
-                onResetFilters={handleResetFilters}
-              />
-            }
-          />
-        </CardContent>
-      </Card>
-    </div>
+    </ManagementLayout>
   );
 }
 

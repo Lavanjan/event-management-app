@@ -96,7 +96,7 @@ export const RoleList: React.FC = () => {
         if (value) queryParams.append(key, value.toString());
       });
 
-      const response = await api.get(`/roles/enhanced?${queryParams}`);
+      const response = await api.get(`/enhanced-roles?${queryParams}`);
       const result = response.data;
       if (result.success) {
         setRoles(result.data);

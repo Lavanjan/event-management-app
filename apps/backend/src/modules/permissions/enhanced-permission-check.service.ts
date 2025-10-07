@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
 import { OrganizationPermission } from '../../database/entities/organization-permission.entity';
+import { OrganizationPackage } from '../../database/entities/organization-package.entity';
 import { RolePermission } from '../../database/entities/role-permission.entity';
 
 export interface UserPermissions {
@@ -21,6 +22,8 @@ export class EnhancedPermissionCheckService {
     private userRepository: Repository<User>,
     @InjectRepository(OrganizationPermission)
     private organizationPermissionRepository: Repository<OrganizationPermission>,
+    @InjectRepository(OrganizationPackage)
+    private organizationPackageRepository: Repository<OrganizationPackage>,
     @InjectRepository(RolePermission)
     private rolePermissionRepository: Repository<RolePermission>,
   ) {}
@@ -30,6 +33,29 @@ export class EnhancedPermissionCheckService {
    */
   async getUserPermissions(userId: string, organizationId: string): Promise<UserPermissions> {
     try {
+      // Check if user is organization admin
+      const user = await this.userRepository.findOne({
+        where: { id: userId, organizationId },
+      });
+
+      if (!user) {
+        throw new Error(`User not found: ${userId}`);
+      }
+
+      const isOrganizationAdmin = user.userType === 'organization_admin';
+
+      // For organization admins, get permissions directly from feature packages
+      if (isOrganizationAdmin) {
+        const packagePermissions = await this.getOrganizationPackagePermissions(organizationId);
+        return {
+          directPermissions: packagePermissions,
+          rolePermissions: packagePermissions,
+          allPermissions: packagePermissions,
+          organizationPermissions: packagePermissions,
+        };
+      }
+
+      // For regular users, use the existing logic with organization permission filtering
       // Get organization's enabled permissions
       const organizationPermissions = await this.getOrganizationPermissions(organizationId);
       const enabledPermissionKeys = organizationPermissions.map(p => p.permissionKey);
@@ -98,6 +124,29 @@ export class EnhancedPermissionCheckService {
       this.logger.error(`Error checking all permissions for user ${userId}:`, error);
       return false;
     }
+  }
+
+  /**
+   * Get permissions from organization's allocated feature packages
+   */
+  private async getOrganizationPackagePermissions(organizationId: string): Promise<string[]> {
+    const organizationPackages = await this.organizationPackageRepository.find({
+      where: { organizationId, isActive: true },
+      relations: ['featurePackage'],
+    });
+
+    const permissions: string[] = [];
+    for (const orgPackage of organizationPackages) {
+      if (orgPackage.featurePackage && orgPackage.featurePackage.features) {
+        for (const feature of orgPackage.featurePackage.features) {
+          if (!permissions.includes(feature)) {
+            permissions.push(feature);
+          }
+        }
+      }
+    }
+
+    return permissions;
   }
 
   /**

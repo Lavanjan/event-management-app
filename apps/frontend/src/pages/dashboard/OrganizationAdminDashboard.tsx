@@ -20,9 +20,12 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDashboardStats, useRecentBookings, useUpcomingEvents, useInventoryAlerts } from '../../hooks/useDashboard';
+import { useCurrency } from '../../contexts/CurrencyContext';
+import CreateBookingDialog from '../../components/modals/CreateBookingDialog';
 
 export function OrganizationAdminDashboard() {
   const { user } = useSelector((state: RootState) => state.auth);
+  const { formatAmount } = useCurrency();
   const navigate = useNavigate();
 
   // Use real API data instead of mock data
@@ -60,12 +63,7 @@ export function OrganizationAdminDashboard() {
   const inventoryAlerts = inventoryAlertsData || [];
   const paymentAlerts = dashboardStats?.paymentAlerts || [];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
@@ -112,10 +110,10 @@ export function OrganizationAdminDashboard() {
           </p>
         </div>
         <div className="flex space-x-2 mt-4 sm:mt-0">
-          <Button onClick={() => navigate('/bookings/create')}>
-            <Plus className="mr-2 h-4 w-4" />
-            New Booking
-          </Button>
+          <CreateBookingDialog onBookingCreated={() => {
+            // Refresh dashboard data when booking is created
+            window.location.reload();
+          }} />
         </div>
       </div>
 
@@ -127,7 +125,7 @@ export function OrganizationAdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(orgStats.totalRevenue.value)}</div>
+            <div className="text-2xl font-bold">{formatAmount(orgStats.totalRevenue.value)}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {getTrendIcon(orgStats.totalRevenue.trend)}
               <span className="ml-1">
@@ -159,7 +157,7 @@ export function OrganizationAdminDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(orgStats.averageBookingValue.value)}</div>
+            <div className="text-2xl font-bold">{formatAmount(orgStats.averageBookingValue.value)}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {getTrendIcon(orgStats.averageBookingValue.trend)}
               <span className="ml-1">
@@ -248,7 +246,7 @@ export function OrganizationAdminDashboard() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-medium">{formatCurrency(alert.amount)}</p>
+                        <p className="text-sm font-medium">{formatAmount(alert.amount)}</p>
                         <Badge variant="destructive">{alert.type}</Badge>
                       </div>
                     </div>
@@ -297,7 +295,7 @@ export function OrganizationAdminDashboard() {
                     </p>
                   </div>
                   <div className="text-right space-y-1">
-                    <p className="text-sm font-medium">{formatCurrency(booking.totalAmount)}</p>
+                    <p className="text-sm font-medium">{formatAmount(booking.totalAmount)}</p>
                     <Badge variant={getStatusColor(booking.status)}>
                       {booking.status}
                     </Badge>

@@ -1,12 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '../ui/dialog';
-import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
@@ -15,6 +7,8 @@ import { Checkbox } from '../ui/checkbox';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, Shield, Search } from 'lucide-react';
 import { Badge } from '../ui/badge';
+import { api } from '../../services/api';
+import { FormModal } from '../common/Modal';
 
 interface Permission {
   permissionKey: string;
@@ -69,18 +63,10 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
   const loadAvailablePermissions = async () => {
     setLoadingPermissions(true);
     try {
-      const response = await fetch('/api/roles/enhanced/available-permissions', {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to load available permissions');
-      }
-
-      const result = await response.json();
-      if (result.success) {
-        setAvailablePermissions(result.data.permissions);
-        setGroupedPermissions(result.data.groupedPermissions);
+      const response = await api.get('/enhanced-roles/available-permissions');
+      if (response.data.success) {
+        setAvailablePermissions(response.data.data.permissions);
+        setGroupedPermissions(response.data.data.groupedPermissions);
       }
     } catch (error) {
       console.error('Error loading permissions:', error);
@@ -216,16 +202,17 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
   }, {} as GroupedPermissions);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Create New Role
-          </DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <FormModal
+      open={isOpen}
+      onOpenChange={onClose}
+      title="Create New Role"
+      description="Create a new role and assign permissions"
+      size="4xl"
+      onSubmit={handleSubmit}
+      isSubmitting={loading}
+      submitLabel="Create Role"
+      submitDisabled={loadingPermissions}
+    >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Role Name *</Label>
@@ -319,17 +306,6 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
             )}
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading || loadingPermissions}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Create Role
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    </FormModal>
   );
 };

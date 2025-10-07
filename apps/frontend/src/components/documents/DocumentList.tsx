@@ -51,7 +51,7 @@ interface DocumentListProps {
 }
 
 export const DocumentList: React.FC<DocumentListProps> = ({
-  documents,
+  documents = [],
   onDocumentDelete,
   onDocumentEdit,
   showActions = true,
@@ -60,6 +60,9 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Ensure documents is always an array
+  const documentList = Array.isArray(documents) ? documents : [];
 
   const handleDownload = async (document: Document) => {
     try {
@@ -118,7 +121,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     return <File className="h-5 w-5 text-gray-500" />;
   };
 
-  if (documents.length === 0) {
+  if (documentList.length === 0) {
     return (
       <div className={`text-center py-8 ${className}`}>
         <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -132,7 +135,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {documents.map((document) => (
+      {documentList.map((document) => (
         <Card key={document.id} className="hover:shadow-md transition-shadow">
           <CardContent className="p-4">
             <div className="flex items-start justify-between">

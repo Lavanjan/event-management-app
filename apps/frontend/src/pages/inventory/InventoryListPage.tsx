@@ -6,7 +6,8 @@ import {
   TrendingUp,
   TrendingDown,
   RefreshCw,
-  Bell
+  Bell,
+  Download
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -24,6 +25,7 @@ import { InventoryFilters } from '../../services/inventoryService';
 import { InventoryItem } from '../../types';
 import CreateInventoryDialog from '../../components/modals/CreateInventoryDialog';
 import { useToast } from '../../hooks/use-toast';
+import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
 
 export function InventoryListPage() {
   const navigate = useNavigate();
@@ -131,39 +133,59 @@ export function InventoryListPage() {
     );
   }
 
+  const statsCards: StatCard[] = !statsLoading && stats ? [
+    {
+      icon: Package,
+      label: 'Total Items',
+      value: `${stats.totalItems} (${stats.activeItems} active)`,
+      iconColor: 'text-primary',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Total Value',
+      value: formatCurrency(stats.totalValue),
+      iconColor: 'text-green-600',
+    },
+    {
+      icon: AlertTriangle,
+      label: 'Low Stock Items',
+      value: stats.lowStockItems,
+      iconColor: 'text-orange-600',
+    },
+    {
+      icon: TrendingDown,
+      label: 'Out of Stock',
+      value: stats.outOfStockItems,
+      iconColor: 'text-red-600',
+    },
+  ] : [];
+
+  const actions: ActionButton[] = [
+    {
+      icon: Bell,
+      label: `Alerts ${(lowStockItems.length > 0 || outOfStockItems.length > 0) ? `(${lowStockItems.length + outOfStockItems.length})` : ''}`,
+      onClick: () => navigate('/inventory/alerts'),
+      variant: 'outline',
+    },
+    {
+      icon: RefreshCw,
+      label: 'Refresh',
+      onClick: handleRefresh,
+      variant: 'outline',
+    },
+    {
+      icon: Download,
+      label: 'Export',
+      onClick: () => {
+        // Export functionality
+        console.log('Export inventory');
+      },
+      variant: 'outline',
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Inventory Management</h1>
-          <p className="text-muted-foreground">
-            Manage your event inventory items and track stock levels
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/inventory/alerts')}
-            className="relative"
-          >
-            <Bell className="h-4 w-4 mr-2" />
-            Alerts
-            {(lowStockItems.length > 0 || outOfStockItems.length > 0) && (
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                {lowStockItems.length + outOfStockItems.length}
-              </span>
-            )}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <CreateInventoryDialog onInventoryCreated={() => {}} />
-        </div>
-      </div>
-
       {/* Low Stock Alerts */}
       {showLowStockAlerts && !lowStockLoading && !outOfStockLoading &&
        (lowStockItems.length > 0 || outOfStockItems.length > 0) && (
@@ -175,80 +197,34 @@ export function InventoryListPage() {
         />
       )}
 
-      {/* Stats Cards */}
-      {!statsLoading && stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalItems}</div>
-              <p className="text-xs text-muted-foreground">
-                {stats.activeItems} active items
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Value</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.totalValue)}</div>
-              <p className="text-xs text-muted-foreground">
-                Current inventory value
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats.lowStockItems}</div>
-              <p className="text-xs text-muted-foreground">
-                Require attention
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.outOfStockItems}</div>
-              <p className="text-xs text-muted-foreground">
-                Need restocking
-              </p>
-            </CardContent>
-          </Card>
+      <ManagementLayout
+        title="Inventory Management"
+        description="Manage your event inventory items and track stock levels"
+        stats={statsCards}
+        actions={actions}
+        tableTitle="All Inventory Items"
+        tableDescription="Manage and track all your inventory items with advanced filtering and search capabilities."
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-end">
+            <CreateInventoryDialog onInventoryCreated={() => {}} />
+          </div>
+          <InventoryDataTable
+            columns={columns}
+            data={inventoryData?.data || []}
+            searchPlaceholder="Search inventory items..."
+            filterOptions={filterOptions}
+            onFiltersChange={handleFiltersChange}
+            isLoading={isLoading}
+            totalCount={inventoryData?.total || 0}
+            pageCount={inventoryData?.totalPages || 0}
+            currentPage={inventoryData?.page || 1}
+            pageSize={inventoryData?.limit || 20}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
         </div>
-      )}
-
-      {/* Enhanced Data Table */}
-      <InventoryDataTable
-        columns={columns}
-        data={inventoryData?.data || []}
-        searchPlaceholder="Search inventory items..."
-        filterOptions={filterOptions}
-        onFiltersChange={handleFiltersChange}
-        isLoading={isLoading}
-        totalCount={inventoryData?.total || 0}
-        pageCount={inventoryData?.totalPages || 0}
-        currentPage={inventoryData?.page || 1}
-        pageSize={inventoryData?.limit || 20}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
-
-
+      </ManagementLayout>
     </div>
   );
 }

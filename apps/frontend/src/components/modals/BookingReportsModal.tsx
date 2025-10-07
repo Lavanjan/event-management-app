@@ -8,6 +8,7 @@ import {
 } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { TrendingUp, TrendingDown, DollarSign, Calendar, User } from 'lucide-react';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { Booking } from '../../types';
 
 interface BookingReportsModalProps {
@@ -16,12 +17,7 @@ interface BookingReportsModalProps {
   onClose: () => void;
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
-};
+
 
 const formatDate = (date: Date | string) => {
   return new Date(date).toLocaleDateString('en-US', {
@@ -32,6 +28,8 @@ const formatDate = (date: Date | string) => {
 };
 
 export function BookingReportsModal({ booking, isOpen, onClose }: BookingReportsModalProps) {
+  const { formatAmount } = useCurrency();
+
   if (!booking) return null;
 
   const hasRevenues = booking.revenues && booking.revenues.length > 0;
@@ -73,9 +71,9 @@ export function BookingReportsModal({ booking, isOpen, onClose }: BookingReports
               <div className="flex items-center gap-3">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <div className="font-medium">Total: {formatCurrency(booking.totalAmount)}</div>
+                  <div className="font-medium">Total: {formatAmount(booking.totalAmount)}</div>
                   <div className="text-sm text-muted-foreground">
-                    Advance: {formatCurrency(booking.advanceAmount)}
+                    Advance: {formatAmount(booking.advanceAmount)}
                   </div>
                 </div>
               </div>
@@ -92,7 +90,7 @@ export function BookingReportsModal({ booking, isOpen, onClose }: BookingReports
                 </Badge>
               </div>
               <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(booking.totalRevenues)}
+                {formatAmount(booking.totalRevenues)}
               </div>
               <div className="text-sm text-muted-foreground">
                 {booking.revenues?.length || 0} item(s)
@@ -107,7 +105,7 @@ export function BookingReportsModal({ booking, isOpen, onClose }: BookingReports
                 </Badge>
               </div>
               <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(booking.totalExpenses)}
+                {formatAmount(booking.totalExpenses)}
               </div>
               <div className="text-sm text-muted-foreground">
                 {booking.expenses?.length || 0} item(s)
@@ -126,7 +124,7 @@ export function BookingReportsModal({ booking, isOpen, onClose }: BookingReports
                 </Badge>
               </div>
               <div className={`text-2xl font-bold ${booking.profitLoss >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-                {formatCurrency(Math.abs(booking.profitLoss))}
+                {formatAmount(Math.abs(booking.profitLoss))}
               </div>
               <div className="text-sm text-muted-foreground">
                 Net {booking.profitLoss >= 0 ? 'profit' : 'loss'}
@@ -160,7 +158,7 @@ export function BookingReportsModal({ booking, isOpen, onClose }: BookingReports
                           )}
                         </div>
                         <div className="text-lg font-bold text-green-600">
-                          {formatCurrency(revenue.amount)}
+                          {formatAmount(revenue.amount)}
                         </div>
                       </div>
                       {revenue.description && (
@@ -208,7 +206,7 @@ export function BookingReportsModal({ booking, isOpen, onClose }: BookingReports
                           )}
                         </div>
                         <div className="text-lg font-bold text-red-600">
-                          {formatCurrency(expense.amount)}
+                          {formatAmount(expense.amount)}
                         </div>
                       </div>
                       {expense.description && (

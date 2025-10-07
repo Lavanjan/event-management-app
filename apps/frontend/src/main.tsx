@@ -8,6 +8,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import { store, persistor } from './store/index.ts';
 import { ThemeProvider } from './components/theme/ThemeProvider.tsx';
+import { CurrencyProvider } from './contexts/CurrencyContext.tsx';
 import { Toaster } from './components/ui/toaster.tsx';
 import './index.css';
 
@@ -34,10 +35,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
           <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
-              <App />
-              <Toaster />
-            </BrowserRouter>
+            <CurrencyProvider>
+              <BrowserRouter>
+                <App />
+                <Toaster />
+              </BrowserRouter>
+            </CurrencyProvider>
           </QueryClientProvider>
         </PersistGate>
       </Provider>

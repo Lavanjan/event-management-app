@@ -4,6 +4,7 @@ import { RootState } from '../../store';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 import { logout } from '../../store/slices/authSlice';
 import { Button } from '../ui/button';
+import secureAuthService from '../../services/secureAuthService';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,8 +23,20 @@ export function Header() {
   const { user } = useSelector((state: RootState) => state.auth);
   const { isMobile } = useSelector((state: RootState) => state.ui);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Call server logout to invalidate session
+      await secureAuthService.logout();
+      console.log('Server logout successful');
+    } catch (error) {
+      console.error('Server logout failed:', error);
+      // Continue with local logout even if server logout fails
+    }
+
+    // Clear Redux state
     dispatch(logout());
+
+    // Navigate to login page
     navigate('/login');
   };
 
@@ -48,9 +61,14 @@ export function Header() {
           )}
           
           <div className="flex items-center space-x-2">
-            <h1 className="text-xl font-semibold text-foreground">
-              Event Booking System
-            </h1>
+            <img
+              src="/src/assets/eventorra.png"
+              alt="Eventorra"
+              className="h-8 w-auto"
+            />
+            {/* <h1 className="text-xl font-semibold text-foreground">
+              Eventorra
+            </h1> */}
           </div>
         </div>
 

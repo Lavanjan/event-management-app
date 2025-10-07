@@ -27,8 +27,8 @@ export const roleService = {
   },
 
   async getPermissions(): Promise<Permission[]> {
-    const response = await api.get('/roles/permissions');
-    return response.data.data;
+    const response = await api.get('/roles/enhanced/available-permissions');
+    return response.data.data.permissions;
   },
 
   async assignRoles(userId: string, roleIds: string[]): Promise<void> {

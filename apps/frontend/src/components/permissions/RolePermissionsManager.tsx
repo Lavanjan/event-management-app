@@ -1,0 +1,452 @@
+import React, { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ColumnDef } from '@tanstack/react-table';
+import { useThreeTierPermissions } from '../../hooks/useThreeTierPermissions';
+import { api } from '../../services/api';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Badge } from '../ui/badge';
+import { CreateRoleModal } from '../roles/CreateRoleModal';
+import { DataTable } from '../common/DataTable';
+import { ManagementLayout, StatCard, ActionButton } from '../layout/ManagementLayout';
+import {
+  Search,
+  Shield,
+  Plus,
+  Users,
+  Settings,
+  AlertCircle,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  ArrowUpDown,
+  X,
+  Download,
+  CheckCircle
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
+import { useToast } from '../../hooks/use-toast';
+
+interface Role {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+  userCount?: number;
+  permissions?: string[];
+}
+
+interface RolePermission {
+  id: string;
+  permissionKey: string;
+  name: string;
+  description: string;
+  category: string;
+  enabled: boolean;
+}
+
+interface RolePermissionsManagerProps {
+  className?: string;
+}
+
+export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
+  className = ''
+}) => {
+  const {
+    isOrganizationAdmin,
+    hasPermission,
+    organizationFeatures,
+    permissionData
+  } = useThreeTierPermissions();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Fetch organization roles
+  const { data: roles = [], isLoading: rolesLoading } = useQuery({
+    queryKey: ['organization-roles'],
+    queryFn: async () => {
+      const response = await api.get('/roles/enhanced');
+      return response.data.data;
+    },
+  });
+
+  // Fetch role permissions for selected role
+  const { data: rolePermissions = [], isLoading: permissionsLoading } = useQuery({
+    queryKey: ['role-permissions', selectedRole?.id],
+    queryFn: async () => {
+      if (!selectedRole) return [];
+      const response = await api.get(`/roles/${selectedRole.id}/permissions`);
+      return response.data.data;
+    },
+    enabled: !!selectedRole,
+  });
+
+  // Update role permission mutation
+  const updateRolePermissionMutation = useMutation({
+    mutationFn: async ({ roleId, permissionKey, enabled }: { roleId: string; permissionKey: string; enabled: boolean }) => {
+      return api.patch(`/roles/${roleId}/permissions/${permissionKey}`, { enabled });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['role-permissions'] });
+      toast({
+        title: 'Success',
+        description: 'Role permission updated successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to update permission',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Delete role mutation
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      return api.delete(`/roles/${roleId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organization-roles'] });
+      setSelectedRole(null);
+      toast({
+        title: 'Success',
+        description: 'Role deleted successfully',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to delete role',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Table columns definition
+  const columns: ColumnDef<Role>[] = useMemo(() => [
+    {
+      accessorKey: 'name',
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="h-8 p-0 hover:bg-transparent"
+        >
+          Role Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center space-x-2">
+          <Shield className="h-4 w-4 text-primary" />
+          <span className="font-medium">{row.getValue('name')}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'description',
+      header: 'Description',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground max-w-[300px] truncate">
+          {row.getValue('description') || 'No description'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'userCount',
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="h-8 p-0 hover:bg-transparent"
+        >
+          Users
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center space-x-1">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <span>{row.getValue('userCount') || 0}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'permissions',
+      header: 'Permissions',
+      cell: ({ row }) => {
+        const permissions = row.getValue('permissions') as string[] || [];
+        return (
+          <Badge variant="outline">
+            {permissions.length} permissions
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'isActive',
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={row.getValue('isActive') ? 'default' : 'secondary'}>
+          {row.getValue('isActive') ? 'Active' : 'Inactive'}
+        </Badge>
+      ),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => {
+        const role = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setSelectedRole(role)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Manage Permissions
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => deleteRoleMutation.mutate(role.id)}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Role
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ], [deleteRoleMutation, setSelectedRole]);
+
+  const handlePermissionToggle = (permissionKey: string, enabled: boolean) => {
+    if (!selectedRole) return;
+    updateRolePermissionMutation.mutate({
+      roleId: selectedRole.id,
+      permissionKey,
+      enabled,
+    });
+  };
+
+  const isPermissionEnabled = (permissionKey: string) => {
+    return rolePermissions.some((p: RolePermission) => p.permissionKey === permissionKey && p.enabled);
+  };
+
+  const groupPermissionsByCategory = () => {
+    const grouped: { [key: string]: string[] } = {};
+    organizationFeatures.forEach(feature => {
+      const category = feature.split('.')[0];
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(feature);
+    });
+    return grouped;
+  };
+
+  if (!hasPermission('roles.read')) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <AlertCircle className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Insufficient Permissions</h3>
+            <p className="text-gray-600">You need role management permissions to access this feature.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const stats: StatCard[] = [
+    {
+      icon: Shield,
+      label: 'Total Roles',
+      value: roles.length,
+      iconColor: 'text-primary',
+    },
+    {
+      icon: Users,
+      label: 'Active Roles',
+      value: roles.filter(r => r.isActive).length,
+      iconColor: 'text-green-600',
+    },
+    {
+      icon: Settings,
+      label: 'Permissions',
+      value: organizationFeatures.length,
+      iconColor: 'text-blue-600',
+    },
+    {
+      icon: CheckCircle,
+      label: 'System Roles',
+      value: roles.filter(r => r.scope === 'system').length,
+      iconColor: 'text-orange-600',
+    },
+  ];
+
+  const actions: ActionButton[] = [
+    {
+      icon: Download,
+      label: 'Export',
+      onClick: () => {
+        // Export functionality
+        console.log('Export roles');
+      },
+      variant: 'outline',
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <ManagementLayout
+        title="Role Management"
+        description="Create and manage roles with specific permissions for your organization."
+        stats={stats}
+        actions={actions}
+        tableTitle="Organization Roles"
+        tableDescription="Manage and track all roles with advanced filtering and search capabilities."
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-end">
+            {hasPermission('roles.create') && (
+              <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Create Role
+              </Button>
+            )}
+          </div>
+          <DataTable
+            columns={columns}
+            data={roles}
+            searchPlaceholder="Search roles..."
+            isLoading={rolesLoading}
+            emptyStateIcon={Shield}
+            emptyStateTitle="No roles found"
+            emptyStateDescription="Create your first role to get started."
+            totalCount={roles.length}
+          />
+        </div>
+      </ManagementLayout>
+
+      {/* Permission Management Modal */}
+      {selectedRole && (
+        <PermissionManagementModal
+          role={selectedRole}
+          isOpen={!!selectedRole}
+          onClose={() => setSelectedRole(null)}
+          onPermissionToggle={handlePermissionToggle}
+          rolePermissions={rolePermissions}
+          organizationFeatures={organizationFeatures}
+          isLoading={permissionsLoading}
+          groupPermissionsByCategory={groupPermissionsByCategory}
+          isPermissionEnabled={isPermissionEnabled}
+        />
+      )}
+
+      {/* Create Role Modal */}
+      <CreateRoleModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          setShowCreateModal(false);
+          queryClient.invalidateQueries({ queryKey: ['organization-roles'] });
+        }}
+      />
+    </div>
+  );
+};
+
+// Permission Management Modal Component
+interface PermissionManagementModalProps {
+  role: Role;
+  isOpen: boolean;
+  onClose: () => void;
+  onPermissionToggle: (permissionKey: string, enabled: boolean) => void;
+  rolePermissions: RolePermission[];
+  organizationFeatures: string[];
+  isLoading: boolean;
+  groupPermissionsByCategory: () => { [key: string]: string[] };
+  isPermissionEnabled: (permissionKey: string) => boolean;
+}
+
+const PermissionManagementModal: React.FC<PermissionManagementModalProps> = ({
+  role,
+  isOpen,
+  onClose,
+  onPermissionToggle,
+  organizationFeatures,
+  isLoading,
+  groupPermissionsByCategory,
+  isPermissionEnabled,
+}) => {
+  const groupedPermissions = groupPermissionsByCategory();
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold">Manage Permissions</h2>
+            <p className="text-sm text-gray-600">Role: {role.name}</p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading permissions...</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(groupedPermissions).map(([category, permissions]) => (
+                <Card key={category}>
+                  <CardHeader>
+                    <CardTitle className="text-lg capitalize">{category} Permissions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {permissions.map((permission) => (
+                        <div key={permission} className="flex items-center space-x-3">
+                          <input
+                            type="checkbox"
+                            id={permission}
+                            checked={isPermissionEnabled(permission)}
+                            onChange={(e) => onPermissionToggle(permission, e.target.checked)}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <label htmlFor={permission} className="text-sm font-medium">
+                            {permission}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};

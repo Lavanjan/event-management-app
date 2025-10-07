@@ -142,20 +142,20 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
   };
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      <div className="flex items-center justify-between">
+    <div className={`flex flex-col h-full ${className}`}>
+      <div className="flex items-center justify-between flex-shrink-0 mb-6">
         <div>
           <h2 className="text-2xl font-bold">{title}</h2>
           {description && (
             <p className="text-muted-foreground mt-1">{description}</p>
           )}
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Badge variant="secondary">
             {totalCount} document{totalCount !== 1 ? 's' : ''}
           </Badge>
-          
+
           <Button
             variant="outline"
             size="sm"
@@ -168,8 +168,8 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+        <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
           <TabsTrigger value="list">
             Documents ({documents.length})
           </TabsTrigger>
@@ -181,107 +181,111 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
           )}
         </TabsList>
 
-        <TabsContent value="list" className="space-y-4">
-          {showFilters && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Filters</CardTitle>
-                <CardDescription>
-                  Filter and search through documents
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Search</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search documents..."
-                        value={filters.search || ''}
-                        onChange={(e) => handleFilterChange('search', e.target.value)}
-                        className="pl-10"
-                      />
+        <TabsContent value="list" className="flex-1 overflow-hidden flex flex-col">
+          <div className="overflow-y-auto flex-1 space-y-4 pr-2">
+            {showFilters && (
+              <Card className="flex-shrink-0">
+                <CardHeader>
+                  <CardTitle className="text-lg">Filters</CardTitle>
+                  <CardDescription>
+                    Filter and search through documents
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Search</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search documents..."
+                          value={filters.search || ''}
+                          onChange={(e) => handleFilterChange('search', e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Type</label>
+                      <Select
+                        value={filters.type || 'all'}
+                        onValueChange={(value) => handleFilterChange('type', value === 'all' ? undefined : value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="All types" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Types</SelectItem>
+                          <SelectItem value={DocumentType.IMAGE}>Image</SelectItem>
+                          <SelectItem value={DocumentType.PDF}>PDF</SelectItem>
+                          <SelectItem value={DocumentType.DOCUMENT}>Document</SelectItem>
+                          <SelectItem value={DocumentType.SPREADSHEET}>Spreadsheet</SelectItem>
+                          <SelectItem value={DocumentType.OTHER}>Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Category</label>
+                      <Select
+                        value={filters.category || 'all'}
+                        onValueChange={(value) => handleFilterChange('category', value === 'all' ? undefined : value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="All categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          <SelectItem value={DocumentCategory.BOOKING_DOCUMENT}>Booking Document</SelectItem>
+                          <SelectItem value={DocumentCategory.INVENTORY_DOCUMENT}>Inventory Document</SelectItem>
+                          <SelectItem value={DocumentCategory.INVOICE}>Invoice</SelectItem>
+                          <SelectItem value={DocumentCategory.RECEIPT}>Receipt</SelectItem>
+                          <SelectItem value={DocumentCategory.CONTRACT}>Contract</SelectItem>
+                          <SelectItem value={DocumentCategory.PHOTO}>Photo</SelectItem>
+                          <SelectItem value={DocumentCategory.OTHER}>Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Type</label>
-                    <Select
-                      value={filters.type || 'all'}
-                      onValueChange={(value) => handleFilterChange('type', value === 'all' ? undefined : value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All types" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Types</SelectItem>
-                        <SelectItem value={DocumentType.IMAGE}>Image</SelectItem>
-                        <SelectItem value={DocumentType.PDF}>PDF</SelectItem>
-                        <SelectItem value={DocumentType.DOCUMENT}>Document</SelectItem>
-                        <SelectItem value={DocumentType.SPREADSHEET}>Spreadsheet</SelectItem>
-                        <SelectItem value={DocumentType.OTHER}>Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="flex justify-end">
+                    <Button variant="outline" onClick={clearFilters}>
+                      <Filter className="h-4 w-4 mr-2" />
+                      Clear Filters
+                    </Button>
                   </div>
+                </CardContent>
+              </Card>
+            )}
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Category</label>
-                    <Select
-                      value={filters.category || 'all'}
-                      onValueChange={(value) => handleFilterChange('category', value === 'all' ? undefined : value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="All categories" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value={DocumentCategory.BOOKING_DOCUMENT}>Booking Document</SelectItem>
-                        <SelectItem value={DocumentCategory.INVENTORY_DOCUMENT}>Inventory Document</SelectItem>
-                        <SelectItem value={DocumentCategory.INVOICE}>Invoice</SelectItem>
-                        <SelectItem value={DocumentCategory.RECEIPT}>Receipt</SelectItem>
-                        <SelectItem value={DocumentCategory.CONTRACT}>Contract</SelectItem>
-                        <SelectItem value={DocumentCategory.PHOTO}>Photo</SelectItem>
-                        <SelectItem value={DocumentCategory.OTHER}>Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <Button variant="outline" onClick={clearFilters}>
-                    <Filter className="h-4 w-4 mr-2" />
-                    Clear Filters
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <LoadingSpinner />
-              <span className="ml-2">Loading documents...</span>
-            </div>
-          ) : (
-            <DocumentList
-              documents={documents}
-              onDocumentDelete={handleDocumentDelete}
-              showActions={true}
-            />
-          )}
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <LoadingSpinner />
+                <span className="ml-2">Loading documents...</span>
+              </div>
+            ) : (
+              <DocumentList
+                documents={documents}
+                onDocumentDelete={handleDocumentDelete}
+                showActions={true}
+              />
+            )}
+          </div>
         </TabsContent>
 
         {allowUpload && (
-          <TabsContent value="upload">
-            <DocumentUpload
-              entityType={entityType}
-              entityId={entityId}
-              onUploadComplete={handleUploadComplete}
-              onUploadError={handleUploadError}
-              allowMultiple={true}
-              maxFiles={10}
-            />
+          <TabsContent value="upload" className="flex-1 overflow-hidden">
+            <div className="overflow-y-auto h-full pr-2">
+              <DocumentUpload
+                entityType={entityType}
+                entityId={entityId}
+                onUploadComplete={handleUploadComplete}
+                onUploadError={handleUploadError}
+                allowMultiple={true}
+                maxFiles={10}
+              />
+            </div>
           </TabsContent>
         )}
       </Tabs>

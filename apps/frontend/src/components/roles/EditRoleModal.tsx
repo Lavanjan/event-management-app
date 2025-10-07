@@ -88,7 +88,7 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
   const loadAvailablePermissions = async () => {
     setLoadingPermissions(true);
     try {
-      const response = await fetch('/api/roles/enhanced/available-permissions', {
+      const response = await fetch('/api/enhanced-roles/available-permissions', {
         credentials: 'include',
       });
 

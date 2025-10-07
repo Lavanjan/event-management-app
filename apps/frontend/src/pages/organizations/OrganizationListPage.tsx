@@ -6,7 +6,7 @@ import { organizationService, Organization, OrganizationQueryParams } from '../.
 import { CreateOrganizationModal } from '../../components/organizations/CreateOrganizationModal';
 import { ViewOrganizationModal } from '../../components/organizations/ViewOrganizationModal';
 import { EditOrganizationModal } from '../../components/organizations/EditOrganizationModal';
-import { ManagePermissionsModal } from '../../components/organizations/ManagePermissionsModal';
+
 import { OrganizationDataTable } from '../../components/organizations/OrganizationDataTable';
 import { OrganizationTableFilters } from '../../components/organizations/OrganizationTableFilters';
 import { useToast } from '../../hooks/use-toast';
@@ -74,7 +74,6 @@ export function OrganizationListPage() {
   // Modal handlers
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
   const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null);
 
   const handleView = (organization: Organization) => {
@@ -87,10 +86,7 @@ export function OrganizationListPage() {
     setEditModalOpen(true);
   };
 
-  const handleManagePermissions = (organization: Organization) => {
-    setSelectedOrganization(organization);
-    setPermissionsModalOpen(true);
-  };
+
 
   const handleDelete = async (organization: Organization) => {
     if (organization.status === 'active') {
@@ -228,7 +224,6 @@ export function OrganizationListPage() {
         }}
         onView={handleView}
         onEdit={handleEdit}
-        onManagePermissions={handleManagePermissions}
         onDelete={handleDelete}
         onSuspend={handleSuspend}
         onResendVerification={handleResendVerification}
@@ -289,15 +284,7 @@ export function OrganizationListPage() {
               setEditModalOpen(false);
             }}
           />
-          <ManagePermissionsModal
-            open={permissionsModalOpen}
-            onOpenChange={setPermissionsModalOpen}
-            organization={selectedOrganization}
-            onSuccess={() => {
-              loadOrganizations();
-              setPermissionsModalOpen(false);
-            }}
-          />
+
         </>
       )}
     </div>

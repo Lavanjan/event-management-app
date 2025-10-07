@@ -21,7 +21,12 @@
     "typeorm:run": "npm run typeorm -- migration:run -d src/database/data-source.ts",
     "typeorm:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
     "seed": "ts-node src/database/seeds/seed.ts",
-    "seed:sample": "ts-node src/database/seeds/seed.ts --sample-data"
+    "seed:sample": "ts-node src/database/seeds/seed.ts --sample-data",
+    "seed:fix-ra": "ts-node src/database/seeds/run-fix-ra-permissions.ts",
+    "debug:ra": "ts-node src/database/seeds/run-debug-ra.ts",
+    "fix:ra-complete": "ts-node src/database/seeds/run-fix-ra-complete.ts",
+    "debug:menu": "ts-node src/database/seeds/run-debug-menu.ts",
+    "debug:package": "ts-node src/database/seeds/run-debug-package.ts"
   },
   "dependencies": {
     "@nestjs/bull": "^10.0.0",

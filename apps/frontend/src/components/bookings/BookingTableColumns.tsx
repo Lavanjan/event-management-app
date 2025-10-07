@@ -12,6 +12,7 @@ import {
   statusVariants
 } from '../common/DataTableColumns';
 import { Calendar, User, Mail, Phone, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 // Booking interface (should match your types)
 export interface Booking {
@@ -39,7 +40,7 @@ export interface Booking {
   updatedAt: Date | string;
 }
 
-export const createBookingColumns = (handlers: ActionHandlers<Booking>): ColumnDef<Booking>[] => [
+export const createBookingColumns = (handlers: ActionHandlers<Booking>, formatAmount?: (amount: number) => string): ColumnDef<Booking>[] => [
   // Customer Information
   {
     accessorKey: 'customerName',
@@ -136,7 +137,7 @@ export const createBookingColumns = (handlers: ActionHandlers<Booking>): ColumnD
           <div className="space-y-1">
             <Progress value={paymentProgress} className="h-2" />
             <p className="text-xs text-muted-foreground">
-              ${booking.advanceAmount + (booking.totalAmount - booking.balanceAmount)} / ${booking.totalAmount}
+              {formatAmount ? formatAmount(booking.advanceAmount + (booking.totalAmount - booking.balanceAmount)) : `$${booking.advanceAmount + (booking.totalAmount - booking.balanceAmount)}`} / {formatAmount ? formatAmount(booking.totalAmount) : `$${booking.totalAmount}`}
             </p>
           </div>
         </div>
@@ -194,14 +195,14 @@ export const createBookingColumns = (handlers: ActionHandlers<Booking>): ColumnD
               <TrendingDown className="h-4 w-4" />
             )}
             <span>
-              {new Intl.NumberFormat('en-US', {
+              {formatAmount ? formatAmount(Math.abs(booking.profitLoss)) : new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
               }).format(Math.abs(booking.profitLoss))}
             </span>
           </div>
           <div className="text-xs text-muted-foreground">
-            Rev: {new Intl.NumberFormat('en-US', {
+            Rev: {formatAmount ? formatAmount(booking.totalRevenues) : new Intl.NumberFormat('en-US', {
               style: 'currency',
               currency: 'USD',
             }).format(booking.totalRevenues)}

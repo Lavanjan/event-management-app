@@ -11,15 +11,35 @@ import { VerificationController } from './verification.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { SecureAuthGuard } from './guards/secure-auth.guard';
-import { User, Organization } from '../../database/entities';
+import {
+  User,
+  Organization,
+  MasterPermission,
+  RolePermission,
+  OrganizationPermission,
+  UserPermission,
+  OrganizationPackage,
+  FeaturePackage
+} from '../../database/entities';
 import { UsersModule } from '../users/users.module';
 import { EmailModule } from '../email/email.module';
 import { PermissionsModule } from '../permissions/permissions.module';
 import { PermissionCheckService } from './permission-check.service';
+import { EnhancedPermissionCheckService } from '../permissions/enhanced-permission-check.service';
+import { MenuService } from './services/menu.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Organization]),
+    TypeOrmModule.forFeature([
+      User,
+      Organization,
+      MasterPermission,
+      RolePermission,
+      OrganizationPermission,
+      UserPermission,
+      OrganizationPackage,
+      FeaturePackage
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -36,7 +56,7 @@ import { PermissionCheckService } from './permission-check.service';
     PermissionsModule,
   ],
   controllers: [AuthController, VerificationController],
-  providers: [AuthService, SecureAuthService, SecureAuthGuard, JwtStrategy, LocalStrategy, PermissionCheckService],
+  providers: [AuthService, SecureAuthService, SecureAuthGuard, JwtStrategy, LocalStrategy, PermissionCheckService, EnhancedPermissionCheckService, MenuService],
   exports: [AuthService, SecureAuthService, SecureAuthGuard, JwtModule, PermissionCheckService],
 })
 export class AuthModule {}

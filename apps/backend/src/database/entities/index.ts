@@ -16,3 +16,6 @@ export { Payment, PaymentMethod, PaymentStatus, PaymentType } from './payment.en
 export { PaymentPlan, PaymentPlanStatus, PaymentPlanType } from './payment-plan.entity';
 export { PaymentTransaction, TransactionType } from './payment-transaction.entity';
 export { RolePermission } from './role-permission.entity';
+export { FeaturePackage } from './feature-package.entity';
+export { OrganizationPackage } from './organization-package.entity';
+export { UserPermission } from './user-permission.entity';

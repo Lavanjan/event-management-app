@@ -1,12 +1,20 @@
-import { useState } from 'react';
-import { Building2, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Building2, X, Package, DollarSign, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
+import { Checkbox } from '../ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Badge } from '../ui/badge';
 import { organizationService } from '../../services/organizationService';
+import { featurePackageService, FeaturePackage } from '../../services/featurePackageService';
 import { useToast } from '../../hooks/use-toast';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { getSupportedCurrencies } from '../../utils/currency';
 
 interface CreateOrganizationModalProps {
   open: boolean;
@@ -18,6 +26,7 @@ interface CreateOrganizationFormData {
   name: string;
   slug: string;
   description: string;
+  currency: string;
   admin: {
     email: string;
     firstName: string;
@@ -25,15 +34,20 @@ interface CreateOrganizationFormData {
     autoGeneratePassword: boolean;
     requiresVerification: boolean;
   };
+  selectedPackage: string; // Single feature package ID (license model)
 }
 
 export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: CreateOrganizationModalProps) {
   const { toast } = useToast();
+  const { user } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [availablePackages, setAvailablePackages] = useState<FeaturePackage[]>([]);
   const [formData, setFormData] = useState<CreateOrganizationFormData>({
     name: '',
     slug: '',
     description: '',
+    currency: 'LKR', // Default to LKR
     admin: {
       email: '',
       firstName: '',
@@ -41,8 +55,33 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
       autoGeneratePassword: true,
       requiresVerification: true,
     },
+    selectedPackage: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load available feature packages when modal opens
+  useEffect(() => {
+    if (open) {
+      loadFeaturePackages();
+    }
+  }, [open]);
+
+  const loadFeaturePackages = async () => {
+    try {
+      setLoadingPackages(true);
+      const packages = await featurePackageService.getAllFeaturePackages();
+      setAvailablePackages(packages.filter(pkg => pkg.isActive));
+    } catch (error) {
+      console.error('Failed to load feature packages:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load feature packages.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingPackages(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     if (field.startsWith('admin.')) {
@@ -81,6 +120,13 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
+  };
+
+  const handlePackageToggle = (packageId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedPackage: prev.selectedPackage === packageId ? '' : packageId
+    }));
   };
 
   const validateForm = (): boolean => {
@@ -123,11 +169,30 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
       setLoading(true);
 
       // Create organization
-      await organizationService.createOrganization(formData);
+      const organizationResponse = await organizationService.createOrganization(formData);
+      const organizationId = organizationResponse.data?.id || organizationResponse.id;
+
+      // Assign selected feature package
+      if (formData.selectedPackage && organizationId && user?.id) {
+        try {
+          await featurePackageService.assignPackageToOrganization({
+            organizationId,
+            featurePackageId: formData.selectedPackage,
+            assignedBy: user.id,
+          });
+        } catch (packageError) {
+          console.error('Failed to assign feature packages:', packageError);
+          toast({
+            title: 'Warning',
+            description: 'Organization created but some feature packages could not be assigned.',
+            variant: 'destructive',
+          });
+        }
+      }
 
       toast({
         title: 'Success',
-        description: 'Organization created successfully.',
+        description: `Organization created successfully${formData.selectedPackage ? ' with feature package assigned' : ''}.`,
       });
 
       // Reset form
@@ -135,11 +200,15 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
         name: '',
         slug: '',
         description: '',
+        currency: 'LKR', // Default to LKR
         admin: {
           email: '',
           firstName: '',
           lastName: '',
+          autoGeneratePassword: true,
+          requiresVerification: true,
         },
+        selectedPackage: '',
       });
       setErrors({});
 
@@ -217,6 +286,29 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
                 placeholder="Enter organization description"
                 rows={3}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="currency">Default Currency *</Label>
+              <Select value={formData.currency} onValueChange={(value) => handleInputChange('currency', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getSupportedCurrencies().map((currency) => (
+                    <SelectItem key={currency.code} value={currency.code}>
+                      <div className="flex items-center space-x-2">
+                        <span>{currency.symbol}</span>
+                        <span>{currency.code}</span>
+                        <span className="text-muted-foreground">- {currency.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                This will be used for all pricing and financial calculations in the organization.
+              </p>
             </div>
           </div>
 
@@ -302,6 +394,90 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
             </div>
           </div>
 
+          {/* Feature Packages */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              <h3 className="text-lg font-medium">Feature Packages</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Select feature packages to assign to this organization. These determine what features and permissions will be available.
+            </p>
+
+            {loadingPackages ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Loading feature packages...</span>
+              </div>
+            ) : availablePackages.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Package className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No feature packages available</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {availablePackages.map((pkg) => (
+                  <Card
+                    key={pkg.id}
+                    className={`cursor-pointer transition-all ${
+                      formData.selectedPackage === pkg.id
+                        ? 'ring-2 ring-primary bg-primary/5'
+                        : 'hover:shadow-md'
+                    }`}
+                    onClick={() => handlePackageToggle(pkg.id)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={formData.selectedPackage === pkg.id}
+                            onChange={() => handlePackageToggle(pkg.id)}
+                          />
+                          <CardTitle className="text-base">{pkg.name}</CardTitle>
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <DollarSign className="h-3 w-3" />
+                          {pkg.price > 0 ? `$${pkg.price}` : 'Free'}
+                          <Badge variant="outline" className="ml-1 text-xs">
+                            {pkg.billingCycle}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {pkg.description && (
+                        <p className="text-sm text-muted-foreground mb-2">{pkg.description}</p>
+                      )}
+                      <div className="flex flex-wrap gap-1">
+                        {pkg.features.slice(0, 3).map((feature, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {feature}
+                          </Badge>
+                        ))}
+                        {pkg.features.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{pkg.features.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {formData.selectedPackage && (
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm font-medium text-blue-900">
+                  Package selected: {availablePackages.find(pkg => pkg.id === formData.selectedPackage)?.name}
+                </p>
+                <p className="text-xs text-blue-700">
+                  This package will be assigned to the organization after creation.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Actions */}
           <div className="flex justify-end space-x-2 pt-4 border-t">
             <Button
@@ -313,7 +489,11 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Organization'}
+              {loading ? (
+                formData.selectedPackage
+                  ? 'Creating & Assigning Package...'
+                  : 'Creating...'
+              ) : 'Create Organization'}
             </Button>
           </div>
         </form>

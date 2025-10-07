@@ -6,6 +6,7 @@ import { Badge } from '../ui/badge';
 import { DataTable } from '../common/DataTable';
 import { useToast } from '../../hooks/use-toast';
 import { usePayments } from '../../hooks/usePayments';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { 
   Search, 
   Plus, 
@@ -49,6 +50,7 @@ export const PaymentList: React.FC = () => {
   const [showRefundModal, setShowRefundModal] = useState(false);
 
   const { toast } = useToast();
+  const { formatAmount: formatCurrencyAmount } = useCurrency();
 
   // Use the payments hook
   const { data: paymentsData, isLoading: loading, error, refetch } = usePayments(filters);
@@ -103,11 +105,9 @@ export const PaymentList: React.FC = () => {
     );
   };
 
-  const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
-    }).format(amount);
+  const formatAmount = (amount: number, currency?: string) => {
+    // Use organization currency if no specific currency provided
+    return formatCurrencyAmount(amount);
   };
 
   const columns = [
@@ -202,17 +202,7 @@ export const PaymentList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Payment Management</h1>
-          <p className="text-gray-600">Track and manage all payment transactions</p>
-        </div>
-        <Button onClick={() => setShowProcessModal(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Process Payment
-        </Button>
-      </div>
-
+      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle>Filters</CardTitle>
@@ -282,25 +272,22 @@ export const PaymentList: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={payments}
-            isLoading={loading}
-            totalCount={pagination.total}
-            pageCount={pagination.totalPages}
-            currentPage={pagination.page}
-            pageSize={pagination.limit}
-            onPageChange={handlePageChange}
-            onRefresh={handleRefresh}
-            title="Payments"
-            description="Manage payment transactions"
-            searchKey="description"
-            searchPlaceholder="Search payments..."
-          />
-        </CardContent>
-      </Card>
+      {/* Data Table */}
+      <DataTable
+        columns={columns}
+        data={payments}
+        isLoading={loading}
+        totalCount={pagination.total}
+        pageCount={pagination.totalPages}
+        currentPage={pagination.page}
+        pageSize={pagination.limit}
+        onPageChange={handlePageChange}
+        onRefresh={handleRefresh}
+        title="Payments"
+        description="Manage payment transactions"
+        searchKey="description"
+        searchPlaceholder="Search payments..."
+      />
 
       {showProcessModal && (
         <ProcessPaymentModal

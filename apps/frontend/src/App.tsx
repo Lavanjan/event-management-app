@@ -6,6 +6,7 @@ import { Layout } from './components/layout/Layout';
 import { AuthLayout } from './components/layout/AuthLayout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PermissionRoute } from './components/auth/PermissionRoute';
+import { AuthInitializer } from './components/auth/AuthInitializer';
 
 // Auth Pages
 import { LoginPage } from './pages/auth/LoginPage';
@@ -60,12 +61,19 @@ import { CreateOrganizationPage } from './pages/organizations/CreateOrganization
 import { OrganizationDetailPage } from './pages/organizations/OrganizationDetailPage';
 import { EditOrganizationPage } from './pages/organizations/EditOrganizationPage';
 
+// Three-Tier Permission System Pages
+import { FeaturePackagesPage } from './pages/admin/FeaturePackagesPage';
+import { MasterPermissionsPage } from './pages/admin/MasterPermissionsPage';
+import { UserPermissionsPage } from './pages/permissions/UserPermissionsPage';
+import { RoleManagementPage } from './pages/permissions/RoleManagementPage';
+
 function App() {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Routes>
+    <AuthInitializer>
+      <div className="min-h-screen bg-background">
+        <Routes>
         {/* Auth Routes */}
         <Route
           path="/login"
@@ -133,134 +141,134 @@ function App() {
 
                   {/* Inventory Routes */}
                   <Route path="/inventory" element={
-                    <PermissionRoute permission="inventory:read">
+                    <PermissionRoute permission="inventory.read">
                       <InventoryListPage />
                     </PermissionRoute>
                   } />
                   <Route path="/inventory/create" element={
-                    <PermissionRoute permission="inventory:create">
+                    <PermissionRoute permission="inventory.create">
                       <InventoryCreatePage />
                     </PermissionRoute>
                   } />
                   <Route path="/inventory/:id" element={
-                    <PermissionRoute permission="inventory:read">
+                    <PermissionRoute permission="inventory.read">
                       <InventoryDetailPage />
                     </PermissionRoute>
                   } />
                   <Route path="/inventory/:id/edit" element={
-                    <PermissionRoute permission="inventory:update">
+                    <PermissionRoute permission="inventory.update">
                       <InventoryEditPage />
                     </PermissionRoute>
                   } />
                   <Route path="/inventory/alerts" element={
-                    <PermissionRoute permission="inventory:read">
+                    <PermissionRoute permission="inventory.read">
                       <LowStockAlertsPage />
                     </PermissionRoute>
                   } />
                   <Route path="/inventory/categories" element={
-                    <PermissionRoute permission="inventory:create">
+                    <PermissionRoute permission="inventory.create">
                       <InventoryCategoriesPage />
                     </PermissionRoute>
                   } />
 
                   {/* Event Routes */}
                   <Route path="/events" element={
-                    <PermissionRoute permission="events:read">
+                    <PermissionRoute permission="events.read">
                       <EventListPage />
                     </PermissionRoute>
                   } />
                   <Route path="/events/create" element={
-                    <PermissionRoute permission="events:create">
+                    <PermissionRoute permission="events.create">
                       <EventCreatePage />
                     </PermissionRoute>
                   } />
                   <Route path="/events/:id" element={
-                    <PermissionRoute permission="events:read">
+                    <PermissionRoute permission="events.read">
                       <EventDetailPage />
                     </PermissionRoute>
                   } />
                   <Route path="/events/:id/edit" element={
-                    <PermissionRoute permission="events:update">
+                    <PermissionRoute permission="events.update">
                       <EventEditPage />
                     </PermissionRoute>
                   } />
 
                   {/* Booking Routes */}
                   <Route path="/bookings" element={
-                    <PermissionRoute permission="bookings:read">
+                    <PermissionRoute permission="bookings.read">
                       <BookingListPage />
                     </PermissionRoute>
                   } />
                   <Route path="/bookings/create" element={
-                    <PermissionRoute permission="bookings:create">
+                    <PermissionRoute permission="bookings.create">
                       <BookingCreatePage />
                     </PermissionRoute>
                   } />
                   <Route path="/bookings/:id" element={
-                    <PermissionRoute permission="bookings:read">
+                    <PermissionRoute permission="bookings.read">
                       <BookingDetailPage />
                     </PermissionRoute>
                   } />
 
                   {/* Organization Management Routes */}
                   <Route path="/organizations" element={
-                    <PermissionRoute permission="organizations:read">
+                    <PermissionRoute permission="organizations.read">
                       <OrganizationListPage />
                     </PermissionRoute>
                   } />
                   <Route path="/organizations/create" element={
-                    <PermissionRoute permission="organizations:create">
+                    <PermissionRoute permission="organizations.create">
                       <CreateOrganizationPage />
                     </PermissionRoute>
                   } />
                   <Route path="/organizations/:id" element={
-                    <PermissionRoute permission="organizations:read">
+                    <PermissionRoute permission="organizations.read">
                       <OrganizationDetailPage />
                     </PermissionRoute>
                   } />
                   <Route path="/organizations/:id/edit" element={
-                    <PermissionRoute permission="organizations:update">
+                    <PermissionRoute permission="organizations.update">
                       <EditOrganizationPage />
                     </PermissionRoute>
                   } />
 
                   {/* User Management Routes */}
                   <Route path="/users" element={
-                    <PermissionRoute permission="users:read">
+                    <PermissionRoute permission="users.read">
                       <UserListPage />
                     </PermissionRoute>
                   } />
                   <Route path="/users/create" element={
-                    <PermissionRoute permission="users:create">
+                    <PermissionRoute permission="users.create">
                       <UserCreatePage />
                     </PermissionRoute>
                   } />
                   <Route path="/users/:id/edit" element={
-                    <PermissionRoute permission="users:update">
+                    <PermissionRoute permission="users.update">
                       <UserEditPage />
                     </PermissionRoute>
                   } />
 
                   {/* Role Management Routes */}
                   <Route path="/roles" element={
-                    <PermissionRoute permission="roles:read">
+                    <PermissionRoute permission="roles.read">
                       <RoleListPage />
                     </PermissionRoute>
                   } />
                   <Route path="/roles/create" element={
-                    <PermissionRoute permission="roles:create">
+                    <PermissionRoute permission="roles.create">
                       <RoleCreatePage />
                     </PermissionRoute>
                   } />
                   <Route path="/roles/permissions" element={
-                    <PermissionRoute permission="roles:read">
+                    <PermissionRoute permission="roles.read">
                       <RoleListPage />
                     </PermissionRoute>
                   } />
 
                   {/* User Roles Route */}
                   <Route path="/users/roles" element={
-                    <PermissionRoute permission="roles:read">
+                    <PermissionRoute permission="roles.read">
                       <RoleListPage />
                     </PermissionRoute>
                   } />
@@ -294,6 +302,33 @@ function App() {
                     </PermissionRoute>
                   } />
 
+                  {/* Three-Tier Permission System Routes */}
+                  <Route path="/admin/feature-packages" element={
+                    <PermissionRoute permission="isProductAdmin">
+                      <FeaturePackagesPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/admin/organizations" element={
+                    <PermissionRoute permission="isProductAdmin">
+                      <OrganizationListPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/admin/permissions" element={
+                    <PermissionRoute permission="isProductAdmin">
+                      <MasterPermissionsPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/permissions/users" element={
+                    <PermissionRoute permission="users.update">
+                      <UserPermissionsPage />
+                    </PermissionRoute>
+                  } />
+                  <Route path="/permissions/roles" element={
+                    <PermissionRoute permission="roles.read">
+                      <RoleManagementPage />
+                    </PermissionRoute>
+                  } />
+
                   {/* Settings Routes */}
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/settings/profile" element={<ProfilePage />} />
@@ -306,8 +341,9 @@ function App() {
             </ProtectedRoute>
           }
         />
-      </Routes>
-    </div>
+        </Routes>
+      </div>
+    </AuthInitializer>
   );
 }
 

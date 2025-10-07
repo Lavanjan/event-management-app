@@ -18,22 +18,21 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { AddExpenseDto } from './dto/add-expense.dto';
 import { AddRevenueDto } from './dto/add-revenue.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { BookingFiltersDto } from './dto/booking-filters.dto';
 import { SecureAuthGuard } from '../auth/guards/secure-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { RequireUserType } from '../auth/decorators/user-type.decorator';
-import { UserType } from '../../database/entities';
+import { ComprehensivePermissionGuard, RequirePermission } from '../../common/guards/comprehensive-permission.guard';
 import { CurrentOrganization } from '../../common/decorators/current-organization.decorator';
 import { BookingPaymentStatus } from '../../database/entities/booking.entity';
 
 @ApiTags('Bookings')
 @Controller('bookings')
-@UseGuards(SecureAuthGuard, RolesGuard)
+@UseGuards(SecureAuthGuard, ComprehensivePermissionGuard)
 @ApiBearerAuth('JWT-auth')
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.create')
   @ApiOperation({ summary: 'Create a new booking' })
   @ApiResponse({ status: 201, description: 'Booking created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input data or insufficient inventory' })
@@ -48,20 +47,24 @@ export class BookingsController {
   }
 
   @Get()
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.read')
   @ApiOperation({ summary: 'Get all bookings with pagination' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
   @ApiQuery({ name: 'sortBy', required: false, type: String })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['ASC', 'DESC'] })
+  @ApiQuery({ name: 'paymentStatus', required: false, type: String, description: 'Comma-separated payment statuses' })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'eventId', required: false, type: String })
+  @ApiQuery({ name: 'customer', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Bookings retrieved successfully' })
-  findAll(@Query() paginationDto: PaginationDto, @CurrentOrganization() organizationId: string) {
-    return this.bookingsService.findAll(paginationDto, organizationId);
+  findAll(@Query() filtersDto: BookingFiltersDto, @CurrentOrganization() organizationId: string) {
+    return this.bookingsService.findAll(filtersDto, organizationId);
   }
 
   @Get('overdue')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN, UserType.ORGANIZATION_USER)
+  @RequirePermission('bookings.read')
   @ApiOperation({ summary: 'Get overdue bookings' })
   @ApiResponse({ status: 200, description: 'Overdue bookings retrieved' })
   getOverdueBookings() {
@@ -69,7 +72,7 @@ export class BookingsController {
   }
 
   @Get('event/:eventId')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN, UserType.ORGANIZATION_USER)
+  @RequirePermission('bookings.read')
   @ApiOperation({ summary: 'Get bookings for a specific event' })
   @ApiResponse({ status: 200, description: 'Event bookings retrieved' })
   getBookingsByEvent(
@@ -80,7 +83,7 @@ export class BookingsController {
   }
 
   @Get(':id')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN, UserType.ORGANIZATION_USER)
+  @RequirePermission('bookings.read')
   @ApiOperation({ summary: 'Get booking by ID' })
   @ApiResponse({ status: 200, description: 'Booking found' })
   @ApiResponse({ status: 404, description: 'Booking not found' })
@@ -89,7 +92,7 @@ export class BookingsController {
   }
 
   @Patch(':id')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Update booking' })
   @ApiResponse({ status: 200, description: 'Booking updated successfully' })
   @ApiResponse({ status: 404, description: 'Booking not found' })
@@ -102,7 +105,7 @@ export class BookingsController {
   }
 
   @Patch(':id/confirm')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Confirm booking' })
   @ApiResponse({ status: 200, description: 'Booking confirmed successfully' })
   confirm(@Param('id', ParseUUIDPipe) id: string, @CurrentOrganization() organizationId: string) {
@@ -110,7 +113,7 @@ export class BookingsController {
   }
 
   @Patch(':id/start')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Start booking event' })
   @ApiResponse({ status: 200, description: 'Event started successfully' })
   start(@Param('id', ParseUUIDPipe) id: string, @CurrentOrganization() organizationId: string) {
@@ -118,7 +121,7 @@ export class BookingsController {
   }
 
   @Patch(':id/complete')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Complete booking' })
   @ApiResponse({ status: 200, description: 'Booking completed successfully' })
   complete(@Param('id', ParseUUIDPipe) id: string, @CurrentOrganization() organizationId: string) {
@@ -126,7 +129,7 @@ export class BookingsController {
   }
 
   @Patch(':id/cancel')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.cancel')
   @ApiOperation({ summary: 'Cancel booking' })
   @ApiResponse({ status: 200, description: 'Booking cancelled successfully' })
   cancel(
@@ -138,7 +141,7 @@ export class BookingsController {
   }
 
   @Patch(':id/payment-status')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Update payment status' })
   @ApiResponse({ status: 200, description: 'Payment status updated' })
   updatePaymentStatus(
@@ -150,7 +153,7 @@ export class BookingsController {
   }
 
   @Post(':id/expenses')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Add expense to booking' })
   @ApiResponse({ status: 201, description: 'Expense added successfully' })
   addExpense(
@@ -162,7 +165,7 @@ export class BookingsController {
   }
 
   @Post(':id/revenues')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Add revenue to booking' })
   @ApiResponse({ status: 201, description: 'Revenue added successfully' })
   addRevenue(
@@ -174,7 +177,7 @@ export class BookingsController {
   }
 
   @Delete(':id/expenses/:expenseId')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Remove expense from booking' })
   @ApiResponse({ status: 200, description: 'Expense removed successfully' })
   removeExpense(
@@ -185,7 +188,7 @@ export class BookingsController {
   }
 
   @Delete(':id/revenues/:revenueId')
-  @RequireUserType(UserType.PRODUCT_ADMIN, UserType.ORGANIZATION_ADMIN)
+  @RequirePermission('bookings.update')
   @ApiOperation({ summary: 'Remove revenue from booking' })
   @ApiResponse({ status: 200, description: 'Revenue removed successfully' })
   removeRevenue(

@@ -14,6 +14,7 @@ import { Card, CardContent } from '../ui/card';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, RefreshCw, DollarSign, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '../ui/alert';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 interface Payment {
   id: string;
@@ -55,6 +56,7 @@ export const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
   });
 
   const { toast } = useToast();
+  const { formatAmount } = useCurrency();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,11 +119,8 @@ export const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const formatAmount = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: payment.currency,
-    }).format(amount);
+  const formatCurrencyAmount = (amount: number) => {
+    return formatAmount(amount, payment.currency);
   };
 
   const isFullRefund = formData.amount === payment.amount;
@@ -151,7 +150,7 @@ export const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-500">Payment Amount:</span>
-                  <div className="font-medium">{formatAmount(payment.amount)}</div>
+                  <div className="font-medium">{formatCurrencyAmount(payment.amount)}</div>
                 </div>
                 <div>
                   <span className="text-gray-500">Payment Method:</span>
@@ -197,7 +196,7 @@ export const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                 />
               </div>
               <div className="flex justify-between text-sm text-gray-500">
-                <span>Maximum refund: {formatAmount(payment.amount)}</span>
+                <span>Maximum refund: {formatCurrencyAmount(payment.amount)}</span>
                 <span>{refundPercentage.toFixed(1)}% of original payment</span>
               </div>
               {isFullRefund && (
@@ -236,18 +235,18 @@ export const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Original Payment:</span>
-                  <span className="font-medium">{formatAmount(payment.amount)}</span>
+                  <span className="font-medium">{formatCurrencyAmount(payment.amount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Refund Amount:</span>
                   <span className="font-medium text-red-600">
-                    -{formatAmount(formData.amount)}
+                    -{formatCurrencyAmount(formData.amount)}
                   </span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-medium">
                   <span>Net Payment:</span>
                   <span className={payment.amount - formData.amount === 0 ? 'text-gray-500' : 'text-green-600'}>
-                    {formatAmount(payment.amount - formData.amount)}
+                    {formatCurrencyAmount(payment.amount - formData.amount)}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500 mt-2">

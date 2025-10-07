@@ -95,7 +95,7 @@ export class Payment {
   @Column('decimal', { precision: 10, scale: 2, name: 'net_amount' })
   netAmount: number;
 
-  @Column({ length: 3, default: 'USD' })
+  @Column({ length: 3, default: 'LKR' })
   currency: string;
 
   @Column({ nullable: true, name: 'transaction_id' })

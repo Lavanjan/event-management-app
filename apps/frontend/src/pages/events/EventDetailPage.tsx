@@ -21,9 +21,12 @@ import { PageLoading, ErrorState } from '../../components/forms/LoadingSpinner';
 import { useEvent, useEventStats, useDuplicateEvent, useDeleteEvent } from '../../hooks/useEvents';
 import { useBookingsByEvent } from '../../hooks/useBookings';
 import { format } from 'date-fns';
+import CreateBookingDialog from '../../components/modals/CreateBookingDialog';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { formatAmount } = useCurrency();
   const navigate = useNavigate();
 
   const { data: event, isLoading, error } = useEvent(id!);
@@ -32,14 +35,10 @@ export function EventDetailPage() {
   const duplicateEvent = useDuplicateEvent();
   const deleteEvent = useDeleteEvent();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
 
-  const getStatusColor = (status: string) => {
+
+  const getStatusColor = (status: string | undefined | null) => {
+    if (!status) return 'secondary';
     switch (status.toLowerCase()) {
       case 'active':
       case 'published':
@@ -105,16 +104,12 @@ export function EventDetailPage() {
 
         <div className="flex items-center space-x-2">
           <Badge variant={getStatusColor(event.status)}>
-            {event.status}
+            {event.status || 'Draft'}
           </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(`/bookings/create?eventId=${event.id}`)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Booking
-          </Button>
+          <CreateBookingDialog onBookingCreated={() => {
+            // Refresh the page data when booking is created
+            window.location.reload();
+          }} />
           <Button
             variant="outline"
             size="sm"
@@ -189,7 +184,7 @@ export function EventDetailPage() {
                     <label className="text-sm font-medium text-muted-foreground">Base Price</label>
                     <p className="text-lg flex items-center">
                       <DollarSign className="mr-1 h-4 w-4" />
-                      {formatCurrency(event.basePrice)}
+                      {formatAmount(event.basePrice)}
                     </p>
                   </div>
                 )}
@@ -268,7 +263,7 @@ export function EventDetailPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">{formatCurrency(booking.totalAmount)}</p>
+                        <p className="font-medium">{formatAmount(booking.totalAmount)}</p>
                         <Badge variant={booking.status === 'confirmed' ? 'success' : 'secondary'}>
                           {booking.status}
                         </Badge>
@@ -312,7 +307,7 @@ export function EventDetailPage() {
                     <p className="text-sm text-muted-foreground">Confirmed</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
+                    <p className="text-2xl font-bold">{formatAmount(stats.totalRevenue)}</p>
                     <p className="text-sm text-muted-foreground">Revenue</p>
                   </div>
                   <div className="text-center">
@@ -347,14 +342,12 @@ export function EventDetailPage() {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start"
-                onClick={() => navigate(`/bookings/create?eventId=${event.id}`)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Booking
-              </Button>
+              <div className="w-full">
+                <CreateBookingDialog onBookingCreated={() => {
+                  // Refresh the page data when booking is created
+                  window.location.reload();
+                }} />
+              </div>
               <Button
                 variant="outline"
                 className="w-full justify-start"

@@ -12,17 +12,20 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { SecureAuthService } from './secure-auth.service';
 import { PermissionCheckService } from './permission-check.service';
+import { MenuService } from './services/menu.service';
+
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { UserMenuDto } from './dto/menu-item.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -36,7 +39,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly secureAuthService: SecureAuthService,
-    private readonly permissionCheckService: PermissionCheckService
+    private readonly permissionCheckService: PermissionCheckService,
+    private readonly menuService: MenuService,
   ) {}
 
   @Public()
@@ -83,6 +87,7 @@ export class AuthController {
 
   @UseGuards(SecureAuthGuard)
   @Get('me')
+  @Throttle({ default: { limit: 300, ttl: 60000 } }) // Allow 300 requests per minute for this endpoint
   @ApiOperation({ summary: 'Get current user information' })
   @ApiResponse({ status: 200, description: 'Current user information' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
@@ -102,6 +107,7 @@ export class AuthController {
         firstName: user.firstName,
         lastName: user.lastName,
         userType: user.userType,
+        organizationId: user.organizationId,
         roles: user.roles?.map(role => role.name) || [],
         permissions: req.session?.permissions || [],
       },
@@ -155,11 +161,12 @@ export class AuthController {
   @Get('permissions')
   @UseGuards(SecureAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get current user permissions' })
+  @ApiOperation({ summary: 'Get current user permissions with three-tier evaluation' })
   @ApiResponse({ status: 200, description: 'User permissions retrieved successfully' })
   async getUserPermissions(@CurrentUser() user: User) {
     try {
-      const permissions = await this.permissionCheckService.getUserPermissions(user);
+      // Use fallback permission system for now
+      const fallbackPermissions = await this.permissionCheckService.getUserPermissions(user);
 
       return {
         success: true,
@@ -167,22 +174,69 @@ export class AuthController {
           userId: user.id,
           userType: user.userType,
           organizationId: user.organizationId,
-          permissions,
+          effectivePermissions: fallbackPermissions,
+          rolePermissions: fallbackPermissions,
+          userOverrides: { grants: [], denies: [] },
+          availableFeatures: [],
           isProductAdmin: user.userType === UserType.PRODUCT_ADMIN,
+          permissionEvaluation: {
+            source: 'fallback-system',
+            description: 'Using fallback permission system - comprehensive system will be enabled later'
+          }
         },
       };
     } catch (error) {
+      // Fallback to old permission system if comprehensive fails
+      try {
+        const fallbackPermissions = await this.permissionCheckService.getUserPermissions(user);
+        return {
+          success: true,
+          data: {
+            userId: user.id,
+            userType: user.userType,
+            organizationId: user.organizationId,
+            permissions: fallbackPermissions,
+            availableFeatures: [],
+            isProductAdmin: user.userType === UserType.PRODUCT_ADMIN,
+            permissionEvaluation: {
+              source: 'fallback-system',
+              description: 'Using fallback permission system due to error in comprehensive evaluation'
+            }
+          },
+        };
+      } catch (fallbackError) {
+        return {
+          success: false,
+          message: 'Failed to get user permissions',
+          data: {
+            userId: user.id,
+            userType: user.userType,
+            organizationId: user.organizationId,
+            permissions: [],
+            availableFeatures: [],
+            isProductAdmin: user.userType === UserType.PRODUCT_ADMIN,
+          },
+        };
+      }
+    }
+  }
+
+  @Get('menu')
+  @UseGuards(SecureAuthGuard)
+  @Throttle({ default: { limit: 200, ttl: 60000 } }) // Allow 200 requests per minute for menu endpoint
+  @ApiOperation({ summary: 'Get user menu items based on permissions' })
+  @ApiResponse({ status: 200, description: 'User menu items retrieved successfully' })
+  async getUserMenu(@Req() req: AuthenticatedRequest): Promise<{ success: boolean; data: UserMenuDto }> {
+    try {
+      const user = req.user;
+      const menuData = await this.menuService.getUserMenu(user);
+
       return {
-        success: false,
-        message: 'Failed to get user permissions',
-        data: {
-          userId: user.id,
-          userType: user.userType,
-          organizationId: user.organizationId,
-          permissions: [],
-          isProductAdmin: user.userType === UserType.PRODUCT_ADMIN,
-        },
+        success: true,
+        data: menuData,
       };
+    } catch (error) {
+      throw new UnauthorizedException('Failed to get user menu');
     }
   }
 }

@@ -26,6 +26,7 @@ import { Input } from '../../components/ui/input';
 import { PageLoading, ErrorState } from '../../components/forms/LoadingSpinner';
 import { financialService } from '../../services/financialService';
 import { useFinancialReports } from '../../hooks/useFinancial';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 
 export function FinancialReportsPage() {
@@ -43,6 +44,8 @@ export function FinancialReportsPage() {
     isError,
     error,
   } = useFinancialReports(dateRange);
+
+  const { formatAmount } = useCurrency();
 
   const handleExportReport = async (type: 'pdf' | 'excel') => {
     try {
@@ -137,7 +140,7 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${summaryData.totalRevenue?.toLocaleString() || '0'}
+              {formatAmount(summaryData.totalRevenue || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               <Activity className="inline h-3 w-3 mr-1" />
@@ -153,7 +156,7 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              ${summaryData.totalExpenses?.toLocaleString() || '0'}
+              {formatAmount(summaryData.totalExpenses || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               <Activity className="inline h-3 w-3 mr-1" />
@@ -169,11 +172,11 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              ${summaryData.netProfit?.toLocaleString() || '0'}
+              {formatAmount(summaryData.netProfit || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               <Target className="inline h-3 w-3 mr-1" />
-              ${profitLossData.averageProfit?.toLocaleString() || '0'} avg per booking
+              {formatAmount(profitLossData.averageProfit || 0)} avg per booking
             </p>
           </CardContent>
         </Card>
@@ -208,9 +211,9 @@ export function FinancialReportsPage() {
               <div className="text-center">
                 <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>Chart visualization will be implemented</p>
-                <p className="text-sm">Revenue: ${summaryData.totalRevenue?.toLocaleString() || '0'}</p>
+                <p className="text-sm">Revenue: {formatAmount(summaryData.totalRevenue || 0)}</p>
                 <p className="text-sm">
-                  Expenses: ${summaryData.totalExpenses?.toLocaleString() || '0'}
+                  Expenses: {formatAmount(summaryData.totalExpenses || 0)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Monthly breakdown: {profitLossData.monthlyProfitLoss?.length || 0} months
@@ -237,7 +240,7 @@ export function FinancialReportsPage() {
                     <span className="text-sm">{category.name}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium">${category.amount?.toLocaleString()}</div>
+                    <div className="text-sm font-medium">{formatAmount(category.amount || 0)}</div>
                     <div className="text-xs text-muted-foreground">{category.percentage?.toFixed(1)}%</div>
                   </div>
                 </div>
@@ -284,8 +287,7 @@ export function FinancialReportsPage() {
                       transaction.type === 'revenue' ? 'text-green-600' : 'text-red-600'
                     }`}
                   >
-                    {transaction.type === 'revenue' ? '+' : '-'}$
-                    {transaction.amount?.toLocaleString()}
+                    {transaction.type === 'revenue' ? '+' : '-'}{formatAmount(transaction.amount || 0).replace(/^Rs\./, '')}
                   </div>
                   <Badge variant="outline" className="text-xs">
                     {transaction.category}
@@ -320,10 +322,10 @@ export function FinancialReportsPage() {
                     <h4 className="font-medium">{month.label}</h4>
                     <div className="flex items-center space-x-4 mt-2 text-sm">
                       <span className="text-green-600">
-                        Revenue: ${month.revenue?.toLocaleString() || '0'}
+                        Revenue: {formatAmount(month.revenue || 0)}
                       </span>
                       <span className="text-red-600">
-                        Expenses: ${month.expenses?.toLocaleString() || '0'}
+                        Expenses: {formatAmount(month.expenses || 0)}
                       </span>
                     </div>
                   </div>
@@ -331,7 +333,7 @@ export function FinancialReportsPage() {
                     <div className={`text-lg font-bold ${
                       month.profit >= 0 ? 'text-blue-600' : 'text-orange-600'
                     }`}>
-                      {month.profit >= 0 ? '+' : ''}${month.profit?.toLocaleString() || '0'}
+                      {month.profit >= 0 ? '+' : ''}{formatAmount(month.profit || 0)}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {month.profitMargin?.toFixed(1) || '0'}% margin

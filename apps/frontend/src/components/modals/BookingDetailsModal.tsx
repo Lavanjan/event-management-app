@@ -27,6 +27,7 @@ import {
 import { Booking } from '../../types';
 import { format } from 'date-fns';
 import { useToast } from '../../hooks/use-toast';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { api } from '../../services/api';
 import { useInventoryList } from '../../hooks/useInventory';
 
@@ -62,6 +63,7 @@ export function BookingDetailsModal({
   onBookingUpdated,
 }: BookingDetailsModalProps) {
   const { toast } = useToast();
+  const { formatAmount } = useCurrency();
   const [expenses, setExpenses] = useState<Expense[]>(booking.expenses || []);
   const [revenues, setRevenues] = useState<Revenue[]>(booking.revenues || []);
   const [showAddExpense, setShowAddExpense] = useState(false);
@@ -279,12 +281,7 @@ export function BookingDetailsModal({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -383,20 +380,20 @@ export function BookingDetailsModal({
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Total Amount:</span>
                 <span className="text-xl font-bold">
-                  {formatCurrency(Number(booking.totalAmount))}
+                  {formatAmount(Number(booking.totalAmount))}
                 </span>
               </div>
               <Separator />
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Advance Paid:</span>
                 <span className="font-semibold text-green-600">
-                  {formatCurrency(Number(booking.advanceAmount))}
+                  {formatAmount(Number(booking.advanceAmount))}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Balance Due:</span>
                 <span className="font-semibold text-orange-600">
-                  {formatCurrency(Number(booking.balanceAmount))}
+                  {formatAmount(Number(booking.balanceAmount))}
                 </span>
               </div>
             </CardContent>
@@ -422,11 +419,11 @@ export function BookingDetailsModal({
                         <p className="font-medium">{allocation.inventoryItem?.name || 'Item'}</p>
                         <p className="text-sm text-muted-foreground">
                           Quantity: {allocation.quantity} ×{' '}
-                          {formatCurrency(Number(allocation.unitPrice))}
+                          {formatAmount(Number(allocation.unitPrice))}
                         </p>
                       </div>
                       <span className="font-semibold">
-                        {formatCurrency(Number(allocation.totalPrice))}
+                        {formatAmount(Number(allocation.totalPrice))}
                       </span>
                     </div>
                   ))}
@@ -451,7 +448,7 @@ export function BookingDetailsModal({
                     <span className="text-sm font-medium">Total Revenues</span>
                   </div>
                   <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                    {formatCurrency(totalRevenues)}
+                    {formatAmount(totalRevenues)}
                   </p>
                 </div>
                 <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-lg">
@@ -460,7 +457,7 @@ export function BookingDetailsModal({
                     <span className="text-sm font-medium">Total Expenses</span>
                   </div>
                   <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                    {formatCurrency(totalExpenses)}
+                    {formatAmount(totalExpenses)}
                   </p>
                 </div>
                 <div
@@ -488,7 +485,7 @@ export function BookingDetailsModal({
                     }`}
                   >
                     {profitLoss >= 0 ? '+' : ''}
-                    {formatCurrency(profitLoss)}
+                    {formatAmount(profitLoss)}
                   </p>
                 </div>
               </div>
@@ -676,7 +673,7 @@ export function BookingDetailsModal({
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-red-600">
-                          -{formatCurrency(Number(expense.amount))}
+                          -{formatAmount(Number(expense.amount))}
                         </span>
                         <Button
                           size="sm"
@@ -789,7 +786,7 @@ export function BookingDetailsModal({
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-green-600">
-                          +{formatCurrency(Number(revenue.amount))}
+                          +{formatAmount(Number(revenue.amount))}
                         </span>
                         <Button
                           size="sm"

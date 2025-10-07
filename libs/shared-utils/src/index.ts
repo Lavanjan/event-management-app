@@ -37,8 +37,9 @@ export const daysBetween = (date1: Date | string, date2: Date | string): number 
 };
 
 // Currency utilities
-export const formatCurrency = (amount: number, currency = 'USD'): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (amount: number, currency = 'LKR'): string => {
+  const locale = currency === 'LKR' ? 'en-LK' : 'en-US';
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
   }).format(amount);

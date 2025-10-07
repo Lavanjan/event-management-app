@@ -14,6 +14,7 @@ import { EventsModule } from '../events/events.module';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
 import { DocumentsModule } from '../documents/documents.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { DocumentsModule } from '../documents/documents.module';
     AuthModule,
     EmailModule,
     DocumentsModule,
+    PermissionsModule,
   ],
   controllers: [BookingsController],
   providers: [BookingsService],

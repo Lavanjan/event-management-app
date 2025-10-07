@@ -3,9 +3,10 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import {
   Organization,
   User,
@@ -13,6 +14,9 @@ import {
   UserType,
   RoleScope,
   OrganizationStatus,
+  RolePermission,
+  OrganizationPackage,
+  MasterPermission,
 } from '../../database/entities';
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto';
 import { FindOrganizationsDto } from './dto/find-organizations.dto';
@@ -25,6 +29,8 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class OrganizationsService {
+  private readonly logger = new Logger(OrganizationsService.name);
+
   constructor(
     @InjectRepository(Organization)
     private organizationRepository: Repository<Organization>,
@@ -129,6 +135,9 @@ export class OrganizationsService {
       });
 
       const savedRole = await queryRunner.manager.save(adminRole);
+
+      // Assign permissions to the organization admin role based on organization's feature packages
+      await this.assignPermissionsToAdminRole(savedRole.id, savedOrganization.id, queryRunner);
 
       // Assign role to admin user
       savedAdmin.roles = [savedRole];
@@ -540,6 +549,108 @@ export class OrganizationsService {
       throw new BadRequestException(
         `Cannot delete organization with ${roleCount} existing role(s). Please delete all roles first.`
       );
+    }
+  }
+
+  /**
+   * Assign permissions to organization admin role based on organization's feature packages
+   */
+  private async assignPermissionsToAdminRole(
+    roleId: string,
+    organizationId: string,
+    queryRunner: any
+  ): Promise<void> {
+    const rolePermissionRepository = queryRunner.manager.getRepository(RolePermission);
+    const organizationPackageRepository = queryRunner.manager.getRepository(OrganizationPackage);
+    const masterPermissionRepository = queryRunner.manager.getRepository(MasterPermission);
+
+    // Get organization's feature packages
+    const orgPackages = await organizationPackageRepository.find({
+      where: { organizationId, isActive: true },
+      relations: ['featurePackage'],
+    });
+
+    // Collect all permissions from feature packages
+    const permissionKeys = new Set<string>();
+    for (const pkg of orgPackages) {
+      if (pkg.featurePackage?.isActive && !pkg.isExpired()) {
+        pkg.featurePackage.features.forEach(feature => permissionKeys.add(feature));
+      }
+    }
+
+    // Get master permission details
+    const masterPermissions = await masterPermissionRepository.find({
+      where: { key: In(Array.from(permissionKeys)) },
+    });
+
+    // Create role permissions
+    const rolePermissions = Array.from(permissionKeys).map(key => {
+      const masterPerm = masterPermissions.find(mp => mp.key === key);
+      if (!masterPerm) {
+        this.logger.warn(`Master permission not found for key: ${key}`);
+        return null;
+      }
+
+      return rolePermissionRepository.create({
+        organizationId,
+        roleId,
+        permissionKey: key,
+        name: masterPerm.name,
+        description: masterPerm.description,
+        category: masterPerm.category,
+        module: masterPerm.module,
+        action: masterPerm.action,
+        enabled: true,
+        grantedBy: 'system',
+        grantedAt: new Date(),
+      });
+    }).filter(Boolean);
+
+    if (rolePermissions.length > 0) {
+      await rolePermissionRepository.save(rolePermissions);
+      this.logger.log(`Assigned ${rolePermissions.length} permissions to organization admin role for organization ${organizationId}`);
+    }
+  }
+
+  /**
+   * Update organization admin role permissions for existing organizations
+   * This method can be called to fix existing organizations that don't have proper permissions
+   */
+  async updateOrganizationAdminPermissions(organizationId: string): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // Find the organization admin role
+      const adminRole = await queryRunner.manager.getRepository(Role).findOne({
+        where: {
+          name: 'Organization Admin',
+          organizationId,
+          scope: RoleScope.ORGANIZATION
+        },
+      });
+
+      if (!adminRole) {
+        throw new NotFoundException('Organization Admin role not found');
+      }
+
+      // Clear existing role permissions
+      await queryRunner.manager.getRepository(RolePermission).delete({
+        roleId: adminRole.id,
+      });
+
+      // Assign new permissions based on current feature packages
+      await this.assignPermissionsToAdminRole(adminRole.id, organizationId, queryRunner);
+
+      await queryRunner.commitTransaction();
+      this.logger.log(`Updated permissions for organization admin role in organization ${organizationId}`);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error(`Failed to update organization admin permissions for ${organizationId}:`, error);
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 

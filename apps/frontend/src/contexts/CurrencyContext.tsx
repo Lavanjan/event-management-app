@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { formatCurrency, getCurrencySymbol, getCurrencyName } from '../utils/currency';
 
 interface CurrencyContextType {
@@ -16,10 +17,10 @@ interface CurrencyProviderProps {
 }
 
 export function CurrencyProvider({ children }: CurrencyProviderProps) {
-  const { user } = useAuth();
-  
-  // Get currency from user's organization, fallback to USD
-  const currency = user?.organization?.currency || 'USD';
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  // Get currency from user's organization, fallback to LKR
+  const currency = user?.organization?.currency || 'LKR';
 
   const formatAmount = (amount: number | string, options?: Intl.NumberFormatOptions) => {
     return formatCurrency(amount, currency, options);
@@ -56,8 +57,8 @@ export function useCurrency() {
 }
 
 // Hook for components that need currency formatting but might not have access to context
-export function useCurrencyFormat(fallbackCurrency: string = 'USD') {
-  const { user } = useAuth();
+export function useCurrencyFormat(fallbackCurrency: string = 'LKR') {
+  const { user } = useSelector((state: RootState) => state.auth);
   const currency = user?.organization?.currency || fallbackCurrency;
 
   const formatAmount = (amount: number | string, options?: Intl.NumberFormatOptions) => {

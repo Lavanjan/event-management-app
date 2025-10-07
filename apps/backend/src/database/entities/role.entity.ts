@@ -54,6 +54,9 @@ export class Role {
   @Column({ default: true, name: 'is_active' })
   isActive: boolean;
 
+  @Column({ default: false, name: 'is_system_role' })
+  isSystemRole: boolean;
+
   @ManyToMany(() => User, user => user.roles)
   users: User[];
 
@@ -104,5 +107,9 @@ export class Role {
 
   belongsToOrganization(organizationId: string): boolean {
     return this.organizationId === organizationId;
+  }
+
+  isSystemRoleType(): boolean {
+    return this.isSystemRole || this.name === 'Product Admin' || this.name === 'Organization Admin';
   }
 }

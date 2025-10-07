@@ -280,6 +280,25 @@ export class OrganizationsController {
     return this.organizationsService.resendVerificationEmail(id);
   }
 
+  @Post(':id/update-admin-permissions')
+  @RequireUserType(UserType.PRODUCT_ADMIN)
+  @ApiOperation({ summary: 'Update organization admin permissions (Product Admin only)' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Organization admin permissions updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Organization or admin role not found',
+  })
+  async updateAdminPermissions(@Param('id') id: string) {
+    await this.organizationsService.updateOrganizationAdminPermissions(id);
+    return {
+      success: true,
+      message: 'Organization admin permissions updated successfully',
+    };
+  }
+
   @Delete(':id')
   @RequireUserType(UserType.PRODUCT_ADMIN)
   @ApiOperation({ summary: 'Delete organization (Product Admin only)' })

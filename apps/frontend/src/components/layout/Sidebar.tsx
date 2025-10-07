@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   Package,
@@ -28,89 +29,177 @@ import {
   Cog,
   Building2,
   Tag,
+  Crown,
+  Layers,
 } from 'lucide-react';
 import { RootState } from '../../store';
 import { Button } from '../ui/button';
 import { cn } from '../../utils/cn';
-import { UserType } from '../../types';
+import { menuService, MenuItemDto } from '../../services/menuService';
+
+// Icon mapping for backend icon names to actual icon components
+const iconMap: Record<string, any> = {
+  LayoutDashboard,
+  Package,
+  Calendar,
+  BookOpen,
+  Users,
+  DollarSign,
+  Settings,
+  List,
+  User,
+  UserPlus,
+  Shield,
+  UserCheck,
+  BarChart3,
+  FileText,
+  CreditCard,
+  TrendingUp,
+  Archive,
+  Search,
+  Filter,
+  Cog,
+  Building2,
+  Tag,
+  Crown,
+  Layers,
+};
+
+// Convert backend menu item to frontend navigation item
+const convertMenuItemToNavigation = (item: MenuItemDto): NavigationItem => {
+  const IconComponent = iconMap[item.icon] || Package; // Default to Package icon if not found
+
+  return {
+    name: item.name,
+    href: item.href,
+    icon: IconComponent,
+    hasAccess: item.hasAccess,
+    children: item.children?.map(convertMenuItemToNavigation),
+  };
+};
 
 interface NavigationItem {
   name: string;
   href?: string;
   icon: any;
-  permission: string;
+  hasAccess: boolean;
   children?: NavigationItem[];
 }
 
-const navigation: NavigationItem[] = [
+// Navigation is now fetched from backend
+const staticNavigation: NavigationItem[] = [
   {
     name: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
-    permission: 'dashboard:read',
+    permission: 'dashboard.view',
   },
   {
     name: 'Organizations',
     href: '/organizations',
     icon: Building2,
-    permission: 'organizations:read',
+    permission: 'organizations.read',
+  },
+  {
+    name: 'Product Admin',
+    icon: Crown,
+    requireProductAdmin: true,
+    children: [
+      {
+        name: 'Feature Packages',
+        href: '/admin/feature-packages',
+        icon: Layers,
+        requireProductAdmin: true,
+      },
+      {
+        name: 'Organization Management',
+        href: '/admin/organizations',
+        icon: Building2,
+        requireProductAdmin: true,
+      },
+      {
+        name: 'Master Permissions',
+        href: '/admin/permissions',
+        icon: Shield,
+        requireProductAdmin: true,
+      },
+    ],
+  },
+  {
+    name: 'Permission Management',
+    icon: Shield,
+    permissions: ['users.update', 'roles.update'],
+    children: [
+      {
+        name: 'User Permissions',
+        href: '/permissions/users',
+        icon: UserCheck,
+        permission: 'users.update',
+      },
+      {
+        name: 'Role Management',
+        href: '/permissions/roles',
+        icon: Users,
+        permission: 'roles.update',
+      },
+    ],
   },
   {
     name: 'Inventory Management',
     icon: Package,
-    permission: 'inventory:read',
+    permission: 'inventory.read',
     children: [
       {
         name: 'All Items',
         href: '/inventory',
         icon: List,
-        permission: 'inventory:read',
+        permission: 'inventory.read',
       },
 
       {
         name: 'Low Stock Alerts',
         href: '/inventory/alerts',
         icon: Archive,
-        permission: 'inventory:read',
+        permission: 'inventory.read',
       },
       {
         name: 'Categories',
         href: '/inventory/categories',
         icon: Tag,
-        permission: 'inventory:create',
+        permission: 'inventory.create',
       },
     ],
   },
   {
     name: 'Event Management',
     icon: Calendar,
-    permission: 'events:read',
+    permission: 'events.read',
     children: [
       {
         name: 'All Events',
         href: '/events',
         icon: List,
-        permission: 'events:read',
+        permission: 'events.read',
       },
 
       {
         name: 'Event Templates',
         href: '/events/templates',
         icon: FileText,
-        permission: 'events:read',
+        permission: 'events.read',
       },
     ],
   },
   {
     name: 'Booking Management',
     icon: BookOpen,
-    permission: 'bookings:read',
+    permission: 'bookings.read',
     children: [
       {
         name: 'All Bookings',
         href: '/bookings',
         icon: List,
-        permission: 'bookings:read',
+        permission: 'bookings.read',
       },
 
       {
@@ -149,84 +238,84 @@ const navigation: NavigationItem[] = [
   {
     name: 'User Management',
     icon: Users,
-    permission: 'users:read',
+    permission: 'users.read',
     children: [
       {
         name: 'All Users',
         href: '/users',
         icon: User,
-        permission: 'users:read',
+        permission: 'users.read',
       },
 
       {
         name: 'User Roles',
         href: '/users/roles',
         icon: UserCheck,
-        permission: 'users:read',
+        permission: 'users.read',
       },
     ],
   },
   {
     name: 'Role Management',
     icon: Shield,
-    permission: 'roles:read',
+    permission: 'roles.read',
     children: [
       {
         name: 'All Roles',
         href: '/roles',
         icon: List,
-        permission: 'roles:read',
+        permission: 'roles.read',
       },
 
       {
         name: 'Permissions',
         href: '/roles/permissions',
         icon: Shield,
-        permission: 'roles:read',
+        permission: 'roles.read',
       },
     ],
   },
   {
     name: 'Financial Reports',
     icon: DollarSign,
-    permission: 'reports:read',
+    permission: 'dashboard.reports',
     children: [
       {
         name: 'Revenue Reports',
         href: '/financial/revenue',
         icon: TrendingUp,
-        permission: 'reports:read',
+        permission: 'dashboard.reports',
       },
       {
         name: 'Expense Reports',
         href: '/financial/expenses',
         icon: BarChart3,
-        permission: 'reports:read',
+        permission: 'dashboard.reports',
       },
       {
         name: 'Profit & Loss',
         href: '/financial/profit-loss',
         icon: FileText,
-        permission: 'reports:read',
+        permission: 'dashboard.reports',
       },
     ],
   },
   {
     name: 'System Settings',
     icon: Settings,
-    permission: 'settings:read',
+    permission: 'settings.read',
     children: [
       {
         name: 'General Settings',
         href: '/settings',
         icon: Cog,
-        permission: 'settings:read',
+        permission: 'settings.read',
       },
       {
         name: 'User Profile',
         href: '/settings/profile',
         icon: User,
-        permission: 'settings:read',
+        permission: 'settings.read',
       },
     ],
   },
@@ -238,28 +327,20 @@ export function Sidebar() {
   const { user } = useSelector((state: RootState) => state.auth);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
-  const hasPermission = (permission: string) => {
-    if (!user) return false;
+  // Fetch menu items from backend
+  const { data: menuData, isLoading, error } = useQuery({
+    queryKey: ['userMenu'],
+    queryFn: () => menuService.getUserMenu(),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-    // Product Admin has access to organizations and dashboard only (no user management)
-    if (user.userType === UserType.PRODUCT_ADMIN) {
-      return permission === 'dashboard:read' ||
-             permission.startsWith('organizations:');
-    }
+  const navigation = menuData?.menuItems?.map(convertMenuItemToNavigation) || [];
 
-    // Organization Admin has access to everything except organizations management
-    if (user.userType === UserType.ORGANIZATION_ADMIN) {
-      return !permission.startsWith('organizations:');
-    }
 
-    // Organization User has limited access
-    if (user.userType === UserType.ORGANIZATION_USER) {
-      return permission === 'dashboard:read' ||
-             permission.startsWith('events:read') ||
-             permission.startsWith('bookings:read');
-    }
-
-    return false;
+  // Access control is now handled by the backend
+  const canAccessMenuItem = (item: NavigationItem): boolean => {
+    return item.hasAccess;
   };
 
   const toggleMenu = (menuName: string) => {
@@ -314,6 +395,48 @@ export function Sidebar() {
     }
   }, [location.pathname]);
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-card border-r border-border">
+        <div className="flex h-full flex-col">
+          <div className="flex h-16 items-center justify-between px-6 border-b">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">EB</span>
+              </div>
+              <span className="font-semibold text-foreground">Event Booking</span>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-muted-foreground">Loading menu...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-card border-r border-border">
+        <div className="flex h-full flex-col">
+          <div className="flex h-16 items-center justify-between px-6 border-b">
+            <div className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">EB</span>
+              </div>
+              <span className="font-semibold text-foreground">Event Booking</span>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-red-500">Failed to load menu</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-card border-r border-border">
       {/* Desktop Sidebar - Always Visible */}
@@ -321,20 +444,24 @@ export function Sidebar() {
         {/* Logo */}
         <div className="flex h-16 items-center justify-between px-6 border-b">
           <div className="flex items-center space-x-2">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">EB</span>
-            </div>
-            <span className="font-semibold text-foreground">Event Booking</span>
+            <img
+              src="/src/assets/eventorra.png"
+              alt="Eventorra"
+              className="h-8 w-auto"
+            />
+            {/* <span className="font-semibold text-foreground">Eventorra</span> */}
           </div>
           <Button variant="ghost" size="icon" className="sm:hidden">
             <ChevronLeft className="h-5 w-5" />
           </Button>
         </div>
 
+
+
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
           {navigation.map((item) => {
-            if (!hasPermission(item.permission)) return null;
+            if (!canAccessMenuItem(item)) return null;
 
             const isActive = isActiveMenu(item);
             const Icon = item.icon;
@@ -377,7 +504,7 @@ export function Sidebar() {
                   {isExpanded && (
                     <div className="ml-6 space-y-1">
                       {item.children?.map((child) => {
-                        if (!hasPermission(child.permission)) return null;
+                        if (!canAccessMenuItem(child)) return null;
 
                         const isChildActive = child.href && (
                           location.pathname === child.href ||

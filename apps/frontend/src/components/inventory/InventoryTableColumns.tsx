@@ -190,8 +190,8 @@ export const createInventoryColumns = (handlers: ActionHandlers<InventoryItem>):
               Manage
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-            <DialogHeader>
+          <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>Documents - {item.name}</DialogTitle>
             </DialogHeader>
             <div className="flex-1 overflow-hidden">

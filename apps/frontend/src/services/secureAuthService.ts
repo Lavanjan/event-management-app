@@ -36,6 +36,7 @@ export interface SecureUserResponse {
     firstName: string;
     lastName: string;
     userType: UserType;
+    organizationId?: string;
     roles: string[];
     permissions: string[];
   };
