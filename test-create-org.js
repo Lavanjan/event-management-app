@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 async function testCreateOrganization() {
   try {
-    const response = await fetch('http://localhost:3002/api/organizations', {
+    const response = await fetch('http://localhost:3004/api/organizations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -16,9 +16,9 @@ async function testCreateOrganization() {
           lastName: 'Admin',
           password: 'TestPassword123!',
           autoGeneratePassword: false,
-          requiresVerification: false
-        }
-      })
+          requiresVerification: false,
+        },
+      }),
     });
 
     const result = await response.json();

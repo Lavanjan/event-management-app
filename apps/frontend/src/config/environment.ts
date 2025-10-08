@@ -78,7 +78,10 @@ export const config: EnvironmentConfig = {
   // Application Configuration
   appName: getEnvVar('VITE_APP_NAME', 'Event Management System'),
   appVersion: getEnvVar('VITE_APP_VERSION', '1.0.0'),
-  environment: getEnvVar('VITE_APP_ENVIRONMENT', 'development') as 'development' | 'staging' | 'production',
+  environment: getEnvVar('VITE_APP_ENVIRONMENT', 'development') as
+    | 'development'
+    | 'staging'
+    | 'production',
 
   // Security Configuration
   enableCsrf: getEnvBoolean('VITE_ENABLE_CSRF', true),
@@ -123,7 +126,8 @@ export function validateConfig(): void {
 
   console.log(`🚀 Application configured for ${config.environment} environment`);
   console.log(`📡 API Base URL: ${config.apiBaseUrl}`);
-  
+  console.log('Proxy target:', import.meta.env.VITE_API_PROXY_TARGET);
+
   if (config.enableDebugMode) {
     console.log('🐛 Debug mode enabled');
     console.log('⚙️ Configuration:', config);

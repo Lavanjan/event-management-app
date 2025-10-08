@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+console.log('Proxy target:', process.env.VITE_API_PROXY_TARGET);
 
 export default defineConfig({
   plugins: [react()],
@@ -16,12 +19,15 @@ export default defineConfig({
       '@/types': path.resolve(__dirname, './src/types'),
     },
   },
-  server: {
-    port: parseInt(process.env.VITE_PORT || '4201'),
-    host: true,
-    hmr: {
-      overlay: false,
+  css: {
+    postcss: {
+      plugins: [tailwindcss('./apps/frontend/tailwind.config.js'), autoprefixer],
     },
+  },
+  server: {
+    port: parseInt(process.env.VITE_PORT || '4201', 10),
+    host: true,
+    hmr: { overlay: false },
     proxy: {
       '/api': {
         target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3004',

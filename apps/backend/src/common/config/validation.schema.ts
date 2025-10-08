@@ -47,7 +47,7 @@ export const validationSchema = Joi.object({
   // Application
   FRONTEND_URL: Joi.string().uri().default('http://localhost:4200'),
   FRONTEND_URL_ALT: Joi.string().uri().default('http://localhost:4201'),
-  BACKEND_URL: Joi.string().uri().default('http://localhost:3002'),
+  BACKEND_URL: Joi.string().uri().default('http://localhost:3004'),
   MAX_FILE_SIZE: Joi.number().default(5242880), // 5MB
   UPLOAD_PATH: Joi.string().default('./uploads'),
 

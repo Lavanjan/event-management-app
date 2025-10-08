@@ -6,49 +6,55 @@ async function updateOrganizationPermissions() {
     // First, get the current organization ID from localStorage or session
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const organizationId = user.organizationId;
-    
+
     if (!organizationId) {
       console.error('No organization ID found. Make sure you are logged in.');
       return;
     }
-    
+
     console.log('Updating permissions for organization:', organizationId);
-    
+
     // Get current permissions
-    const currentResponse = await fetch(`http://localhost:3002/api/organizations/${organizationId}/permissions`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-    
+    const currentResponse = await fetch(
+      `http://localhost:3004/api/organizations/${organizationId}/permissions`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }
+    );
+
     if (!currentResponse.ok) {
       console.error('Failed to get current permissions:', currentResponse.status);
       return;
     }
-    
+
     const currentData = await currentResponse.json();
     console.log('Current permissions:', currentData);
-    
+
     // Update all permissions to enabled: true
     const updatedPermissions = currentData.data.permissions.map(permission => ({
       ...permission,
-      enabled: true
+      enabled: true,
     }));
-    
+
     // Update permissions
-    const updateResponse = await fetch(`http://localhost:3002/api/organizations/${organizationId}/permissions`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        permissions: updatedPermissions
-      })
-    });
-    
+    const updateResponse = await fetch(
+      `http://localhost:3004/api/organizations/${organizationId}/permissions`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          permissions: updatedPermissions,
+        }),
+      }
+    );
+
     if (updateResponse.ok) {
       const result = await updateResponse.json();
       console.log('✅ Permissions updated successfully!', result);
@@ -58,7 +64,6 @@ async function updateOrganizationPermissions() {
       const errorData = await updateResponse.json();
       console.error('Error details:', errorData);
     }
-    
   } catch (error) {
     console.error('❌ Error updating permissions:', error);
   }

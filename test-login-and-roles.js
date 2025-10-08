@@ -3,27 +3,27 @@ const axios = require('axios');
 async function testLoginAndRoles() {
   try {
     console.log('🔐 Testing login for new organization admin...');
-    
+
     // Step 1: Login
-    const loginResponse = await axios.post('http://localhost:3002/api/auth/login', {
+    const loginResponse = await axios.post('http://localhost:3004/api/auth/login', {
       email: 'testfixed3@example.com',
-      password: 'TestPassword123!'
+      password: 'TestPassword123!',
     });
-    
+
     console.log('✅ Login successful!');
     console.log('User:', loginResponse.data.user);
     console.log('Session ID:', loginResponse.data.sessionId);
-    
+
     const sessionId = loginResponse.data.sessionId;
-    
+
     // Step 2: Test enhanced roles API
     console.log('\n🔧 Testing enhanced roles API...');
 
     try {
-      const rolesResponse = await axios.get('http://localhost:3002/api/enhanced-roles', {
+      const rolesResponse = await axios.get('http://localhost:3004/api/enhanced-roles', {
         headers: {
-          'Cookie': `sessionId=${sessionId}`
-        }
+          Cookie: `sessionId=${sessionId}`,
+        },
       });
 
       console.log('✅ Enhanced roles API successful!');
@@ -36,18 +36,20 @@ async function testLoginAndRoles() {
     console.log('\n📦 Testing inventory out-of-stock API...');
 
     try {
-      const inventoryResponse = await axios.get('http://localhost:3002/api/inventory/out-of-stock', {
-        headers: {
-          'Cookie': `sessionId=${sessionId}`
+      const inventoryResponse = await axios.get(
+        'http://localhost:3004/api/inventory/out-of-stock',
+        {
+          headers: {
+            Cookie: `sessionId=${sessionId}`,
+          },
         }
-      });
+      );
 
       console.log('✅ Inventory API successful!');
       console.log('Inventory data:', inventoryResponse.data);
     } catch (inventoryError) {
       console.log('❌ Inventory API error:', inventoryError.response?.data?.message);
     }
-    
   } catch (error) {
     console.error('❌ Error:', error.response?.data || error.message);
     if (error.response?.data) {

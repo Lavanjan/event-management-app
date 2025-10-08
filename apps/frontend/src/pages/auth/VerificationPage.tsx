@@ -9,11 +9,11 @@ export function VerificationPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  
+
   const token = searchParams.get('token');
   const prefilledOtp = searchParams.get('otp');
 
@@ -25,7 +25,7 @@ export function VerificationPage() {
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!token) {
       toast({
         title: 'Error',
@@ -98,7 +98,7 @@ export function VerificationPage() {
     setResendLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3002/api/verify/resend', {
+      const response = await fetch('http://localhost:3004/api/verify/resend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export function VerificationPage() {
             Enter the 6-digit verification code sent to your email address
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleVerify}>
           <div className="space-y-4">
             <div>
@@ -153,7 +153,7 @@ export function VerificationPage() {
                 id="otp"
                 type="text"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="Enter 6-digit code"
                 className="text-center text-2xl tracking-widest"
                 maxLength={6}
@@ -166,14 +166,10 @@ export function VerificationPage() {
           </div>
 
           <div className="space-y-4">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || otp.length !== 6}
-            >
+            <Button type="submit" className="w-full" disabled={loading || otp.length !== 6}>
               {loading ? 'Verifying...' : 'Verify Email'}
             </Button>
-            
+
             <Button
               type="button"
               variant="outline"

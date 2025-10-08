@@ -1,98 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Test Frontend Permissions</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .category { border: 1px solid #ccc; margin: 10px 0; padding: 10px; }
-        .permission { margin: 5px 0; padding: 5px; background: #f5f5f5; }
-        .enabled { background: #d4edda; }
-        .disabled { background: #f8d7da; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .category {
+        border: 1px solid #ccc;
+        margin: 10px 0;
+        padding: 10px;
+      }
+      .permission {
+        margin: 5px 0;
+        padding: 5px;
+        background: #f5f5f5;
+      }
+      .enabled {
+        background: #d4edda;
+      }
+      .disabled {
+        background: #f8d7da;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Test Frontend Permissions Processing</h1>
     <button onclick="testPermissions()">Test Permissions API</button>
     <div id="results"></div>
 
     <script>
-        async function testPermissions() {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<p>Loading...</p>';
+      async function testPermissions() {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = '<p>Loading...</p>';
 
-            try {
-                // Test the organization permissions API
-                const orgId = '92c8966d-a30e-4dd3-9e22-e0ba7ee20991'; // Ra organization
-                const response = await fetch(`http://localhost:3002/api/organizations/${orgId}/permissions`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'include',
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-
-                const result = await response.json();
-                console.log('API Response:', result);
-
-                if (result.success && result.data && result.data.permissions) {
-                    // Group permissions by category (same logic as frontend)
-                    const permissionsByCategory = {};
-                    
-                    result.data.permissions.forEach((perm, index) => {
-                        console.log(`Processing permission ${index + 1}:`, perm);
-                        const category = perm.category;
-                        if (!permissionsByCategory[category]) {
-                            permissionsByCategory[category] = [];
-                        }
-                        permissionsByCategory[category].push({
-                            id: perm.id,
-                            name: perm.name,
-                            description: perm.description,
-                            category: perm.category,
-                            enabled: Boolean(perm.enabled)
-                        });
-                    });
-
-                    console.log('Grouped permissions:', permissionsByCategory);
-
-                    // Display results
-                    let html = `<h2>API Response Summary</h2>`;
-                    html += `<p>Total permissions: ${result.data.permissions.length}</p>`;
-                    html += `<p>Categories found: ${Object.keys(permissionsByCategory).length}</p>`;
-
-                    Object.keys(permissionsByCategory).forEach(categoryKey => {
-                        const categoryPermissions = permissionsByCategory[categoryKey];
-                        const enabledCount = categoryPermissions.filter(p => p.enabled).length;
-                        
-                        html += `<div class="category">`;
-                        html += `<h3>${categoryKey} (${enabledCount}/${categoryPermissions.length} enabled)</h3>`;
-                        
-                        categoryPermissions.forEach(perm => {
-                            const statusClass = perm.enabled ? 'enabled' : 'disabled';
-                            html += `<div class="permission ${statusClass}">`;
-                            html += `<strong>${perm.name}</strong> (${perm.id}) - ${perm.enabled ? 'ENABLED' : 'DISABLED'}`;
-                            html += `<br><small>${perm.description}</small>`;
-                            html += `</div>`;
-                        });
-                        
-                        html += `</div>`;
-                    });
-
-                    resultsDiv.innerHTML = html;
-                } else {
-                    resultsDiv.innerHTML = `<p style="color: red;">Invalid API response format</p><pre>${JSON.stringify(result, null, 2)}</pre>`;
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+        try {
+          // Test the organization permissions API
+          const orgId = '92c8966d-a30e-4dd3-9e22-e0ba7ee20991'; // Ra organization
+          const response = await fetch(
+            `http://localhost:3004/api/organizations/${orgId}/permissions`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
             }
+          );
+
+          if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log('API Response:', result);
+
+          if (result.success && result.data && result.data.permissions) {
+            // Group permissions by category (same logic as frontend)
+            const permissionsByCategory = {};
+
+            result.data.permissions.forEach((perm, index) => {
+              console.log(`Processing permission ${index + 1}:`, perm);
+              const category = perm.category;
+              if (!permissionsByCategory[category]) {
+                permissionsByCategory[category] = [];
+              }
+              permissionsByCategory[category].push({
+                id: perm.id,
+                name: perm.name,
+                description: perm.description,
+                category: perm.category,
+                enabled: Boolean(perm.enabled),
+              });
+            });
+
+            console.log('Grouped permissions:', permissionsByCategory);
+
+            // Display results
+            let html = `<h2>API Response Summary</h2>`;
+            html += `<p>Total permissions: ${result.data.permissions.length}</p>`;
+            html += `<p>Categories found: ${Object.keys(permissionsByCategory).length}</p>`;
+
+            Object.keys(permissionsByCategory).forEach(categoryKey => {
+              const categoryPermissions = permissionsByCategory[categoryKey];
+              const enabledCount = categoryPermissions.filter(p => p.enabled).length;
+
+              html += `<div class="category">`;
+              html += `<h3>${categoryKey} (${enabledCount}/${categoryPermissions.length} enabled)</h3>`;
+
+              categoryPermissions.forEach(perm => {
+                const statusClass = perm.enabled ? 'enabled' : 'disabled';
+                html += `<div class="permission ${statusClass}">`;
+                html += `<strong>${perm.name}</strong> (${perm.id}) - ${perm.enabled ? 'ENABLED' : 'DISABLED'}`;
+                html += `<br><small>${perm.description}</small>`;
+                html += `</div>`;
+              });
+
+              html += `</div>`;
+            });
+
+            resultsDiv.innerHTML = html;
+          } else {
+            resultsDiv.innerHTML = `<p style="color: red;">Invalid API response format</p><pre>${JSON.stringify(result, null, 2)}</pre>`;
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
         }
+      }
     </script>
-</body>
+  </body>
 </html>
