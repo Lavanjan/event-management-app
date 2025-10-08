@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   LayoutDashboard,
@@ -10,7 +10,6 @@ import {
   Users,
   DollarSign,
   Settings,
-  ChevronLeft,
   ChevronDown,
   ChevronRight,
   List,
@@ -30,7 +29,6 @@ import {
   Layers,
 } from 'lucide-react';
 import { RootState } from '../../store';
-import { Button } from '../ui/button';
 import { cn } from '../../utils/cn';
 import { menuService, MenuItemDto } from '../../services/menuService';
 
@@ -124,7 +122,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'Permission Management',
+    name: 'Permissions',
     icon: Shield,
     permissions: ['users.update', 'roles.update'],
     children: [
@@ -135,7 +133,7 @@ const staticNavigation: any[] = [
         permission: 'users.update',
       },
       {
-        name: 'Role Management',
+        name: 'Roles',
         href: '/permissions/roles',
         icon: Users,
         permission: 'roles.update',
@@ -143,7 +141,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'Inventory Management',
+    name: 'Inventory',
     icon: Package,
     permission: 'inventory.read',
     children: [
@@ -169,7 +167,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'Event Management',
+    name: 'Events',
     icon: Calendar,
     permission: 'events.read',
     children: [
@@ -189,7 +187,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'Booking Management',
+    name: 'Bookings',
     icon: BookOpen,
     permission: 'bookings.read',
     children: [
@@ -209,7 +207,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'Payment Management',
+    name: 'Payments',
     icon: CreditCard,
     permission: 'payments.read',
     children: [
@@ -234,7 +232,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'User Management',
+    name: 'Users',
     icon: Users,
     permission: 'users.read',
     children: [
@@ -254,7 +252,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'Role Management',
+    name: 'Roles',
     icon: Shield,
     permission: 'roles.read',
     children: [
@@ -274,7 +272,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'Financial Reports',
+    name: 'Reports',
     icon: DollarSign,
     permission: 'dashboard.reports',
     children: [
@@ -299,7 +297,7 @@ const staticNavigation: any[] = [
     ],
   },
   {
-    name: 'System Settings',
+    name: 'Settings',
     icon: Settings,
     permission: 'settings.read',
     children: [
@@ -321,6 +319,7 @@ const staticNavigation: any[] = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   // @ts-ignore
   const { sidebarOpen } = useSelector((state: RootState) => state.ui);
   const { user } = useSelector((state: RootState) => state.auth);
@@ -440,28 +439,32 @@ export function Sidebar() {
   }
 
   return (
-    <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 bg-card border-r border-border">
+    <div className="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 bg-white border-r border-gray-100 shadow-sm">
       {/* Desktop Sidebar - Always Visible */}
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className="flex h-16 items-center justify-between px-6 border-b">
-          <div className="flex items-center space-x-2">
+        <div className="flex h-16 items-center justify-center px-6 border-b border-gray-200">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="focus:outline-none focus:ring-2 focus:ring-teal-500 rounded-lg"
+          >
             <img
               src="/src/assets/eventorra.png"
               alt="Eventorra"
-              className="h-8 w-auto"
+              className="h-10 w-auto hover:opacity-80 transition-opacity"
             />
-            {/* <span className="font-semibold text-foreground">Eventorra</span> */}
-          </div>
-          <Button variant="ghost" size="icon" className="sm:hidden">
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+          </button>
         </div>
 
 
 
+        {/* Menu Label */}
+        <div className="px-6 py-4">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu</p>
+        </div>
+
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+        <nav className="flex-1 overflow-y-auto space-y-2 px-4 pb-4">
           {navigation.map((item) => {
             if (!canAccessMenuItem(item)) return null;
 
@@ -481,30 +484,30 @@ export function Sidebar() {
                   <button
                     onClick={() => toggleMenu(item.name)}
                     className={cn(
-                      'group flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                      'group flex items-center justify-between w-full h-10 px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
                       hasActiveChild
-                        ? 'bg-accent text-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        ? 'bg-teal-100 text-teal-700 border border-teal-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     )}
                   >
                     <div className="flex items-center">
                       <Icon
                         className={cn(
                           'mr-3 h-5 w-5 flex-shrink-0',
-                          hasActiveChild ? 'text-foreground' : 'text-muted-foreground'
+                          hasActiveChild ? 'text-teal-600' : 'text-gray-500'
                         )}
                       />
                       {item.name}
                     </div>
                     {isExpanded ? (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
                     ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4 text-gray-400" />
                     )}
                   </button>
 
                   {isExpanded && (
-                    <div className="ml-6 space-y-1">
+                    <div className="ml-8 space-y-1 border-l-2 border-gray-100 pl-4">
                       {item.children?.map((child) => {
                         if (!canAccessMenuItem(child)) return null;
 
@@ -519,16 +522,16 @@ export function Sidebar() {
                             key={child.name}
                             to={child.href!}
                             className={cn(
-                              'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                              'group flex items-center h-10 px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
                               isChildActive
-                                ? 'bg-primary text-primary-foreground'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                                ? 'bg-teal-600 text-white'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                             )}
                           >
                             <ChildIcon
                               className={cn(
                                 'mr-3 h-4 w-4 flex-shrink-0',
-                                isChildActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                                isChildActive ? 'text-white' : 'text-gray-500'
                               )}
                             />
                             {child.name}
@@ -545,16 +548,16 @@ export function Sidebar() {
                   key={item.name}
                   to={item.href!}
                   className={cn(
-                    'group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                    'group flex items-center h-10 px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
                     isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                      ? 'bg-teal-600 text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   )}
                 >
                   <Icon
                     className={cn(
                       'mr-3 h-5 w-5 flex-shrink-0',
-                      isActive ? 'text-primary-foreground' : 'text-muted-foreground'
+                      isActive ? 'text-white' : 'text-gray-500'
                     )}
                   />
                   {item.name}
@@ -565,20 +568,24 @@ export function Sidebar() {
         </nav>
 
         {/* User Info */}
-        <div className="border-t p-4">
+        <div className="border-t border-gray-100 p-6">
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 bg-secondary rounded-full flex items-center justify-center">
-              <span className="text-secondary-foreground text-sm font-medium">
+            <div className="h-10 w-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center shadow-md">
+              <span className="text-white text-sm font-semibold">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-semibold text-gray-900 truncate">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-xs text-gray-500 truncate">
                 {user?.email}
               </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-400">Your balance</p>
+              <p className="text-sm font-semibold text-teal-600">$568.55</p>
             </div>
           </div>
         </div>

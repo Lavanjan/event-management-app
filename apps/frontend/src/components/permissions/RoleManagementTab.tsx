@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, Users, Shield } from 'lucide-react';
+import { Button } from '../ui/button';
 import { api } from '../../services/api';
 
 interface Role {
@@ -183,13 +184,10 @@ export const RoleManagementTab: React.FC<RoleManagementTabProps> = ({
           <p className="text-sm text-gray-500">Manage roles and their permissions</p>
         </div>
         {hasPermission('roles.create') && (
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-          >
+          <Button onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Create Role
-          </button>
+          </Button>
         )}
       </div>
 
@@ -399,19 +397,18 @@ export const RoleManagementTab: React.FC<RoleManagementTabProps> = ({
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleCreateRole}
                   disabled={!newRole.name.trim() || createRoleMutation.isPending}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
                   {createRoleMutation.isPending ? 'Creating...' : 'Create Role'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -476,19 +473,18 @@ export const RoleManagementTab: React.FC<RoleManagementTabProps> = ({
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleUpdateRole}
                   disabled={updateRoleMutation.isPending}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
                 >
                   {updateRoleMutation.isPending ? 'Updating...' : 'Update Role'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

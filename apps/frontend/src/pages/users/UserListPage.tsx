@@ -293,19 +293,19 @@ export function UserListPage() {
       icon: Users,
       label: 'Total Users',
       value: usersData?.total || 0,
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: UserCheck,
       label: 'Active Users',
       value: users.filter(u => u.isActive).length,
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: Shield,
       label: 'Admins',
       value: users.filter(u => u.userType.includes('admin')).length,
-      iconColor: 'text-blue-600',
+      iconColor: 'bg-blue-100',
     },
     {
       icon: Clock,
@@ -316,7 +316,7 @@ export function UserListPage() {
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         return createdAt > thirtyDaysAgo;
       }).length,
-      iconColor: 'text-orange-600',
+      iconColor: 'bg-orange-100',
     },
   ];
 

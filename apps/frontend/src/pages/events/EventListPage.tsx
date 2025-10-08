@@ -280,25 +280,25 @@ export function EventListPage() {
       icon: CalendarDays,
       label: 'Total Events',
       value: eventData?.total || 0,
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: Eye,
       label: 'Published',
       value: events.filter(e => e.isActive).length,
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: Edit,
       label: 'Draft',
       value: events.filter(e => !e.isActive).length,
-      iconColor: 'text-blue-600',
+      iconColor: 'bg-blue-100',
     },
     {
       icon: Users,
       label: 'Total Capacity',
       value: events.reduce((sum, event) => sum + (event.maxAttendees || 0), 0),
-      iconColor: 'text-orange-600',
+      iconColor: 'bg-orange-100',
     },
   ];
 

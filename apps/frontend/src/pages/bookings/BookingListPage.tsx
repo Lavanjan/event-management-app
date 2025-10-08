@@ -561,7 +561,7 @@ export function BookingListPage() {
       icon: BookOpen,
       label: 'Total Bookings',
       value: bookingData?.total || 0,
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: TrendingUp,
@@ -574,7 +574,7 @@ export function BookingListPage() {
           return sum + (isNaN(amount) ? 0 : amount);
         }, 0)
       ),
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: Calendar,
@@ -583,7 +583,7 @@ export function BookingListPage() {
         (b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.STARTED) &&
         new Date(b.startDate) > new Date()
       ).length,
-      iconColor: 'text-blue-600',
+      iconColor: 'bg-blue-100',
     },
     {
       icon: CheckCircle,

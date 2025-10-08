@@ -923,7 +923,6 @@ export default function EditBookingForm({ booking, onClose }: EditBookingFormPro
               <Button
                 type="submit"
                 disabled={updateBooking.isPending}
-                className="bg-primary hover:bg-primary/90"
               >
                 {updateBooking.isPending ? 'Updating...' : 'Update Booking'}
               </Button>

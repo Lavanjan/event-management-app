@@ -287,25 +287,25 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
       icon: Shield,
       label: 'Total Roles',
       value: roles.length,
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: Users,
       label: 'Active Roles',
       value: roles.filter((r: any) => r.isActive).length,
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: Settings,
       label: 'Permissions',
       value: organizationFeatures?.length || 0,
-      iconColor: 'text-blue-600',
+      iconColor: 'bg-blue-100',
     },
     {
       icon: CheckCircle,
       label: 'System Roles',
       value: roles.filter((r: any) => r.scope === 'system').length,
-      iconColor: 'text-orange-600',
+      iconColor: 'bg-orange-100',
     },
   ];
 

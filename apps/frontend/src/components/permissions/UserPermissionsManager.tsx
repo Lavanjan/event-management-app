@@ -256,25 +256,25 @@ export const UserPermissionsManager: React.FC<UserPermissionsManagerProps> = ({
       icon: Users,
       label: 'Total Users',
       value: users.length,
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: UserCheck,
       label: 'Active Users',
       value: users.filter((u: User) => u.isActive).length,
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: Shield,
       label: 'With Overrides',
       value: users.filter((u: User) => u.permissions && u.permissions.length > 0).length,
-      iconColor: 'text-blue-600',
+      iconColor: 'bg-blue-100',
     },
     {
       icon: Settings,
       label: 'Admins',
       value: users.filter((u: User) => u.userType.includes('admin')).length,
-      iconColor: 'text-orange-600',
+      iconColor: 'bg-orange-100',
     },
   ];
 

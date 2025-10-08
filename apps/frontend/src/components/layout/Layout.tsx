@@ -31,7 +31,7 @@ export function Layout({ children }: LayoutProps) {
   }, [dispatch, sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       {/* Mobile Layout */}
       {isMobile ? (
         <div className="flex flex-col h-screen">
@@ -47,12 +47,10 @@ export function Layout({ children }: LayoutProps) {
         /* Desktop Layout */
         <div className="h-screen">
           <Sidebar />
-          <div className="md:pl-64 flex flex-col h-full">
+          <div className="md:pl-72 flex flex-col h-full">
             <Header />
-            <main className="flex-1 overflow-auto">
-              <div className="container mx-auto px-6 py-8">
-                {children}
-              </div>
+            <main className="flex-1 overflow-auto px-8 py-6">
+              {children}
             </main>
           </div>
         </div>

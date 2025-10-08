@@ -138,25 +138,25 @@ export function InventoryListPage() {
       icon: Package,
       label: 'Total Items',
       value: `${stats.totalItems} (${stats.activeItems} active)`,
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: TrendingUp,
       label: 'Total Value',
       value: formatCurrency(stats.totalValue),
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: AlertTriangle,
       label: 'Low Stock Items',
       value: stats.lowStockItems,
-      iconColor: 'text-orange-600',
+      iconColor: 'bg-orange-100',
     },
     {
       icon: TrendingDown,
       label: 'Out of Stock',
       value: stats.outOfStockItems,
-      iconColor: 'text-red-600',
+      iconColor: 'bg-red-100',
     },
   ] : [];
 
