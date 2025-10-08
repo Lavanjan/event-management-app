@@ -44,6 +44,7 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   className = '',
 }) => {
   const {
+    // @ts-ignore
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,

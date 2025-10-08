@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { featurePackageService, FeaturePackage, CreateFeaturePackageDto } from '../../services/featurePackageService';
+import { featurePackageService, FeaturePackage } from '../../services/featurePackageService';
 import { useThreeTierPermissions } from '../../hooks/useThreeTierPermissions';
 import { CreateFeaturePackageModal } from './CreateFeaturePackageModal';
 import { EditFeaturePackageModal } from './EditFeaturePackageModal';
 import { useToast } from '../../hooks/use-toast';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface ProductAdminDashboardProps {
   className?: string;
 }
 
 export const ProductAdminDashboard: React.FC<ProductAdminDashboardProps> = ({ className = '' }) => {
-  const { isProductAdmin, hasPermission } = useThreeTierPermissions();
+  const { hasPermission } = useThreeTierPermissions();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);

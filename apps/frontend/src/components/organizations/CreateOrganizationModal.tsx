@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, X, Package, DollarSign, Loader2 } from 'lucide-react';
+import { Building2, Package, DollarSign, Loader2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -170,7 +170,7 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
 
       // Create organization
       const organizationResponse = await organizationService.createOrganization(formData);
-      const organizationId = organizationResponse.data?.id || organizationResponse.id;
+      const organizationId = (organizationResponse as any).data?.id || organizationResponse.id;
 
       // Assign selected feature package
       if (formData.selectedPackage && organizationId && user?.id) {

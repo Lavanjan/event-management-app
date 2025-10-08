@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,9 +10,7 @@ import {
   Edit,
   Copy,
   Trash2,
-  Plus,
-  BookOpen,
-  Package
+  BookOpen
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
@@ -103,8 +101,8 @@ export function EventDetailPage() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Badge variant={getStatusColor(event.status)}>
-            {event.status || 'Draft'}
+          <Badge variant={getStatusColor((event as any).status)}>
+            {(event as any).status || 'Draft'}
           </Badge>
           <CreateBookingDialog onBookingCreated={() => {
             // Refresh the page data when booking is created
@@ -153,11 +151,11 @@ export function EventDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Start Date</label>
-                  <p className="text-lg">{format(new Date(event.startDate), 'PPP p')}</p>
+                  <p className="text-lg">{event.startDate ? format(new Date(event.startDate), 'PPP p') : 'Not set'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">End Date</label>
-                  <p className="text-lg">{format(new Date(event.endDate), 'PPP p')}</p>
+                  <p className="text-lg">{event.endDate ? format(new Date(event.endDate), 'PPP p') : 'Not set'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Location</label>
@@ -168,23 +166,23 @@ export function EventDetailPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Event Type</label>
-                  <p className="text-lg">{event.type}</p>
+                  <p className="text-lg">{(event as any).type || 'Event'}</p>
                 </div>
-                {event.maxCapacity && (
+                {event.maxAttendees && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Max Capacity</label>
                     <p className="text-lg flex items-center">
                       <Users className="mr-1 h-4 w-4" />
-                      {event.maxCapacity} attendees
+                      {event.maxAttendees} attendees
                     </p>
                   </div>
                 )}
-                {event.basePrice && (
+                {event.fullDayPrice && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Base Price</label>
                     <p className="text-lg flex items-center">
                       <DollarSign className="mr-1 h-4 w-4" />
-                      {formatAmount(event.basePrice)}
+                      {formatAmount(event.fullDayPrice)}
                     </p>
                   </div>
                 )}
@@ -247,9 +245,9 @@ export function EventDetailPage() {
                     </div>
                   ))}
                 </div>
-              ) : bookings && bookings.items.length > 0 ? (
+              ) : bookings && (bookings as any).items && (bookings as any).items.length > 0 ? (
                 <div className="space-y-4">
-                  {bookings.items.map((booking) => (
+                  {(bookings as any).items.map((booking: any) => (
                     <div
                       key={booking.id}
                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer"
@@ -303,7 +301,7 @@ export function EventDetailPage() {
                     <p className="text-sm text-muted-foreground">Total Bookings</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold">{stats.confirmedBookings}</p>
+                    <p className="text-2xl font-bold">{(stats as any).confirmedBookings || 0}</p>
                     <p className="text-sm text-muted-foreground">Confirmed</p>
                   </div>
                   <div className="text-center">
@@ -311,22 +309,22 @@ export function EventDetailPage() {
                     <p className="text-sm text-muted-foreground">Revenue</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold">{stats.totalAttendees}</p>
+                    <p className="text-2xl font-bold">{(stats as any).totalAttendees || 0}</p>
                     <p className="text-sm text-muted-foreground">Attendees</p>
                   </div>
                 </div>
 
-                {event.maxCapacity && (
+                {event.maxAttendees && (
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Capacity Used</span>
-                      <span>{stats.totalAttendees}/{event.maxCapacity}</span>
+                      <span>{(stats as any).totalAttendees || 0}/{event.maxAttendees}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-primary h-2 rounded-full"
                         style={{
-                          width: `${Math.min((stats.totalAttendees / event.maxCapacity) * 100, 100)}%`,
+                          width: `${Math.min(((stats as any).totalAttendees || 0) / (event.maxAttendees || 1) * 100, 100)}%`,
                         }}
                       />
                     </div>
@@ -394,7 +392,7 @@ export function EventDetailPage() {
                 </div>
               </div>
 
-              {event.status === 'active' && (
+              {(event as any).status === 'active' && (
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full" />
                   <div>
@@ -409,7 +407,7 @@ export function EventDetailPage() {
                 <div>
                   <p className="text-sm font-medium">Event Starts</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(event.startDate), 'MMM dd, yyyy p')}
+                    {event.startDate ? format(new Date(event.startDate), 'MMM dd, yyyy p') : 'Not set'}
                   </p>
                 </div>
               </div>
@@ -419,7 +417,7 @@ export function EventDetailPage() {
                 <div>
                   <p className="text-sm font-medium">Event Ends</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(event.endDate), 'MMM dd, yyyy p')}
+                    {event.endDate ? format(new Date(event.endDate), 'MMM dd, yyyy p') : 'Not set'}
                   </p>
                 </div>
               </div>

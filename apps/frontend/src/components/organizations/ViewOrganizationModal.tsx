@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Building2, Mail, Phone, Globe, Calendar, Users, MapPin } from 'lucide-react';
+import { Building2, Mail, Phone, Globe, Calendar, MapPin } from 'lucide-react';
 import { Organization } from '../../services/organizationService';
 
 interface ViewOrganizationModalProps {
@@ -118,7 +118,7 @@ export function ViewOrganizationModal({ open, onOpenChange, organization }: View
           </Card>
 
           {/* Address Information */}
-          {(organization.address || organization.city || organization.state || organization.country || organization.zipCode) && (
+          {(organization.address || organization.city || organization.state || organization.country || (organization as any).zipCode) && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Address Information</CardTitle>
@@ -129,7 +129,7 @@ export function ViewOrganizationModal({ open, onOpenChange, organization }: View
                   <div className="space-y-1">
                     {organization.address && <p className="text-sm">{organization.address}</p>}
                     <p className="text-sm">
-                      {[organization.city, organization.state, organization.zipCode].filter(Boolean).join(', ')}
+                      {[organization.city, organization.state, (organization as any).zipCode].filter(Boolean).join(', ')}
                     </p>
                     {organization.country && <p className="text-sm">{organization.country}</p>}
                   </div>

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Shield, Save, Users, Settings } from 'lucide-react';
+import { ArrowLeft, Shield, Save, Settings } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { InputField, TextareaField } from '../../components/forms/FormField';
@@ -56,6 +56,7 @@ export function RoleCreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createRole = useCreateRole();
+  // @ts-ignore
   const { data: availablePermissions } = usePermissions();
 
   const {

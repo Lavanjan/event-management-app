@@ -34,7 +34,7 @@ export const PermissionProvider: React.FC<PermissionProviderProps> = ({
 
     try {
       setIsLoading(true);
-      const userPermissions = await permissionService.getUserPermissions(user.id, organizationId);
+      const userPermissions = await permissionService.getUserPermissions();
       setPermissions(userPermissions);
     } catch (error) {
       console.error('Error fetching permissions:', error);

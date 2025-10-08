@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { PaymentList } from '../../components/payments/PaymentList';
 import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
 import { DollarSign, CreditCard, TrendingUp, Download, Plus } from 'lucide-react';

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
 import { eventService, EventFilters } from '../services/eventService';
 import { addNotification } from '../store/slices/uiSlice';
-import { Event, CreateEventDto, UpdateEventDto } from '../types';
+import { CreateEventDto, UpdateEventDto } from '../types';
 
 export const EVENT_QUERY_KEYS = {
   all: ['events'] as const,

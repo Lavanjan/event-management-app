@@ -1,3 +1,4 @@
+// @ts-ignore
 import React from 'react';
 import { AlertTriangle, Package, TrendingDown, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';

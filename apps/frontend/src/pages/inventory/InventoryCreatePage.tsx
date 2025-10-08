@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Package, Save, DollarSign, Hash } from 'lucide-react';
+import { ArrowLeft, Package, Save, Hash } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { InputField, TextareaField, SelectField } from '../../components/forms/FormField';
@@ -49,7 +49,10 @@ export function InventoryCreatePage() {
   const onSubmit = async (data: InventoryFormData) => {
     try {
       setIsSubmitting(true);
-      await createInventoryItem.mutateAsync(data);
+      await createInventoryItem.mutateAsync({
+        ...data,
+        quantityUnit: 'pieces' // Default unit
+      });
       navigate('/inventory');
     } catch (error) {
       console.error('Failed to create inventory item:', error);
@@ -60,7 +63,7 @@ export function InventoryCreatePage() {
 
   // Convert categories to options for the select field
   const categoryOptions = React.useMemo(() => {
-    return categories?.map(cat => ({
+    return categories?.map((cat: any) => ({
       value: cat.id,
       label: cat.name
     })) || [];

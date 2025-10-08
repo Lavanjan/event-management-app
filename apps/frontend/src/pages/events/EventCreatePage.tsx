@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Calendar, MapPin, Users, DollarSign, Clock, Save } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, DollarSign, Save } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { InputField, TextareaField, SelectField } from '../../components/forms/FormField';
@@ -100,9 +100,9 @@ export function EventCreatePage() {
     if (template) {
       setValue('name', `${template.name} - ${format(new Date(), 'MMM dd, yyyy')}`);
       setValue('description', template.description || '');
-      setValue('type', template.type);
-      setValue('maxCapacity', template.maxCapacity);
-      setValue('basePrice', template.basePrice);
+      setValue('type', (template as any).type || '');
+      setValue('maxCapacity', template.maxAttendees || 0);
+      setValue('basePrice', template.fullDayPrice || 0);
       setValue('requiredAdvancePercentage', template.requiredAdvancePercentage);
       setValue('balancePaymentWindowDays', template.balancePaymentWindowDays);
       setValue('allowInventoryAllocation', template.allowInventoryAllocation);
@@ -386,7 +386,7 @@ export function EventCreatePage() {
                         className="w-full p-3 text-left border rounded-lg hover:bg-accent transition-colors"
                       >
                         <div className="font-medium">{template.name}</div>
-                        <div className="text-sm text-muted-foreground">{template.type}</div>
+                        <div className="text-sm text-muted-foreground">{(template as any).type || 'Event'}</div>
                       </button>
                     ))}
                   </div>

@@ -5,7 +5,7 @@ import { Textarea } from '../ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
 import { useToast } from '../../hooks/use-toast';
-import { Loader2, Shield, Search } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { api } from '../../services/api';
 import { FormModal } from '../common/Modal';

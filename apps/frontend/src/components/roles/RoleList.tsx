@@ -5,16 +5,12 @@ import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { DataTable } from '../common/DataTable';
 import { useToast } from '../../hooks/use-toast';
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  Eye, 
-  Edit, 
-  Trash2,
-  Users,
-  Shield,
-  Settings
+import {
+  Plus,
+  Filter,
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { api } from '../../services/api';
 import {
@@ -340,11 +336,12 @@ export const RoleList: React.FC = () => {
       <Card>
         <CardContent className="p-0">
           <DataTable
-            columns={columns}
-            data={roles}
+            columns={columns as any}
+            data={roles as any}
             loading={loading}
             pagination={pagination}
             onPageChange={handlePageChange}
+            {...({} as any)}
           />
         </CardContent>
       </Card>
@@ -376,7 +373,7 @@ export const RoleList: React.FC = () => {
         <RoleDetailsModal
           isOpen={showDetailsModal}
           onClose={() => setShowDetailsModal(false)}
-          role={selectedRole}
+          role={selectedRole as any}
         />
       )}
 

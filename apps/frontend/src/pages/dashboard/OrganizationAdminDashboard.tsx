@@ -5,16 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import {
-  Package,
-  Calendar,
   BookOpen,
   DollarSign,
   TrendingUp,
-  TrendingDown,
-  Users,
   AlertTriangle,
   Clock,
-  Plus,
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
@@ -29,10 +24,10 @@ export function OrganizationAdminDashboard() {
   const navigate = useNavigate();
 
   // Use real API data instead of mock data
-  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats();
-  const { data: recentBookingsData, isLoading: bookingsLoading } = useRecentBookings(5);
-  const { data: upcomingEventsData, isLoading: eventsLoading } = useUpcomingEvents(5);
-  const { data: inventoryAlertsData, isLoading: alertsLoading } = useInventoryAlerts();
+  const { data: dashboardStats } = useDashboardStats();
+  const { data: recentBookingsData } = useRecentBookings(5);
+  const { data: upcomingEventsData } = useUpcomingEvents(5);
+  const { data: inventoryAlertsData } = useInventoryAlerts();
 
   // Extract real data or provide default values
   const orgStats = {

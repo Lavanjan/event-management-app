@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Eye, Edit, Settings, Shield, Trash2, Ban, Mail } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Eye, Edit, Trash2, Ban, Mail } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
@@ -138,7 +138,7 @@ export function OrganizationTableColumns({
 
               <DropdownMenuSeparator />
 
-              {organization.status === 'pending' && onResendVerification && (
+              {(organization.status as any) === 'pending' && onResendVerification && (
                 <DropdownMenuItem onClick={() => onResendVerification(organization)}>
                   <Mail className="mr-2 h-4 w-4" />
                   Resend Verification

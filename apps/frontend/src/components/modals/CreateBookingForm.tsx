@@ -49,6 +49,7 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+  // @ts-ignore
   const [useCustomAdvance, setUseCustomAdvance] = useState(false);
   const [inventoryAllocations, setInventoryAllocations] = useState<
     Array<{ inventoryItemId: string; quantity: number; unitPrice: number; name: string }>

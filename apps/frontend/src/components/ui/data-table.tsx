@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { Button } from "./button";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { DataTablePagination } from "./data-table-pagination";
 
 interface PaginationProps {

@@ -1,17 +1,14 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { ArrowUpDown, Package, XCircle, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
+import { ArrowUpDown, XCircle, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
 import { InventoryItem } from '../../types';
 import {
-  commonColumns,
   createTextColumn,
   createNumberColumn,
-  createStatusColumn,
   createDateColumn,
   createActionsColumn,
   ActionHandlers,
-  statusVariants
 } from '../common/DataTableColumns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { DocumentManager } from '../documents/DocumentManager';
@@ -144,7 +141,7 @@ export const createInventoryColumns = (handlers: ActionHandlers<InventoryItem>):
         </div>
       );
     },
-    filterFn: (row, id, value) => {
+    filterFn: (row: any, _id: any, value: any) => {
       const item = row.original;
       if (value.includes('out_of_stock') && item.availableQuantity === 0) return true;
       if (value.includes('low_stock') && item.availableQuantity > 0 && item.availableQuantity <= item.lowStockThreshold) return true;

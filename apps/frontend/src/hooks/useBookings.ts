@@ -3,7 +3,6 @@ import { useDispatch } from 'react-redux';
 import { bookingService, BookingFilters } from '../services/bookingService';
 import { addNotification } from '../store/slices/uiSlice';
 import {
-  Booking,
   CreateBookingDto,
   UpdateBookingDto,
   PaymentStatus
@@ -270,7 +269,7 @@ export function useAddExpense() {
   const dispatch = useDispatch();
 
   return useMutation({
-    mutationFn: ({ id, expense }: { id: string; expense: AddExpenseDto }) =>
+    mutationFn: ({ id, expense }: { id: string; expense: any }) =>
       bookingService.addExpense(id, expense),
     onSuccess: (updatedBooking) => {
       queryClient.invalidateQueries({ queryKey: BOOKING_QUERY_KEYS.detail(updatedBooking.id) });
@@ -297,7 +296,7 @@ export function useAddRevenue() {
   const dispatch = useDispatch();
 
   return useMutation({
-    mutationFn: ({ id, revenue }: { id: string; revenue: AddRevenueDto }) =>
+    mutationFn: ({ id, revenue }: { id: string; revenue: any }) =>
       bookingService.addRevenue(id, revenue),
     onSuccess: (updatedBooking) => {
       queryClient.invalidateQueries({ queryKey: BOOKING_QUERY_KEYS.detail(updatedBooking.id) });

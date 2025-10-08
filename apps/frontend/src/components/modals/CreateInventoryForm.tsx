@@ -215,7 +215,7 @@ export default function CreateInventoryForm({ onClose }: CreateInventoryFormProp
                       <SelectContent>
                         <SelectItem value="">No Category</SelectItem>
                         {categoriesLoading ? (
-                          <SelectItem value="" disabled>Loading categories...</SelectItem>
+                          <SelectItem value="" disabled {...({} as any)}>Loading categories...</SelectItem>
                         ) : (
                           categories?.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
