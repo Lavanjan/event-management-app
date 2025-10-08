@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  inventoryCategoryService, 
-  InventoryCategory, 
-  CreateInventoryCategoryDto, 
-  UpdateInventoryCategoryDto 
+import {
+  inventoryCategoryService,
+  UpdateInventoryCategoryDto
 } from '../services/inventoryCategoryService';
 import { useToast } from './use-toast';
 

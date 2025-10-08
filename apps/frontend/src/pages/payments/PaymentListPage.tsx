@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { PaymentList } from '../../components/payments/PaymentList';
 import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
 import { DollarSign, CreditCard, TrendingUp, Download, Plus } from 'lucide-react';
@@ -12,25 +12,25 @@ export function PaymentListPage() {
       icon: DollarSign,
       label: 'Total Payments',
       value: '0', // This would come from API
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: CreditCard,
       label: 'Processed Today',
       value: '0', // This would come from API
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: TrendingUp,
       label: 'Total Revenue',
       value: '$0.00', // This would come from API
-      iconColor: 'text-blue-600',
+      iconColor: 'bg-blue-100',
     },
     {
       icon: DollarSign,
       label: 'Pending',
       value: '0', // This would come from API
-      iconColor: 'text-orange-600',
+      iconColor: 'bg-orange-100',
     },
   ];
 

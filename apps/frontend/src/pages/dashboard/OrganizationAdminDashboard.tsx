@@ -1,38 +1,31 @@
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { RootState } from '../../store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import {
-  Package,
-  Calendar,
-  BookOpen,
   DollarSign,
   TrendingUp,
-  TrendingDown,
-  Users,
   AlertTriangle,
   Clock,
-  Plus,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Users,
+  Package,
+  Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDashboardStats, useRecentBookings, useUpcomingEvents, useInventoryAlerts } from '../../hooks/useDashboard';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import CreateBookingDialog from '../../components/modals/CreateBookingDialog';
 
 export function OrganizationAdminDashboard() {
-  const { user } = useSelector((state: RootState) => state.auth);
   const { formatAmount } = useCurrency();
   const navigate = useNavigate();
 
   // Use real API data instead of mock data
-  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats();
-  const { data: recentBookingsData, isLoading: bookingsLoading } = useRecentBookings(5);
-  const { data: upcomingEventsData, isLoading: eventsLoading } = useUpcomingEvents(5);
-  const { data: inventoryAlertsData, isLoading: alertsLoading } = useInventoryAlerts();
+  const { data: dashboardStats } = useDashboardStats();
+  const { data: recentBookingsData } = useRecentBookings(5);
+  const { data: upcomingEventsData } = useUpcomingEvents(5);
+  const { data: inventoryAlertsData } = useInventoryAlerts();
 
   // Extract real data or provide default values
   const orgStats = {
@@ -65,10 +58,6 @@ export function OrganizationAdminDashboard() {
 
 
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
-  };
-
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
@@ -86,103 +75,126 @@ export function OrganizationAdminDashboard() {
     }
   };
 
-  const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
-    switch (trend) {
-      case 'up':
-        return <ArrowUpRight className="h-4 w-4 text-green-600" />;
-      case 'down':
-        return <ArrowDownRight className="h-4 w-4 text-red-600" />;
-      default:
-        return <TrendingUp className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            Welcome back, {user?.firstName}!
+          <h1 className="text-3xl font-bold text-gray-900">
+            Dashboard Overview
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-gray-600 mt-1">
             Here's what's happening with your event booking business today.
           </p>
         </div>
-        <div className="flex space-x-2 mt-4 sm:mt-0">
-          <CreateBookingDialog onBookingCreated={() => {
-            // Refresh dashboard data when booking is created
-            window.location.reload();
-          }} />
+        <div className="flex space-x-3 mt-4 sm:mt-0">
+          <Button variant="default" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Download Report
+          </Button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatAmount(orgStats.totalRevenue.value)}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {getTrendIcon(orgStats.totalRevenue.trend)}
-              <span className="ml-1">
-                {orgStats.totalRevenue.change > 0 ? '+' : ''}{orgStats.totalRevenue.change}% from last month
-              </span>
+          <CardContent className="text-center pt-4">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="h-12 w-12 bg-teal-100 rounded-full flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-teal-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900 truncate w-full">{formatAmount(orgStats.totalRevenue.value)}</p>
+                <div className="flex items-center justify-center text-xs text-gray-500">
+                  {orgStats.totalRevenue.trend === 'up' ? (
+                    <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
+                  )}
+                  <span className="truncate">
+                    {orgStats.totalRevenue.change > 0 ? '+' : ''}{orgStats.totalRevenue.change}%
+                  </span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(orgStats.totalBookings.value)}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {getTrendIcon(orgStats.totalBookings.trend)}
-              <span className="ml-1">
-                {orgStats.totalBookings.change > 0 ? '+' : ''}{orgStats.totalBookings.change}% from last month
-              </span>
+          <CardContent className="text-center pt-4">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-600">Total Bookings</p>
+                <p className="text-2xl font-bold text-gray-900 truncate w-full">{orgStats.totalBookings.value}</p>
+                <div className="flex items-center justify-center text-xs text-gray-500">
+                  {orgStats.totalBookings.trend === 'up' ? (
+                    <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
+                  )}
+                  <span className="truncate">
+                    {orgStats.totalBookings.change > 0 ? '+' : ''}{orgStats.totalBookings.change}%
+                  </span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Booking Value</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatAmount(orgStats.averageBookingValue.value)}</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {getTrendIcon(orgStats.averageBookingValue.trend)}
-              <span className="ml-1">
-                {orgStats.averageBookingValue.change > 0 ? '+' : ''}{orgStats.averageBookingValue.change}% from last month
-              </span>
+          <CardContent className="text-center pt-4">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-600">Avg. Booking Value</p>
+                <p className="text-2xl font-bold text-gray-900 truncate w-full">{formatAmount(orgStats.averageBookingValue.value)}</p>
+                <div className="flex items-center justify-center text-xs text-gray-500">
+                  {orgStats.averageBookingValue.trend === 'up' ? (
+                    <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
+                  )}
+                  <span className="truncate">
+                    {orgStats.averageBookingValue.change > 0 ? '+' : ''}{orgStats.averageBookingValue.change}%
+                  </span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Profit Margin</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{orgStats.profitMargin.value.toFixed(1)}%</div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {getTrendIcon(orgStats.profitMargin.trend)}
-              <span className="ml-1">
-                {orgStats.profitMargin.change > 0 ? '+' : ''}{orgStats.profitMargin.change}% from last month
-              </span>
+          <CardContent className="text-center pt-4">
+            <div className="flex flex-col items-center space-y-3">
+              <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <Package className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-gray-600">Profit Margin</p>
+                <p className="text-2xl font-bold text-gray-900 truncate w-full">{orgStats.profitMargin.value.toFixed(1)}%</p>
+                <div className="flex items-center justify-center text-xs text-gray-500">
+                  {orgStats.profitMargin.trend === 'up' ? (
+                    <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
+                  ) : (
+                    <ArrowDownRight className="h-3 w-3 text-red-600 mr-1" />
+                  )}
+                  <span className="truncate">
+                    {orgStats.profitMargin.change > 0 ? '+' : ''}{orgStats.profitMargin.change}%
+                  </span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+
 
       {/* Alerts Section */}
       {(inventoryAlerts.length > 0 || paymentAlerts.length > 0) && (

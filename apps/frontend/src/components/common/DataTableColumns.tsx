@@ -9,17 +9,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { 
-  MoreHorizontal, 
-  ArrowUpDown, 
+import {
+  MoreHorizontal,
+  ArrowUpDown,
   Edit,
   Trash2,
-  Eye,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Clock,
-  DollarSign
+  Eye
 } from 'lucide-react';
 import { format } from 'date-fns';
 

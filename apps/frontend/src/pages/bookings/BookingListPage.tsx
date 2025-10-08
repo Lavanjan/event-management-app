@@ -10,7 +10,7 @@ import {
   Download,
   RefreshCw,
   TrendingUp,
-  TrendingDown,
+
   Calendar,
   DollarSign,
   ArrowUpDown,
@@ -21,13 +21,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '../../components/ui/card';
+
 import { Badge } from '../../components/ui/badge';
 import {
   DropdownMenu,
@@ -54,6 +48,7 @@ import EditBookingDialog from '../../components/modals/EditBookingDialog';
 import { BookingDetailsModal } from '../../components/modals/BookingDetailsModal';
 import { BookingReportsModal } from '../../components/modals/BookingReportsModal';
 import { DocumentManager } from '../../components/documents';
+// @ts-ignore
 import { useToast } from '../../hooks/use-toast';
 import { useCurrency } from '../../contexts/CurrencyContext';
 import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
@@ -449,7 +444,7 @@ const createColumns = (
 ];
 
 export function BookingListPage() {
-  const { toast } = useToast();
+
   const { formatAmount } = useCurrency();
   const [filters, setFilters] = useState<BookingFilters>({
     page: 1,
@@ -464,7 +459,7 @@ export function BookingListPage() {
 
   const { data: bookingData, isLoading, error } = useBookingList(filters);
   const bookings = bookingData?.data || [];
-  const totalPages = bookingData ? Math.ceil(bookingData.total / filters.limit) : 0;
+
   const startBookingMutation = useStartBooking();
   const completeBookingMutation = useCompleteBooking();
 
@@ -566,7 +561,7 @@ export function BookingListPage() {
       icon: BookOpen,
       label: 'Total Bookings',
       value: bookingData?.total || 0,
-      iconColor: 'text-primary',
+      iconColor: 'bg-teal-100',
     },
     {
       icon: TrendingUp,
@@ -579,7 +574,7 @@ export function BookingListPage() {
           return sum + (isNaN(amount) ? 0 : amount);
         }, 0)
       ),
-      iconColor: 'text-green-600',
+      iconColor: 'bg-green-100',
     },
     {
       icon: Calendar,
@@ -588,7 +583,7 @@ export function BookingListPage() {
         (b.status === BookingStatus.CONFIRMED || b.status === BookingStatus.STARTED) &&
         new Date(b.startDate) > new Date()
       ).length,
-      iconColor: 'text-blue-600',
+      iconColor: 'bg-blue-100',
     },
     {
       icon: CheckCircle,

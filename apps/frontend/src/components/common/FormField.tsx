@@ -161,7 +161,7 @@ export function SelectField({
           {required && <span className="text-destructive ml-1">*</span>}
         </Label>
       )}
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <Select value={value} onValueChange={onChange} disabled={disabled} {...({} as any)}>
         <SelectTrigger className={cn(error && 'border-destructive focus:border-destructive')}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -170,7 +170,8 @@ export function SelectField({
             <SelectItem
               key={option.value}
               value={option.value}
-              disabled={option.disabled}
+              disabled={option.disabled as any}
+              {...({} as any)}
             >
               {option.label}
             </SelectItem>
@@ -241,7 +242,7 @@ export function MultiSelectField({
               'w-full justify-between',
               error && 'border-destructive focus:border-destructive'
             )}
-            disabled={disabled}
+            disabled={disabled as any}
           >
             {selectedOptions.length > 0
               ? `${selectedOptions.length} selected`

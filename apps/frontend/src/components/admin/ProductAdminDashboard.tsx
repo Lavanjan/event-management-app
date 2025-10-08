@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { featurePackageService, FeaturePackage, CreateFeaturePackageDto } from '../../services/featurePackageService';
+import { featurePackageService, FeaturePackage } from '../../services/featurePackageService';
 import { useThreeTierPermissions } from '../../hooks/useThreeTierPermissions';
 import { CreateFeaturePackageModal } from './CreateFeaturePackageModal';
 import { EditFeaturePackageModal } from './EditFeaturePackageModal';
 import { useToast } from '../../hooks/use-toast';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface ProductAdminDashboardProps {
   className?: string;
 }
 
 export const ProductAdminDashboard: React.FC<ProductAdminDashboardProps> = ({ className = '' }) => {
-  const { isProductAdmin, hasPermission } = useThreeTierPermissions();
+  const { hasPermission } = useThreeTierPermissions();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -118,12 +119,9 @@ export const ProductAdminDashboard: React.FC<ProductAdminDashboardProps> = ({ cl
           <h1 className="text-2xl font-bold text-gray-900">Product Admin Dashboard</h1>
           <p className="text-gray-600 mt-1">Manage feature packages and organization assignments</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
+        <Button onClick={() => setShowCreateModal(true)}>
           Create Feature Package
-        </button>
+        </Button>
       </div>
 
       {/* Stats Cards */}

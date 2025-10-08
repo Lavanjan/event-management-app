@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { roleService } from '../services/roleService';
-import { Role, CreateRoleDto, UpdateRoleDto } from '../types';
+import { UpdateRoleDto } from '../types';
 
 export function useRoles() {
   return useQuery({

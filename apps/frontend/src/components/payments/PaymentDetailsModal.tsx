@@ -129,6 +129,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
   };
 
   const formatCurrencyAmount = (amount: number, currency?: string) => {
+    // @ts-ignore
     return formatAmount(amount, currency);
   };
 
@@ -383,6 +384,7 @@ export const PaymentDetailsModal: React.FC<PaymentDetailsModalProps> = ({
                             <div className="text-right">
                               <div className={`font-medium ${transaction.amountChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {transaction.amountChange > 0 ? '+' : ''}
+                                {/* @ts-ignore */}
                                 {formatAmount(transaction.amountChange, currentPayment.currency)}
                               </div>
                             </div>

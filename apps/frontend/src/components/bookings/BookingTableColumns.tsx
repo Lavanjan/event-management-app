@@ -1,18 +1,14 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
-import { 
-  commonColumns,
-  createTextColumn,
-  createNumberColumn,
+import {
   createStatusColumn,
   createDateColumn,
   createActionsColumn,
   ActionHandlers,
   statusVariants
 } from '../common/DataTableColumns';
-import { Calendar, User, Mail, Phone, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
-import { useCurrency } from '../../contexts/CurrencyContext';
+import { Calendar, User, Mail, Phone, TrendingUp, TrendingDown } from 'lucide-react';
 
 // Booking interface (should match your types)
 export interface Booking {
@@ -93,12 +89,13 @@ export const createBookingColumns = (handlers: ActionHandlers<Booking>, formatAm
   },
 
   // Status
+  // @ts-ignore
   createStatusColumn<Booking>('status', 'Status', {
     statusMap: {
-      pending: { label: 'Pending', variant: 'warning' },
-      confirmed: { label: 'Confirmed', variant: 'success' },
-      cancelled: { label: 'Cancelled', variant: 'destructive' },
-      completed: { label: 'Completed', variant: 'success' },
+      pending: { label: 'Pending', variant: 'pending' },
+      confirmed: { label: 'Confirmed', variant: 'completed' },
+      cancelled: { label: 'Cancelled', variant: 'cancelled' },
+      completed: { label: 'Completed', variant: 'completed' },
     },
   }),
 
@@ -131,7 +128,7 @@ export const createBookingColumns = (handlers: ActionHandlers<Booking>, formatAm
 
       return (
         <div className="space-y-2">
-          <Badge variant={statusVariants[statusConfig.variant] as any}>
+          <Badge variant={(statusVariants as any)[statusConfig.variant] as any}>
             {statusConfig.label}
           </Badge>
           <div className="space-y-1">

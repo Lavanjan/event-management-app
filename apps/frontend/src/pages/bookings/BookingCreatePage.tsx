@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +6,6 @@ import { z } from 'zod';
 import {
   ArrowLeft,
   Calendar,
-  User,
   Package,
   DollarSign,
   Save,
@@ -77,7 +76,6 @@ export function BookingCreatePage() {
     handleSubmit,
     control,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -94,23 +92,23 @@ export function BookingCreatePage() {
 
   // Update selected event when eventId changes
   useEffect(() => {
-    if (watchEventId && eventsData?.items) {
-      const event = eventsData.items.find(e => e.id === watchEventId);
+    if (watchEventId && (eventsData as any)?.items) {
+      const event = (eventsData as any).items.find((e: any) => e.id === watchEventId);
       setSelectedEvent(event);
     }
   }, [watchEventId, eventsData]);
 
-  const eventOptions = eventsData?.items?.map(event => ({
+  const eventOptions = (eventsData as any)?.items?.map((event: any) => ({
     value: event.id,
     label: `${event.name} - ${format(new Date(event.startDate), 'MMM dd, yyyy')}`,
   })) || [];
 
-  const availableInventory = inventoryData?.items?.filter(item =>
+  const availableInventory = (inventoryData as any)?.items?.filter((item: any) =>
     item.quantity > 0 && !selectedInventory.find(sel => sel.itemId === item.id)
   ) || [];
 
   const addInventoryItem = (itemId: string) => {
-    const item = inventoryData?.items?.find(i => i.id === itemId);
+    const item = (inventoryData as any)?.items?.find((i: any) => i.id === itemId);
     if (item) {
       setSelectedInventory(prev => [...prev, {
         itemId: item.id,
@@ -179,6 +177,9 @@ export function BookingCreatePage() {
 
       const bookingData = {
         ...data,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Default to next day
+        durationType: 'full_day' as const,
         inventoryItems: selectedInventory.map(item => ({
           itemId: item.itemId,
           quantity: item.quantity,
@@ -341,7 +342,7 @@ export function BookingCreatePage() {
                     }}
                   >
                     <option value="">Select inventory item to add</option>
-                    {availableInventory.map(item => (
+                    {availableInventory.map((item: any) => (
                       <option key={item.id} value={item.id}>
                         {item.name} (Available: {item.quantity}) - ${item.unitPrice}
                       </option>

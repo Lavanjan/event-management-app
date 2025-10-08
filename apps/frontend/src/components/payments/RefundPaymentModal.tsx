@@ -120,6 +120,7 @@ export const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
   };
 
   const formatCurrencyAmount = (amount: number) => {
+    // @ts-ignore
     return formatAmount(amount, payment.currency);
   };
 

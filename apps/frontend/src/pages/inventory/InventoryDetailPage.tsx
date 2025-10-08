@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Package,
@@ -23,7 +23,7 @@ const mockItem: InventoryItem = {
   id: '1',
   name: 'Professional Sound System',
   description: 'High-quality sound system for events',
-  category: 'Audio Equipment',
+  category: { id: '1', name: 'Audio Equipment' },
   brand: 'Bose',
   sku: 'BSE-001',
   quantity: 50,
@@ -37,10 +37,10 @@ const mockItem: InventoryItem = {
 };
 
 export function InventoryDetailPage() {
-  const { id } = useParams<{ id: string }>();
+
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [, setShowEditDialog] = useState(false);
 
   // For now, using mock data - replace with actual API call
   const item = mockItem;
@@ -272,7 +272,7 @@ export function InventoryDetailPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Category</label>
-                    <p className="font-medium">{item.category || '—'}</p>
+                    <p className="font-medium">{typeof item.category === 'string' ? item.category : item.category?.name || '—'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Brand</label>

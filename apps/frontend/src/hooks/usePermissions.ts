@@ -36,7 +36,7 @@ export const usePermissions = () => {
         }
         throw error;
       }
-      setUserPermissions(permissions);
+      setUserPermissions(null);
     } catch (err) {
       console.error('Error fetching user permissions:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch permissions');

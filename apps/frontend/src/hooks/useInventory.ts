@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
 import { inventoryService, InventoryFilters } from '../services/inventoryService';
 import { addNotification } from '../store/slices/uiSlice';
-import { InventoryItem, CreateInventoryItemDto, UpdateInventoryItemDto } from '../types';
+import { CreateInventoryItemDto, UpdateInventoryItemDto } from '../types';
 
 export const INVENTORY_QUERY_KEYS = {
   all: ['inventory'] as const,

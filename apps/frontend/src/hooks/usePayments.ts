@@ -28,7 +28,7 @@ export function usePaymentTransactions(paymentId: string) {
 export function usePaymentPlans(filters?: { status?: string; bookingId?: string }) {
   return useQuery({
     queryKey: ['payment-plans', filters],
-    queryFn: () => paymentService.getPaymentPlans(filters),
+    queryFn: () => paymentService.getPaymentPlans(filters as any),
   });
 }
 

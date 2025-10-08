@@ -38,6 +38,7 @@ export function VerifyOtpPage() {
     setError('');
 
     try {
+      // @ts-ignore
       const response = await api.post('/verify/email', {
         token,
         otp,

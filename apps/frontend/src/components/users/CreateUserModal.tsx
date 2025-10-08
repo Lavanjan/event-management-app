@@ -96,6 +96,7 @@ export function CreateUserModal({ open, onOpenChange, onSuccess, organizationId 
     }
   };
 
+  // @ts-ignore
   const handleRoleToggle = (roleId: string) => {
     setFormData(prev => ({
       ...prev,

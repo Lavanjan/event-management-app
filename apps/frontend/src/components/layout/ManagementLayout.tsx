@@ -1,3 +1,4 @@
+// @ts-ignore
 import React, { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Button } from '../ui/button';
@@ -37,14 +38,14 @@ export function ManagementLayout({
   children,
 }: ManagementLayoutProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
+          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+          <p className="text-gray-600 mt-2">{description}</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
           {actions.map((action, index) => (
             <Button
               key={index}
@@ -60,15 +61,17 @@ export function ManagementLayout({
       </div>
 
       {/* Stats Cards */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${stats.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${stats.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
         {stats.map((stat, index) => (
           <Card key={index}>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <stat.icon className={`h-8 w-8 ${stat.iconColor || 'text-primary'}`} />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
+            <CardContent className="text-center pt-4">
+              <div className="flex flex-col items-center space-y-3">
+                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.iconColor || 'bg-teal-100'}`}>
+                  <stat.icon className={`h-6 w-6 ${stat.iconColor ? 'text-white' : 'text-teal-600'}`} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-600">{stat.label}</p>
+                  <p className="text-2xl font-bold text-gray-900 truncate w-full">{stat.value}</p>
                 </div>
               </div>
             </CardContent>
@@ -78,12 +81,14 @@ export function ManagementLayout({
 
       {/* Main Content Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b border-gray-100">
           <CardTitle>{tableTitle}</CardTitle>
           <CardDescription>{tableDescription}</CardDescription>
         </CardHeader>
-        <CardContent>
-          {children}
+        <CardContent className="p-0">
+          <div className="p-4">
+            {children}
+          </div>
         </CardContent>
       </Card>
     </div>

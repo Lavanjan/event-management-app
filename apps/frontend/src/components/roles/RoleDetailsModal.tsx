@@ -8,11 +8,10 @@ import {
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { 
-  Eye, 
-  Shield, 
-  Calendar, 
-  Users,
+import {
+  Eye,
+  Shield,
+  Calendar,
   CheckCircle,
   Settings
 } from 'lucide-react';

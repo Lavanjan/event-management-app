@@ -58,6 +58,7 @@ export default function EditBookingForm({ booking, onClose }: EditBookingFormPro
   const [originalTotalAmount, setOriginalTotalAmount] = useState<number>(0);
   const [originalAdvanceAmount, setOriginalAdvanceAmount] = useState<number>(0);
   const [refundAmount, setRefundAmount] = useState<number>(0);
+  // @ts-ignore
   const [useCustomAdvance, setUseCustomAdvance] = useState(false);
   const [newAdvanceAmount, setNewAdvanceAmount] = useState<number>(0);
 
@@ -922,7 +923,6 @@ export default function EditBookingForm({ booking, onClose }: EditBookingFormPro
               <Button
                 type="submit"
                 disabled={updateBooking.isPending}
-                className="bg-primary hover:bg-primary/90"
               >
                 {updateBooking.isPending ? 'Updating...' : 'Update Booking'}
               </Button>

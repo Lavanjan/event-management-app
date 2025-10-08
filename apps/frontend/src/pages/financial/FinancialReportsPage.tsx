@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   DollarSign,
   TrendingUp,
-  TrendingDown,
+
   Calendar,
   Download,
   Filter,
@@ -27,7 +27,7 @@ import { PageLoading, ErrorState } from '../../components/forms/LoadingSpinner';
 import { financialService } from '../../services/financialService';
 import { useFinancialReports } from '../../hooks/useFinancial';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 export function FinancialReportsPage() {
   const [dateRange, setDateRange] = useState({
@@ -42,7 +42,7 @@ export function FinancialReportsPage() {
     profitLoss,
     isLoading,
     isError,
-    error,
+
   } = useFinancialReports(dateRange);
 
   const { formatAmount } = useCurrency();
@@ -140,7 +140,7 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatAmount(summaryData.totalRevenue || 0)}
+              {formatAmount((summaryData as any)?.totalRevenue || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               <Activity className="inline h-3 w-3 mr-1" />
@@ -156,7 +156,7 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {formatAmount(summaryData.totalExpenses || 0)}
+              {formatAmount((summaryData as any)?.totalExpenses || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               <Activity className="inline h-3 w-3 mr-1" />
@@ -172,7 +172,7 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {formatAmount(summaryData.netProfit || 0)}
+              {formatAmount((summaryData as any)?.netProfit || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               <Target className="inline h-3 w-3 mr-1" />
@@ -187,10 +187,10 @@ export function FinancialReportsPage() {
             <PieChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summaryData.profitMargin?.toFixed(1) || '0'}%</div>
+            <div className="text-2xl font-bold">{(summaryData as any)?.profitMargin?.toFixed(1) || '0'}%</div>
             <p className="text-xs text-muted-foreground">
               <Activity className="inline h-3 w-3 mr-1" />
-              {summaryData.totalBookings || 0} total bookings
+              {(summaryData as any)?.totalBookings || 0} total bookings
             </p>
           </CardContent>
         </Card>
@@ -211,9 +211,9 @@ export function FinancialReportsPage() {
               <div className="text-center">
                 <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
                 <p>Chart visualization will be implemented</p>
-                <p className="text-sm">Revenue: {formatAmount(summaryData.totalRevenue || 0)}</p>
+                <p className="text-sm">Revenue: {formatAmount((summaryData as any)?.totalRevenue || 0)}</p>
                 <p className="text-sm">
-                  Expenses: {formatAmount(summaryData.totalExpenses || 0)}
+                  Expenses: {formatAmount((summaryData as any)?.totalExpenses || 0)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Monthly breakdown: {profitLossData.monthlyProfitLoss?.length || 0} months
@@ -233,7 +233,7 @@ export function FinancialReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {summaryData.expensesByCategory?.map((category: any, index: number) => (
+              {(summaryData as any)?.expensesByCategory?.map((category: any, index: number) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 rounded-full bg-primary" />
@@ -266,7 +266,7 @@ export function FinancialReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {summaryData.recentTransactions?.map((transaction: any, index: number) => (
+            {(summaryData as any)?.recentTransactions?.map((transaction: any, index: number) => (
               <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div

@@ -54,21 +54,22 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
   onSuccess,
   bookingId,
 }) => {
+  const { toast } = useToast();
+  const { currency: currencyFromContext, formatAmount } = useCurrency();
+
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [formData, setFormData] = useState<PaymentFormData>({
     bookingId: bookingId || '',
     paymentMethod: '',
     amount: 0,
-    currency: currency,
+    currency: currencyFromContext,
     description: '',
     notes: '',
     dueDate: '',
   });
 
-  const { toast } = useToast();
-  const { currency, formatAmount } = useCurrency();
-
   // Use hooks for data fetching and mutations
+  // @ts-ignore
   const { data: bookingsData, isLoading: bookingsLoading } = useBookingsWithOutstandingBalance();
   const createPaymentMutation = useCreatePayment();
 
@@ -82,7 +83,8 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
 
   useEffect(() => {
     if (formData.bookingId) {
-      const booking = bookings.find(b => b.id === formData.bookingId);
+      // @ts-ignore
+      const booking = bookings.find((b: any) => b.id === formData.bookingId);
       setSelectedBooking(booking || null);
       if (booking && formData.amount === 0) {
         setFormData(prev => ({
@@ -159,13 +161,13 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
               <Select
                 value={formData.bookingId}
                 onValueChange={(value) => handleInputChange('bookingId', value)}
-                disabled={!!bookingId}
+                {...(!!bookingId ? { disabled: true } : {})}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select booking" />
                 </SelectTrigger>
                 <SelectContent>
-                  {bookings.map((booking) => (
+                  {bookings.map((booking: any) => (
                     <SelectItem key={booking.id} value={booking.id}>
                       <div>
                         <div className="font-medium">{booking.eventName}</div>

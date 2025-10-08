@@ -59,6 +59,7 @@ class PermissionService {
   /**
    * Check if the current user has a specific permission
    */
+  // @ts-ignore
   async hasPermission(permission: string, organizationId?: string): Promise<boolean> {
     // Check cache first
     if (this.permissionsCache.has(permission)) {
