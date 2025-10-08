@@ -67,6 +67,8 @@ Thumbs.db
 .env.test.local
 .env.production.local
 
+.yarn/
+
 # Dependencies
 node_modules/
 
