@@ -47,7 +47,8 @@ export function VerificationPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3002/api/verify/email', {
+      const apiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api';
+      const response = await fetch(`${apiUrl}/verify/email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

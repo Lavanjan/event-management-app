@@ -77,7 +77,7 @@ export class EmailService {
 
   async sendOrganizationAdminWelcome(data: OrganizationAdminWelcomeData): Promise<void> {
     try {
-      const subject = `Welcome to ${data.organizationName} - Your Admin Account is Ready`;
+      const subject = `Welcome to Eventorra - ${data.organizationName} Admin Account Ready`;
 
       const htmlContent = this.generateOrganizationAdminWelcomeHtml(data);
       const textContent = this.generateOrganizationAdminWelcomeText(data);
@@ -101,83 +101,335 @@ export class EmailService {
   private generateOrganizationAdminWelcomeHtml(data: OrganizationAdminWelcomeData): string {
     return `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Welcome to ${data.organizationName}</title>
+        <title>Welcome to ${data.organizationName} - Eventorra</title>
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #f7882f; color: white; padding: 20px; text-align: center; }
-          .content { padding: 20px; background-color: #f9f9f9; }
-          .credentials { background-color: #fff; padding: 15px; border-left: 4px solid #f7882f; margin: 20px 0; }
-          .button { display: inline-block; padding: 12px 24px; background-color: #f7882f; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }
-          .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-          .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 15px 0; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              color: #374151;
+              background-color: #f9fafb;
+              padding: 20px;
+          }
+          .email-container {
+              max-width: 600px;
+              margin: 0 auto;
+              background: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+          }
+          .header {
+              background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+              color: white;
+              padding: 40px 30px;
+              text-align: center;
+          }
+          .header h1 {
+              font-size: 28px;
+              font-weight: 700;
+              margin-bottom: 8px;
+          }
+          .header p {
+              font-size: 16px;
+              opacity: 0.9;
+          }
+          .content {
+              padding: 40px 30px;
+          }
+          .greeting {
+              font-size: 20px;
+              font-weight: 600;
+              color: #111827;
+              margin-bottom: 20px;
+          }
+          .intro-text {
+              font-size: 16px;
+              color: #6b7280;
+              margin-bottom: 30px;
+              line-height: 1.7;
+          }
+          .credentials-card {
+              background: #f8fafc;
+              border: 2px solid #0d9488;
+              border-radius: 12px;
+              padding: 30px;
+              margin: 30px 0;
+          }
+          .credentials-card h3 {
+              color: #0d9488;
+              font-size: 18px;
+              font-weight: 600;
+              margin-bottom: 20px;
+              text-align: center;
+          }
+          .credential-item {
+              background: white;
+              border-radius: 8px;
+              padding: 15px;
+              margin: 15px 0;
+          }
+          .credential-label {
+              font-size: 14px;
+              font-weight: 600;
+              color: #6b7280;
+              margin-bottom: 5px;
+          }
+          .credential-value {
+              font-size: 16px;
+              color: #111827;
+              font-weight: 500;
+          }
+          .password-container {
+              background: #f0fdf4;
+              border: 2px dashed #0d9488;
+              border-radius: 8px;
+              padding: 15px;
+              text-align: center;
+          }
+          .password-value {
+              font-family: 'Courier New', monospace;
+              font-size: 18px;
+              font-weight: 700;
+              color: #0d9488;
+              letter-spacing: 2px;
+              margin: 10px 0;
+              padding: 8px;
+              background: white;
+              border-radius: 6px;
+          }
+          .login-button {
+              display: inline-block;
+              background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+              color: white !important;
+              padding: 16px 32px;
+              text-decoration: none;
+              border-radius: 50px;
+              font-weight: 600;
+              font-size: 16px;
+              margin: 20px 0;
+              transition: all 0.3s ease;
+              box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+          }
+          .login-button:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+          }
+          .features-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              gap: 20px;
+              margin: 30px 0;
+          }
+          .feature-card {
+              background: #f8fafc;
+              border-radius: 8px;
+              padding: 20px;
+              border-left: 4px solid #0d9488;
+          }
+          .feature-icon {
+              font-size: 24px;
+              margin-bottom: 10px;
+          }
+          .feature-title {
+              font-weight: 600;
+              color: #111827;
+              margin-bottom: 8px;
+          }
+          .feature-desc {
+              font-size: 14px;
+              color: #6b7280;
+          }
+          .steps-list {
+              background: #f0f9ff;
+              border-radius: 12px;
+              padding: 25px;
+              margin: 30px 0;
+          }
+          .steps-list h3 {
+              color: #0ea5e9;
+              margin-bottom: 20px;
+              text-align: center;
+          }
+          .step-item {
+              display: flex;
+              align-items: flex-start;
+              margin: 15px 0;
+              padding: 10px 0;
+          }
+          .step-number {
+              background: #0d9488;
+              color: white;
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 12px;
+              font-weight: 600;
+              margin-right: 15px;
+              flex-shrink: 0;
+          }
+          .step-text {
+              color: #374151;
+              font-size: 15px;
+          }
+          .warning-notice {
+              background: #fef3c7;
+              border: 1px solid #f59e0b;
+              border-radius: 8px;
+              padding: 20px;
+              margin: 25px 0;
+          }
+          .warning-notice strong {
+              color: #92400e;
+          }
+          .footer {
+              background: #f9fafb;
+              padding: 30px;
+              text-align: center;
+              border-top: 1px solid #e5e7eb;
+          }
+          .footer p {
+              font-size: 14px;
+              color: #6b7280;
+              margin: 5px 0;
+          }
+          .brand-name {
+              color: #0d9488;
+              font-weight: 600;
+          }
+          @media (max-width: 600px) {
+              .email-container { margin: 10px; border-radius: 12px; }
+              .header { padding: 30px 20px; }
+              .content { padding: 30px 20px; }
+              .credentials-card { padding: 20px; }
+              .features-grid { grid-template-columns: 1fr; }
+              .password-value { font-size: 16px; letter-spacing: 1px; }
+          }
         </style>
       </head>
       <body>
-        <div class="container">
+        <div class="email-container">
           <div class="header">
-            <h1>Welcome to ${data.organizationName}</h1>
-            <p>Your Organization Admin Account is Ready</p>
+            <h1>🎉 Welcome to Eventorra!</h1>
+            <p>Your organization admin account is ready</p>
           </div>
-          
+
           <div class="content">
-            <h2>Hello ${data.firstName} ${data.lastName},</h2>
-            
-            <p>Congratulations! Your organization <strong>${
-              data.organizationName
-            }</strong> has been successfully set up in our Event Booking System, and you have been designated as the Organization Administrator.</p>
-            
-            <div class="credentials">
-              <h3>Your Login Credentials:</h3>
-              <p><strong>Email:</strong> ${data.email}</p>
+            <div class="greeting">Hello ${data.firstName} ${data.lastName},</div>
+
+            <p class="intro-text">
+                Congratulations! Your organization <span class="brand-name">${data.organizationName}</span> has been successfully set up on <span class="brand-name">Eventorra</span>, and you have been designated as the Organization Administrator. You now have access to all the powerful event management features.
+            </p>
+
+            <div class="credentials-card">
+              <h3>🔐 Your Admin Login Credentials</h3>
+
+              <div class="credential-item">
+                  <div class="credential-label">📧 Email Address</div>
+                  <div class="credential-value">${data.email}</div>
+              </div>
+
               ${
                 data.temporaryPassword
                   ? `
-                <p><strong>Temporary Password:</strong> <code>${data.temporaryPassword}</code></p>
-                <div class="warning">
-                  <strong>Important:</strong> This is a temporary password. Please change it immediately after your first login for security purposes.
-                </div>
+              <div class="credential-item">
+                  <div class="credential-label">🔑 Temporary Password</div>
+                  <div class="password-container">
+                      <div class="password-value">${data.temporaryPassword}</div>
+                      <p style="font-size: 12px; color: #6b7280; margin-top: 10px;">
+                          💡 Copy this password to login
+                      </p>
+                  </div>
+              </div>
               `
                   : `
-                <p><strong>Password:</strong> Use the password you provided during setup.</p>
+              <div class="credential-item">
+                  <div class="credential-label">🔑 Password</div>
+                  <div class="credential-value">Use the password you provided during setup</div>
+              </div>
               `
               }
+
+              <div style="text-align: center; margin-top: 25px;">
+                  <a href="${data.loginUrl}" class="login-button">🚀 Access Your Admin Dashboard</a>
+              </div>
             </div>
-            
-            <h3>As an Organization Administrator, you can:</h3>
-            <ul>
-              <li>Create and manage users within your organization</li>
-              <li>Create custom roles and assign permissions</li>
-              <li>Manage events, inventory, and bookings</li>
-              <li>Access financial reports and analytics</li>
-              <li>Configure organization settings</li>
-            </ul>
-            
-            <div style="text-align: center;">
-              <a href="${data.loginUrl}" class="button">Login to Your Account</a>
+
+            ${
+              data.temporaryPassword
+                ? `
+            <div class="warning-notice">
+                <strong>🔒 Security Notice:</strong> This is a temporary password. Please change it immediately after your first login for security purposes.
             </div>
-            
-            <h3>Next Steps:</h3>
-            <ol>
-              <li>Click the login button above to access your account</li>
-              ${data.temporaryPassword ? '<li>Change your temporary password immediately</li>' : ''}
-              <li>Complete your organization profile</li>
-              <li>Set up your team members and their roles</li>
-              <li>Start creating events and managing inventory</li>
-            </ol>
-            
-            <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-            
-            <p>Welcome aboard!</p>
+            `
+                : ''
+            }
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-title">User Management</div>
+                    <div class="feature-desc">Create and manage users within your organization</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎭</div>
+                    <div class="feature-title">Role & Permissions</div>
+                    <div class="feature-desc">Create custom roles and assign permissions</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎪</div>
+                    <div class="feature-title">Event Management</div>
+                    <div class="feature-desc">Manage events, inventory, and bookings</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Analytics & Reports</div>
+                    <div class="feature-desc">Access financial reports and analytics</div>
+                </div>
+            </div>
+
+            <div class="steps-list">
+                <h3>🚀 Next Steps to Get Started</h3>
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Click the login button above to access your admin dashboard</div>
+                </div>
+                ${data.temporaryPassword ? `
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Change your temporary password immediately for security</div>
+                </div>
+                ` : ''}
+                <div class="step-item">
+                    <div class="step-number">${data.temporaryPassword ? '3' : '2'}</div>
+                    <div class="step-text">Complete your organization profile and settings</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">${data.temporaryPassword ? '4' : '3'}</div>
+                    <div class="step-text">Set up your team members and assign their roles</div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">${data.temporaryPassword ? '5' : '4'}</div>
+                    <div class="step-text">Start creating events and managing your inventory</div>
+                </div>
+            </div>
+
+            <p style="text-align: center; color: #6b7280; margin: 30px 0;">
+                If you have any questions or need assistance, please don't hesitate to contact our support team. Welcome aboard! 🎊
+            </p>
           </div>
-          
+
           <div class="footer">
-            <p>This email was sent from the Event Booking System. Please do not reply to this email.</p>
-            <p>If you did not expect this email, please contact our support team immediately.</p>
+            <p><strong>Eventorra Team</strong></p>
+            <p>This email was sent from Eventorra. Please do not reply to this email.</p>
+            <p>Need help? Contact our support team anytime.</p>
           </div>
         </div>
       </body>
@@ -234,7 +486,7 @@ If you did not expect this email, please contact our support team immediately.
 
   async sendVerificationEmail(data: VerificationEmailData): Promise<void> {
     try {
-      const subject = `Verify Your Account - ${data.organizationName}`;
+      const subject = `Verify Your Eventorra Account - ${data.organizationName}`;
 
       const verificationData: UserVerificationData = {
         email: data.email,
@@ -266,7 +518,7 @@ If you did not expect this email, please contact our support team immediately.
 
   async sendUserVerification(data: UserVerificationData): Promise<void> {
     try {
-      const subject = 'Verify Your Account - Action Required';
+      const subject = 'Verify Your Eventorra Account - Action Required';
 
       const htmlContent = this.generateUserVerificationHtml(data);
       const textContent = this.generateUserVerificationText(data);
@@ -288,7 +540,7 @@ If you did not expect this email, please contact our support team immediately.
 
   async sendUserCredentials(data: UserCredentialsData): Promise<void> {
     try {
-      const subject = `Your Account Credentials${
+      const subject = `Your Eventorra Account Credentials${
         data.organizationName ? ` - ${data.organizationName}` : ''
       }`;
 
@@ -313,70 +565,227 @@ If you did not expect this email, please contact our support team immediately.
   private generateUserVerificationHtml(data: UserVerificationData): string {
     return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your Account</title>
+    <title>Verify Your Account - Eventorra</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #4f46e5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-        .verification-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; border: 2px solid #4f46e5; }
-        .otp-code { font-size: 32px; font-weight: bold; color: #4f46e5; letter-spacing: 8px; margin: 20px 0; }
-        .button { display: inline-block; background: #4f46e5; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold; border: none; cursor: pointer; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280; }
-        .warning { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            background-color: #f9fafb;
+            padding: 20px;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 20px;
+        }
+        .intro-text {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        .verification-card {
+            background: #f8fafc;
+            border: 2px solid #0d9488;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .verification-card h3 {
+            color: #0d9488;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .option-section {
+            margin: 25px 0;
+            padding: 20px 0;
+        }
+        .option-section:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .option-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+        }
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white !important;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+        .verify-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+        }
+        .url-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+        .url-link {
+            color: #0d9488;
+            text-decoration: none;
+        }
+        .otp-container {
+            background: white;
+            border: 2px dashed #0d9488;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .otp-code {
+            font-size: 36px;
+            font-weight: 700;
+            color: #0d9488;
+            letter-spacing: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+        }
+        .otp-instruction {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 15px;
+        }
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .warning-box strong {
+            color: #92400e;
+        }
+        .security-note {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .footer {
+            background: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 5px 0;
+        }
+        .brand-name {
+            color: #0d9488;
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            .email-container { margin: 10px; border-radius: 12px; }
+            .header { padding: 30px 20px; }
+            .content { padding: 30px 20px; }
+            .verification-card { padding: 20px; }
+            .otp-code { font-size: 28px; letter-spacing: 4px; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Verify Your Account</h1>
-    </div>
-    <div class="content">
-        <h2>Hello ${data.firstName} ${data.lastName},</h2>
+    <div class="email-container">
+        <div class="header">
+            <h1>🎉 Welcome to Eventorra!</h1>
+            <p>Verify your account to get started</p>
+        </div>
 
-        <p>Welcome to the Event Booking System${
-          data.organizationName ? ` for ${data.organizationName}` : ''
-        }! To complete your account setup, please verify your email address.</p>
+        <div class="content">
+            <div class="greeting">Hello ${data.firstName} ${data.lastName},</div>
 
-        <div class="verification-box">
-            <h3>Verification Options</h3>
-
-            <p><strong>Option 1: Click to go to verification page</strong></p>
-            <table cellpadding="0" cellspacing="0" border="0" style="margin: 20px auto;">
-              <tr>
-                <td style="background-color: #4f46e5; border-radius: 6px; text-align: center; padding: 0;">
-                  <a href="${
-                    data.verificationUrl
-                  }" style="display: block; padding: 15px 30px; color: #ffffff; text-decoration: none; font-weight: bold; font-family: Arial, sans-serif; font-size: 16px; line-height: 1; border-radius: 6px;">Go to Verification Page</a>
-                </td>
-              </tr>
-            </table>
-
-            <p style="margin: 10px 0; font-size: 14px; color: #666;">
-              Or copy and paste this link in your browser:<br>
-              <a href="${data.verificationUrl}" style="color: #4f46e5; word-break: break-all;">${
-      data.verificationUrl
-    }</a>
+            <p class="intro-text">
+                Welcome to <span class="brand-name">Eventorra</span>${
+                  data.organizationName ? ` for <strong>${data.organizationName}</strong>` : ''
+                }! We're excited to have you on board. To complete your account setup and ensure security, please verify your email address.
             </p>
 
-            <p><strong>Option 2: Enter the OTP code directly</strong></p>
-            <div class="otp-code">${data.otp}</div>
-            <p>Click the button above to go to the verification page, then enter this 6-digit code to complete verification</p>
-        </div>
+            <div class="verification-card">
+                <h3>📧 Email Verification Required</h3>
 
-        <div class="warning">
-            <strong>⚠️ Important:</strong> This verification code will expire in ${
-              data.expiryMinutes
-            } minutes. If you don't verify within this time, you'll need to request a new verification email.
-        </div>
+                <div class="option-section">
+                    <div class="option-title">🚀 Option 1: Quick Verification</div>
+                    <p style="color: #6b7280; margin-bottom: 15px;">Click the button below to verify instantly</p>
+                    <a href="${data.verificationUrl}" class="verify-button">
+                        ✓ Verify My Account
+                    </a>
+                    <div class="url-text">
+                        Or copy this link: <a href="${data.verificationUrl}" class="url-link">${data.verificationUrl}</a>
+                    </div>
+                </div>
 
-        <p>If you didn't create this account, please ignore this email or contact our support team.</p>
+                <div class="option-section">
+                    <div class="option-title">🔢 Option 2: Enter Verification Code</div>
+                    <p style="color: #6b7280; margin-bottom: 15px;">Use this 6-digit code on the verification page</p>
+                    <div class="otp-container">
+                        <div class="otp-code">${data.otp}</div>
+                        <div class="otp-instruction">Enter this code after clicking the verification button</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <strong>⏰ Time Sensitive:</strong> This verification code will expire in <strong>${data.expiryMinutes} minutes</strong>.
+                If you don't verify within this time, you'll need to request a new verification email.
+            </div>
+
+            <div class="security-note">
+                <strong>🔒 Security Notice:</strong> If you didn't create this account, please ignore this email or contact our support team immediately.
+            </div>
+        </div>
 
         <div class="footer">
-            <p>This email was sent from the Event Booking System. Please do not reply to this email.</p>
-            <p>If you need assistance, please contact our support team.</p>
+            <p><strong>Eventorra Team</strong></p>
+            <p>This email was sent from Eventorra. Please do not reply to this email.</p>
+            <p>Need help? Contact our support team anytime.</p>
         </div>
     </div>
 </body>
@@ -386,96 +795,262 @@ If you did not expect this email, please contact our support team immediately.
 
   private generateUserVerificationText(data: UserVerificationData): string {
     return `
-Verify Your Account
+🎉 Welcome to Eventorra!
 
 Hello ${data.firstName} ${data.lastName},
 
-Welcome to the Event Booking System${
+Welcome to Eventorra${
       data.organizationName ? ` for ${data.organizationName}` : ''
-    }! To complete your account setup, please verify your email address.
+    }! We're excited to have you on board. To complete your account setup and ensure security, please verify your email address.
 
-Verification Options:
+📧 Email Verification Required
 
-Option 1: Go to verification page
-${data.verificationUrl}
+🚀 Option 1: Quick Verification
+Click this link to verify instantly: ${data.verificationUrl}
 
-Option 2: Enter the OTP code directly
-${data.otp}
+🔢 Option 2: Enter Verification Code
+Use this 6-digit code on the verification page: ${data.otp}
 
-Click the link above to go to the verification page, then enter this 6-digit code to complete verification.
+⏰ Time Sensitive: This verification code will expire in ${data.expiryMinutes} minutes. If you don't verify within this time, you'll need to request a new verification email.
 
-⚠️ Important: This verification code will expire in ${data.expiryMinutes} minutes.
-
-If you didn't create this account, please ignore this email or contact our support team.
+🔒 Security Notice: If you didn't create this account, please ignore this email or contact our support team immediately.
 
 ---
-This email was sent from the Event Booking System. Please do not reply to this email.
-If you need assistance, please contact our support team.
+Eventorra Team
+This email was sent from Eventorra. Please do not reply to this email.
+Need help? Contact our support team anytime.
     `;
   }
 
   private generateUserCredentialsHtml(data: UserCredentialsData): string {
     return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Account Credentials</title>
+    <title>Your Account Credentials - Eventorra</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: #4f46e5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-        .credentials-box { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #4f46e5; }
-        .password { font-family: monospace; font-size: 18px; background: #f3f4f6; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        .button { display: inline-block; background: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280; }
-        .warning { background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #374151;
+            background-color: #f9fafb;
+            padding: 20px;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 20px;
+        }
+        .intro-text {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        .credentials-card {
+            background: #f8fafc;
+            border: 2px solid #0d9488;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .credentials-card h3 {
+            color: #0d9488;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .credential-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        .credential-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+        .credential-value {
+            font-size: 16px;
+            color: #111827;
+            font-weight: 500;
+        }
+        .password-container {
+            background: #f0fdf4;
+            border: 2px dashed #0d9488;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .password-value {
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: #0d9488;
+            letter-spacing: 2px;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+        .login-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            color: white !important;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+        }
+        .verification-notice {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .verification-notice strong {
+            color: #92400e;
+        }
+        .security-notice {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .footer {
+            background: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer p {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 5px 0;
+        }
+        .brand-name {
+            color: #0d9488;
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            .email-container { margin: 10px; border-radius: 12px; }
+            .header { padding: 30px 20px; }
+            .content { padding: 30px 20px; }
+            .credentials-card { padding: 20px; }
+            .password-value { font-size: 16px; letter-spacing: 1px; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Your Account Credentials</h1>
-    </div>
-    <div class="content">
-        <h2>Hello ${data.firstName} ${data.lastName},</h2>
-
-        <p>Your account has been created${
-          data.organizationName ? ` for ${data.organizationName}` : ''
-        }. Here are your login credentials:</p>
-
-        <div class="credentials-box">
-            <h3>Login Information</h3>
-            <p><strong>Email:</strong> ${data.email}</p>
-            <p><strong>Temporary Password:</strong></p>
-            <div class="password">${data.temporaryPassword}</div>
-            <a href="${data.loginUrl}" class="button">Login Now</a>
+    <div class="email-container">
+        <div class="header">
+            <h1>🔐 Your Account is Ready!</h1>
+            <p>Login credentials for Eventorra</p>
         </div>
 
-        ${
-          data.requiresVerification
-            ? `
-        <div class="warning">
-            <strong>⚠️ Account Verification Required</strong>
-            <p>Before you can use your account, you need to verify your email address.</p>
+        <div class="content">
+            <div class="greeting">Hello ${data.firstName} ${data.lastName},</div>
+
+            <p class="intro-text">
+                Great news! Your account has been successfully created${
+                  data.organizationName ? ` for <span class="brand-name">${data.organizationName}</span>` : ''
+                } on <span class="brand-name">Eventorra</span>. You can now access all the powerful event management features.
+            </p>
+
+            <div class="credentials-card">
+                <h3>🎯 Your Login Credentials</h3>
+
+                <div class="credential-item">
+                    <div class="credential-label">📧 Email Address</div>
+                    <div class="credential-value">${data.email}</div>
+                </div>
+
+                <div class="credential-item">
+                    <div class="credential-label">🔑 Temporary Password</div>
+                    <div class="password-container">
+                        <div class="password-value">${data.temporaryPassword}</div>
+                        <p style="font-size: 12px; color: #6b7280; margin-top: 10px;">
+                            💡 Copy this password to login
+                        </p>
+                    </div>
+                </div>
+
+                <a href="${data.loginUrl}" class="login-button">
+                    🚀 Login to Eventorra
+                </a>
+            </div>
+
             ${
-              data.verificationUrl
-                ? `<a href="${data.verificationUrl}" class="button">Verify Account</a>`
+              data.requiresVerification
+                ? `
+            <div class="verification-notice">
+                <strong>⚠️ Email Verification Required</strong>
+                <p style="margin: 10px 0;">Before you can use your account, please verify your email address.</p>
+                ${
+                  data.verificationUrl
+                    ? `<a href="${data.verificationUrl}" class="login-button" style="margin: 15px 0;">✓ Verify Email Address</a>`
+                    : ''
+                }
+                ${data.otp ? `<p style="margin-top: 15px;">Or use this verification code: <strong style="color: #0d9488;">${data.otp}</strong></p>` : ''}
+            </div>
+            `
                 : ''
             }
-            ${data.otp ? `<p>Or use this OTP code: <strong>${data.otp}</strong></p>` : ''}
-        </div>
-        `
-            : ''
-        }
 
-        <div class="warning">
-            <strong>🔒 Security Notice:</strong> Please change your temporary password immediately after logging in for security purposes.
+            <div class="security-notice">
+                <strong>🔒 Important Security Notice:</strong> For your account security, please change this temporary password immediately after your first login. You can do this in your account settings.
+            </div>
         </div>
 
         <div class="footer">
-            <p>This email was sent from the Event Booking System. Please do not reply to this email.</p>
-            <p>If you need assistance, please contact our support team.</p>
+            <p><strong>Eventorra Team</strong></p>
+            <p>This email was sent from Eventorra. Please do not reply to this email.</p>
+            <p>Need help? Contact our support team anytime.</p>
         </div>
     </div>
 </body>

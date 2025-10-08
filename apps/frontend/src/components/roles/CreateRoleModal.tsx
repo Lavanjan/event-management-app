@@ -103,7 +103,7 @@ export const CreateRoleModal: React.FC<CreateRoleModalProps> = ({
 
     setLoading(true);
     try {
-      const response = await fetch('/api/roles/enhanced', {
+      const response = await fetch('/api/enhanced-roles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -6,6 +6,7 @@ import {
   IsEnum,
   ValidateNested,
   IsBoolean,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -131,4 +132,12 @@ export class CreateOrganizationDto {
   @ValidateNested()
   @Type(() => CreateOrganizationAdminDto)
   admin: CreateOrganizationAdminDto;
+
+  @ApiPropertyOptional({
+    description: 'Selected feature package ID to assign to the organization',
+    example: 'f198f462-50df-42eb-bb21-3865021be83c'
+  })
+  @IsOptional()
+  @IsUUID()
+  selectedPackage?: string;
 }

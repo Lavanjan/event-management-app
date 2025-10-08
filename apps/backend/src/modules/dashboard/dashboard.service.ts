@@ -22,7 +22,7 @@ export class DashboardService {
     private revenueRepository: Repository<BookingRevenue>
   ) {}
 
-  async getStats() {
+  async getStats(organizationId: string) {
     const [
       totalInventoryItems,
       totalInventoryValue,
@@ -33,30 +33,34 @@ export class DashboardService {
       lowStockItems,
       overduePayments,
     ] = await Promise.all([
-      this.inventoryRepository.count({ where: { isActive: true } }),
+      this.inventoryRepository.count({ where: { isActive: true, organizationId } }),
       this.inventoryRepository
         .createQueryBuilder('item')
         .select('SUM(item.unitPrice * item.quantity)', 'total')
-        .where('item.isActive = :isActive', { isActive: true })
+        .where('item.isActive = :isActive AND item.organizationId = :organizationId', { isActive: true, organizationId })
         .getRawOne()
         .then(result => parseFloat(result.total) || 0),
-      this.eventRepository.count({ where: { isActive: true } }),
-      this.bookingRepository.count(),
+      this.eventRepository.count({ where: { isActive: true, organizationId } }),
+      this.bookingRepository.count({ where: { organizationId } }),
       this.revenueRepository
         .createQueryBuilder('revenue')
+        .leftJoin('revenue.booking', 'booking')
         .select('SUM(revenue.amount)', 'total')
+        .where('booking.organizationId = :organizationId', { organizationId })
         .getRawOne()
         .then(result => parseFloat(result.total) || 0),
       this.expenseRepository
         .createQueryBuilder('expense')
+        .leftJoin('expense.booking', 'booking')
         .select('SUM(expense.amount)', 'total')
+        .where('booking.organizationId = :organizationId', { organizationId })
         .getRawOne()
         .then(result => parseFloat(result.total) || 0),
       this.inventoryRepository.count({
-        where: { availableQuantity: 5, isActive: true }, // Less than or equal to 5
+        where: { availableQuantity: 5, isActive: true, organizationId }, // Less than or equal to 5
       }),
       this.bookingRepository.count({
-        where: { paymentStatus: BookingPaymentStatus.OVERDUE },
+        where: { paymentStatus: BookingPaymentStatus.OVERDUE, organizationId },
       }),
     ]);
 
@@ -79,7 +83,7 @@ export class DashboardService {
     };
   }
 
-  async getChartData(period: '7d' | '30d' | '90d' | '1y' = '30d') {
+  async getChartData(period: '7d' | '30d' | '90d' | '1y' = '30d', organizationId: string) {
     // For now, return mock data
     return {
       success: true,
@@ -96,9 +100,10 @@ export class DashboardService {
     };
   }
 
-  async getRecentActivity(limit: number = 10) {
+  async getRecentActivity(limit: number = 10, organizationId: string) {
     // Get recent bookings as activity
     const recentBookings = await this.bookingRepository.find({
+      where: { organizationId },
       take: limit,
       order: { createdAt: 'DESC' },
       relations: ['event'],
@@ -122,9 +127,9 @@ export class DashboardService {
     };
   }
 
-  async getUpcomingEvents(limit: number = 5) {
+  async getUpcomingEvents(limit: number = 5, organizationId: string) {
     const upcomingEvents = await this.eventRepository.find({
-      where: { isActive: true },
+      where: { isActive: true, organizationId },
       take: limit,
       order: { startDate: 'ASC' },
     });
@@ -132,7 +137,7 @@ export class DashboardService {
     const eventsWithBookings = await Promise.all(
       upcomingEvents.map(async event => {
         const bookingsCount = await this.bookingRepository.count({
-          where: { eventId: event.id },
+          where: { eventId: event.id, organizationId },
         });
 
         return {
@@ -153,8 +158,9 @@ export class DashboardService {
     };
   }
 
-  async getRecentBookings(limit: number = 10) {
+  async getRecentBookings(limit: number = 10, organizationId: string) {
     const recentBookings = await this.bookingRepository.find({
+      where: { organizationId },
       take: limit,
       order: { createdAt: 'DESC' },
       relations: ['event'],
@@ -177,9 +183,9 @@ export class DashboardService {
     };
   }
 
-  async getInventoryAlerts() {
+  async getInventoryAlerts(organizationId: string) {
     const lowStockItems = await this.inventoryRepository.find({
-      where: { availableQuantity: 5, isActive: true }, // Less than or equal to 5
+      where: { availableQuantity: 5, isActive: true, organizationId }, // Less than or equal to 5
       take: 20,
     });
 
@@ -198,9 +204,9 @@ export class DashboardService {
     };
   }
 
-  async getPaymentAlerts() {
+  async getPaymentAlerts(organizationId: string) {
     const overdueBookings = await this.bookingRepository.find({
-      where: { paymentStatus: BookingPaymentStatus.OVERDUE },
+      where: { paymentStatus: BookingPaymentStatus.OVERDUE, organizationId },
       relations: ['event'],
       take: 20,
     });
@@ -223,7 +229,7 @@ export class DashboardService {
     };
   }
 
-  async getFinancialSummary() {
+  async getFinancialSummary(organizationId: string) {
     // For now, return mock data
     return {
       success: true,
@@ -250,7 +256,7 @@ export class DashboardService {
     };
   }
 
-  async getKPIs() {
+  async getKPIs(organizationId: string) {
     return {
       success: true,
       data: {

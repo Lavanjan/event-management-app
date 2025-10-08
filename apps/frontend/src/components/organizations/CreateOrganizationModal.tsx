@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { Building2, Package, DollarSign, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Building2, Package, DollarSign, Loader2, Check } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Checkbox } from '../ui/checkbox';
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -69,8 +69,8 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
   const loadFeaturePackages = async () => {
     try {
       setLoadingPackages(true);
-      const packages = await featurePackageService.getAllFeaturePackages();
-      setAvailablePackages(packages.filter(pkg => pkg.isActive));
+      const packages = await featurePackageService.getActiveFeaturePackages();
+      setAvailablePackages(packages);
     } catch (error) {
       console.error('Failed to load feature packages:', error);
       toast({
@@ -122,12 +122,15 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
     }
   };
 
-  const handlePackageToggle = (packageId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedPackage: prev.selectedPackage === packageId ? '' : packageId
-    }));
-  };
+  const handlePackageToggle = useCallback((packageId: string) => {
+    setFormData(prev => {
+      const newSelectedPackage = prev.selectedPackage === packageId ? '' : packageId;
+      return {
+        ...prev,
+        selectedPackage: newSelectedPackage
+      };
+    });
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -429,10 +432,13 @@ export function CreateOrganizationModal({ open, onOpenChange, onSuccess }: Creat
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={formData.selectedPackage === pkg.id}
-                            onChange={() => handlePackageToggle(pkg.id)}
-                          />
+                          <div className={`h-4 w-4 rounded-sm border flex items-center justify-center ${
+                            formData.selectedPackage === pkg.id
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'border-gray-300'
+                          }`}>
+                            {formData.selectedPackage === pkg.id && <Check className="h-3 w-3" />}
+                          </div>
                           <CardTitle className="text-base">{pkg.name}</CardTitle>
                         </div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">

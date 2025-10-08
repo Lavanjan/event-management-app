@@ -60,6 +60,8 @@ services:
       SMTP_USER: your-email@gmail.com
       SMTP_PASS: your-app-password
       FRONTEND_URL: http://localhost:4200
+      FRONTEND_URL_ALT: http://localhost:4201
+      BACKEND_URL: http://localhost:3000
     ports:
       - "3000:3000"
     depends_on:

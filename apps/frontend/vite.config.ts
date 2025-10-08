@@ -17,14 +17,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 4201,
+    port: parseInt(process.env.VITE_PORT || '4201'),
     host: true,
     hmr: {
       overlay: false,
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3002',
         changeOrigin: true,
         secure: false,
         ws: true,

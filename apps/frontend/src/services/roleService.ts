@@ -27,7 +27,7 @@ export const roleService = {
   },
 
   async getPermissions(): Promise<Permission[]> {
-    const response = await api.get('/roles/enhanced/available-permissions');
+    const response = await api.get('/enhanced-roles/available-permissions');
     return response.data.data.permissions;
   },
 

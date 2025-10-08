@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import {
   DollarSign,
   TrendingUp,
@@ -11,20 +13,24 @@ import {
   ArrowDownRight,
   Users,
   Package,
-  Download
+  Download,
+  Calendar,
+  Mail,
+  Phone
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { useDashboardStats, useRecentBookings, useUpcomingEvents, useInventoryAlerts } from '../../hooks/useDashboard';
+import { useDashboardStats, useRecentBookings, useInventoryAlerts } from '../../hooks/useDashboard';
 import { useCurrency } from '../../contexts/CurrencyContext';
 
 export function OrganizationAdminDashboard() {
   const { formatAmount } = useCurrency();
   const navigate = useNavigate();
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   // Use real API data instead of mock data
   const { data: dashboardStats } = useDashboardStats();
   const { data: recentBookingsData } = useRecentBookings(5);
-  const { data: upcomingEventsData } = useUpcomingEvents(5);
   const { data: inventoryAlertsData } = useInventoryAlerts();
 
   // Extract real data or provide default values
@@ -52,11 +58,23 @@ export function OrganizationAdminDashboard() {
   };
 
   const recentBookings = recentBookingsData || [];
-  const upcomingEvents = upcomingEventsData || [];
   const inventoryAlerts = inventoryAlertsData || [];
   const paymentAlerts = dashboardStats?.paymentAlerts || [];
 
+  const handleBookingClick = (booking: any) => {
+    setSelectedBooking(booking);
+    setShowBookingModal(true);
+  };
 
+  const getPaymentStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'paid': return 'default';
+      case 'advance_paid': return 'secondary';
+      case 'pending': return 'outline';
+      case 'overdue': return 'destructive';
+      default: return 'outline';
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -297,7 +315,7 @@ export function OrganizationAdminDashboard() {
                 <div
                   key={booking.id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer"
-                  onClick={() => navigate(`/bookings/${booking.id}`)}
+                  onClick={() => handleBookingClick(booking)}
                 >
                   <div className="space-y-1">
                     <p className="text-sm font-medium">{booking.customerName}</p>
@@ -308,9 +326,14 @@ export function OrganizationAdminDashboard() {
                   </div>
                   <div className="text-right space-y-1">
                     <p className="text-sm font-medium">{formatAmount(booking.totalAmount)}</p>
-                    <Badge variant={getStatusColor(booking.status)}>
-                      {booking.status}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge variant={getStatusColor(booking.status)} className="text-xs">
+                        {booking.status}
+                      </Badge>
+                      <Badge variant={getPaymentStatusColor(booking.paymentStatus)} className="text-xs">
+                        {booking.paymentStatus?.replace('_', ' ')}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -318,44 +341,138 @@ export function OrganizationAdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Upcoming Events */}
+        {/* Recent Activity */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Upcoming Events</CardTitle>
-              <CardDescription>Events scheduled for the coming days</CardDescription>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest system activities and updates</CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/events')}>
-              View All
+            <Button variant="outline" size="sm" onClick={() => navigate('/reports')}>
+              View Reports
             </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {upcomingEvents.map((event) => (
+              {recentBookings.slice(0, 3).map((booking) => (
                 <div
-                  key={event.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent cursor-pointer"
-                  onClick={() => navigate(`/events/${event.id}`)}
+                  key={`activity-${booking.id}`}
+                  className="flex items-center gap-3 p-3 border rounded-lg"
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">{event.name}</p>
-                    <p className="text-xs text-muted-foreground">{event.location}</p>
+                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Users className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium">New booking created</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(event.startDate), 'MMM dd, yyyy')}
+                      {booking.customerName} booked {booking.eventName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(booking.createdAt), 'MMM dd, yyyy HH:mm')}
                     </p>
                   </div>
-                  <div className="text-right space-y-1">
-                    <p className="text-sm font-medium">{event.bookingsCount} bookings</p>
-                    <Badge variant={getStatusColor(event.status)}>
-                      {event.status}
-                    </Badge>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{formatAmount(booking.totalAmount)}</p>
                   </div>
                 </div>
               ))}
+              {recentBookings.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No recent activity</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Booking Details Modal */}
+      <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Booking Details</DialogTitle>
+          </DialogHeader>
+          {selectedBooking && (
+            <div className="space-y-6">
+              {/* Customer Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">Customer Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{selectedBooking.customerName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{selectedBooking.customerEmail}</span>
+                    </div>
+                    {selectedBooking.customerPhone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{selectedBooking.customerPhone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">Event Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{selectedBooking.eventName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        Booked on {format(new Date(selectedBooking.createdAt), 'MMM dd, yyyy HH:mm')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Information */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-lg">Payment Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <span className="text-sm font-medium">Total Amount</span>
+                    <span className="font-semibold">{formatAmount(selectedBooking.totalAmount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <span className="text-sm font-medium">Status</span>
+                    <Badge variant={getStatusColor(selectedBooking.status)}>
+                      {selectedBooking.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <span className="text-sm font-medium">Payment</span>
+                    <Badge variant={getPaymentStatusColor(selectedBooking.paymentStatus)}>
+                      {selectedBooking.paymentStatus?.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setShowBookingModal(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  setShowBookingModal(false);
+                  navigate(`/bookings/${selectedBooking.id}`);
+                }}>
+                  View Full Details
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

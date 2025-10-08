@@ -12,9 +12,9 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             alt="Eventorra"
             className="mx-auto h-16 w-auto"
           />
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          {/* <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             Eventorra
-          </h2>
+          </h2> */}
         </div>
         {children}
       </div>

@@ -82,7 +82,7 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ['organization-roles'],
     queryFn: async () => {
-      const response = await api.get('/roles/enhanced');
+      const response = await api.get('/enhanced-roles');
       return response.data.data;
     },
   });

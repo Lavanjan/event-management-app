@@ -21,6 +21,7 @@ import { FeaturePackagesService } from './feature-packages.service';
 import { CreateFeaturePackageDto, UpdateFeaturePackageDto, AssignPackageDto } from './dto';
 import { PermissionsGuard } from '../../common/guards/permissions.guard';
 import { RequirePermission } from '../../common/decorators/permissions.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Feature Packages')
 @ApiBearerAuth()
@@ -48,7 +49,7 @@ export class FeaturePackagesController {
   }
 
   @Get('active')
-  @RequirePermission('product.admin', 'product.packages')
+  @Public() // Make this public for organization creation
   @ApiOperation({ summary: 'Get active feature packages' })
   @ApiResponse({ status: 200, description: 'List of active feature packages' })
   async findActive() {

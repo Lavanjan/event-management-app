@@ -130,7 +130,7 @@ export const RoleList: React.FC = () => {
     if (!roleToDelete) return;
 
     try {
-      const response = await fetch(`/api/roles/enhanced/${roleToDelete.id}`, {
+      const response = await fetch(`/api/enhanced-roles/${roleToDelete.id}`, {
         method: 'DELETE',
         credentials: 'include',
       });

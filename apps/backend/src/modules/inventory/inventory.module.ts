@@ -9,12 +9,14 @@ import { InventoryCategoryController } from '../../controllers/inventory-categor
 import { InventoryCategoryService } from '../../services/inventory-category.service';
 import { AuthModule } from '../auth/auth.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
+import { PermissionsModule } from '../permissions/permissions.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([InventoryItem, InventoryCategory]),
     AuthModule,
     OrganizationsModule,
+    PermissionsModule,
   ],
   controllers: [InventoryController, InventoryCategoryController],
   providers: [InventoryService, InventoryCategoryService],

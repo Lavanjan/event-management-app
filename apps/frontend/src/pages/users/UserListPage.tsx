@@ -15,7 +15,8 @@ import {
   Users,
   Shield,
   Clock,
-  Download
+  Download,
+  Eye
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -253,32 +254,44 @@ export function UserListPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleEdit(user)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleStatusToggle(user.id, user.isActive)}
-              >
-                {user.isActive ? (
-                  <>
-                    <UserX className="mr-2 h-4 w-4" />
-                    Deactivate
-                  </>
-                ) : (
-                  <>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Activate
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleDelete(user.id, `${user.firstName} ${user.lastName}`)}
-                className="text-red-600"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
-              </DropdownMenuItem>
+              {/* Only show edit/deactivate/delete for non-organization-admin users */}
+              {user.userType !== 'organization_admin' && (
+                <>
+                  <DropdownMenuItem onClick={() => handleEdit(user)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleStatusToggle(user.id, user.isActive)}
+                  >
+                    {user.isActive ? (
+                      <>
+                        <UserX className="mr-2 h-4 w-4" />
+                        Deactivate
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="mr-2 h-4 w-4" />
+                        Activate
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleDelete(user.id, `${user.firstName} ${user.lastName}`)}
+                    className="text-red-600"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                </>
+              )}
+              {/* For organization admins, show view-only option */}
+              {user.userType === 'organization_admin' && (
+                <DropdownMenuItem onClick={() => handleEdit(user)} disabled>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details (Read-only)
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );

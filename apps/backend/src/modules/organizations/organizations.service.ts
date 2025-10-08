@@ -16,6 +16,7 @@ import {
   OrganizationStatus,
   RolePermission,
   OrganizationPackage,
+  FeaturePackage,
   MasterPermission,
 } from '../../database/entities';
 import { CreateOrganizationDto, UpdateOrganizationDto } from './dto';
@@ -70,7 +71,7 @@ export class OrganizationsService {
       }
 
       // Create organization
-      const { admin, ...organizationData } = createOrganizationDto;
+      const { admin, selectedPackage, ...organizationData } = createOrganizationDto;
       const requiresVerification = createOrganizationDto.admin.requiresVerification !== false;
 
       const organization = this.organizationRepository.create({
@@ -135,6 +136,32 @@ export class OrganizationsService {
       });
 
       const savedRole = await queryRunner.manager.save(adminRole);
+
+      // Assign selected package to organization if provided
+      if (selectedPackage) {
+        const organizationPackageRepository = queryRunner.manager.getRepository(OrganizationPackage);
+        const featurePackageRepository = queryRunner.manager.getRepository(FeaturePackage);
+
+        // Verify the package exists and is active
+        const featurePackage = await featurePackageRepository.findOne({
+          where: { id: selectedPackage, isActive: true }
+        });
+
+        if (featurePackage) {
+          const orgPackage = organizationPackageRepository.create({
+            organizationId: savedOrganization.id,
+            featurePackageId: selectedPackage,
+            isActive: true,
+            assignedBy: null, // System assignment
+            assignedAt: new Date(),
+          });
+
+          await queryRunner.manager.save(orgPackage);
+          this.logger.log(`Assigned feature package ${selectedPackage} to organization ${savedOrganization.id}`);
+        } else {
+          this.logger.warn(`Feature package ${selectedPackage} not found or inactive`);
+        }
+      }
 
       // Assign permissions to the organization admin role based on organization's feature packages
       await this.assignPermissionsToAdminRole(savedRole.id, savedOrganization.id, queryRunner);
@@ -601,7 +628,7 @@ export class OrganizationsService {
         module: masterPerm.module,
         action: masterPerm.action,
         enabled: true,
-        grantedBy: 'system',
+        grantedBy: null, // System assignment
         grantedAt: new Date(),
       });
     }).filter(Boolean);

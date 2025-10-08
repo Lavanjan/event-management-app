@@ -127,7 +127,7 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/roles/enhanced/${role.id}`, {
+      const response = await fetch(`/api/enhanced-roles/${role.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

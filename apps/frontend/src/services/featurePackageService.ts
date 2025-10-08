@@ -62,12 +62,12 @@ class FeaturePackageService {
 
   async getAllFeaturePackages(): Promise<FeaturePackage[]> {
     const response = await api.get('/feature-packages');
-    return response.data.data; // Extract the data array from the response
+    return response.data.data || response.data; // Handle both response formats
   }
 
   async getActiveFeaturePackages(): Promise<FeaturePackage[]> {
     const response = await api.get('/feature-packages/active');
-    return response.data;
+    return response.data.data || response.data; // Handle both response formats
   }
 
   async getFeaturePackageById(id: string): Promise<FeaturePackage> {

@@ -583,10 +583,7 @@ export function Sidebar() {
                 {user?.email}
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-400">Your balance</p>
-              <p className="text-sm font-semibold text-teal-600">$568.55</p>
-            </div>
+          
           </div>
         </div>
       </div>

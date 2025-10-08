@@ -1,11 +1,13 @@
 const fetch = require('node-fetch');
+require('dotenv').config();
 
 async function testLogin() {
   try {
     // First, let's get the user's current password from database
     // We know the user was created and verified, so let's try to login
-    
-    const response = await fetch('http://localhost:3002/api/auth/login', {
+
+    const apiUrl = process.env.VITE_API_URL || process.env.BACKEND_URL || 'http://localhost:3002';
+    const response = await fetch(`${apiUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +28,8 @@ async function testLogin() {
       console.log('Cookies received:', cookies);
 
       // Test inventory API with the session
-      const inventoryResponse = await fetch('http://localhost:3002/api/inventory?page=1&limit=20&search=&sortBy=name&sortOrder=ASC', {
+      const apiUrl = process.env.VITE_API_URL || process.env.BACKEND_URL || 'http://localhost:3002';
+      const inventoryResponse = await fetch(`${apiUrl}/api/inventory?page=1&limit=20&search=&sortBy=name&sortOrder=ASC`, {
         method: 'GET',
         headers: {
           'Cookie': cookies ? cookies.join('; ') : ''
