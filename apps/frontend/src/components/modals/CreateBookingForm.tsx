@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { User, Mail, Phone, Calendar, DollarSign, FileText, Clock, Package, X } from 'lucide-react';
+import { User, Mail, Phone, Calendar, DollarSign, FileText, Clock, Package, X, Banknote } from 'lucide-react';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
@@ -40,12 +40,15 @@ interface CreateBookingFormProps {
 
 export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
   const { toast } = useToast();
-  const { formatAmount } = useCurrency();
+  const { formatAmount, getCurrencySymbol } = useCurrency();
   const createBooking = useCreateBooking();
   const { data: eventsData } = useEventList({ limit: 100 });
   const { data: inventoryData } = useInventoryList({ limit: 100 });
   const events = eventsData?.data || [];
   const inventoryItems = inventoryData?.data || [];
+
+  // Get currency icon based on organization currency
+  const CurrencyIcon = getCurrencySymbol() === '$' ? DollarSign : Banknote;
 
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -655,7 +658,7 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <FormLabel className="dark:text-[#f1f7feb5] text-sm">
-                  <DollarSign className="inline w-4 h-4 mr-1" />
+                  <CurrencyIcon className="inline w-4 h-4 mr-1" />
                   Total Amount
                 </FormLabel>
                 <Input
@@ -715,7 +718,7 @@ export default function CreateBookingForm({ onClose }: CreateBookingFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="dark:text-[#f1f7feb5] text-sm">
-                    <DollarSign className="inline w-4 h-4 mr-1" />
+                    <CurrencyIcon className="inline w-4 h-4 mr-1" />
                     Advance Amount
                   </FormLabel>
                   <FormControl>

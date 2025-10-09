@@ -10,6 +10,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { CreateRoleModal } from '../roles/CreateRoleModal';
+import { ManageRolePermissionsModal } from '../roles/ManageRolePermissionsModal';
 import { DataTable } from '../common/DataTable';
 import { ManagementLayout, StatCard, ActionButton } from '../layout/ManagementLayout';
 import {
@@ -311,6 +312,12 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
 
   const actions: ActionButton[] = [
     {
+      icon: Plus,
+      label: 'Create Role',
+      onClick: () => setShowCreateModal(true),
+      variant: 'default',
+    },
+    {
       icon: Download,
       label: 'Export',
       onClick: () => {
@@ -332,14 +339,6 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
         tableDescription="Manage and track all roles with advanced filtering and search capabilities."
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-end">
-            {hasPermission('roles.create') && (
-              <Button onClick={() => setShowCreateModal(true)} className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Create Role
-              </Button>
-            )}
-          </div>
           <DataTable
             columns={columns}
             data={roles}
@@ -355,16 +354,14 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
 
       {/* Permission Management Modal */}
       {selectedRole && (
-        <PermissionManagementModal
+        <ManageRolePermissionsModal
           role={selectedRole}
           isOpen={!!selectedRole}
           onClose={() => setSelectedRole(null)}
-          onPermissionToggle={handlePermissionToggle}
-          rolePermissions={rolePermissions}
-          organizationFeatures={organizationFeatures || []}
-          isLoading={permissionsLoading}
-          groupPermissionsByCategory={groupPermissionsByCategory}
-          isPermissionEnabled={isPermissionEnabled}
+          onPermissionsUpdated={() => {
+            queryClient.invalidateQueries({ queryKey: ['organization-roles'] });
+            queryClient.invalidateQueries({ queryKey: ['role-permissions'] });
+          }}
         />
       )}
 
@@ -377,87 +374,6 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
           queryClient.invalidateQueries({ queryKey: ['organization-roles'] });
         }}
       />
-    </div>
-  );
-};
-
-// Permission Management Modal Component
-interface PermissionManagementModalProps {
-  role: Role;
-  isOpen: boolean;
-  onClose: () => void;
-  onPermissionToggle: (permissionKey: string, enabled: boolean) => void;
-  rolePermissions: RolePermission[];
-  organizationFeatures: string[];
-  isLoading: boolean;
-  groupPermissionsByCategory: () => { [key: string]: string[] };
-  isPermissionEnabled: (permissionKey: string) => boolean;
-}
-
-const PermissionManagementModal: React.FC<PermissionManagementModalProps> = ({
-  role,
-  // @ts-ignore
-  isOpen,
-  onClose,
-  onPermissionToggle,
-  // @ts-ignore
-  organizationFeatures,
-  isLoading,
-  groupPermissionsByCategory,
-  isPermissionEnabled,
-}) => {
-  const groupedPermissions = groupPermissionsByCategory();
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b">
-          <div>
-            <h2 className="text-xl font-semibold">Manage Permissions</h2>
-            <p className="text-sm text-gray-600">Role: {role.name}</p>
-          </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading permissions...</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {Object.entries(groupedPermissions).map(([category, permissions]) => (
-                <Card key={category}>
-                  <CardHeader>
-                    <CardTitle className="text-lg capitalize">{category} Permissions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {permissions.map((permission) => (
-                        <div key={permission} className="flex items-center space-x-3">
-                          <input
-                            type="checkbox"
-                            id={permission}
-                            checked={isPermissionEnabled(permission)}
-                            onChange={(e) => onPermissionToggle(permission, e.target.checked)}
-                            className="rounded border-gray-300 text-primary focus:ring-primary"
-                          />
-                          <label htmlFor={permission} className="text-sm font-medium">
-                            {permission}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

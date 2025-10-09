@@ -129,12 +129,12 @@ export function ProductAdminDashboard() {
       {/* System KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Organizations</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-medium">Total Organizations</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(systemStats.totalOrganizations.value)}</div>
+          <CardContent className="pb-2">
+            <div className="text-xl font-bold">{formatNumber(systemStats.totalOrganizations.value)}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {getTrendIcon(systemStats.totalOrganizations.trend)}
               <span className="ml-1">
@@ -145,12 +145,12 @@ export function ProductAdminDashboard() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-medium">Total Users</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatNumber(systemStats.totalUsers.value)}</div>
+          <CardContent className="pb-2">
+            <div className="text-xl font-bold">{formatNumber(systemStats.totalUsers.value)}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {getTrendIcon(systemStats.totalUsers.trend)}
               <span className="ml-1">
@@ -161,12 +161,12 @@ export function ProductAdminDashboard() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Platform Revenue</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-medium">Platform Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatAmount(systemStats.totalRevenue.value)}</div>
+          <CardContent className="pb-2">
+            <div className="text-xl font-bold">{formatAmount(systemStats.totalRevenue.value)}</div>
             <div className="flex items-center text-xs text-muted-foreground">
               {getTrendIcon(systemStats.totalRevenue.trend)}
               <span className="ml-1">

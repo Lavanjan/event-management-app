@@ -50,10 +50,17 @@ import { PaymentListPage } from './pages/payments/PaymentListPage';
 
 // Financial Pages
 import { FinancialReportsPage } from './pages/financial/FinancialReportsPage';
+import { RevenueReportsPage } from './pages/financial/RevenueReportsPage';
+import { ExpenseReportsPage } from './pages/financial/ExpenseReportsPage';
+import { ProfitLossReportPage } from './pages/financial/ProfitLossReportPage';
 
 // Settings Pages
 import { SettingsPage } from './pages/settings/SettingsPage';
-import { ProfilePage } from './pages/settings/ProfilePage';
+import { UserProfilePage } from './pages/settings/UserProfilePage';
+
+import { ChangePasswordPage } from './pages/settings/ChangePasswordPage';
+import { ThemeSettingsPage } from './pages/settings/ThemeSettingsPage';
+import { LicensePackagePage } from './pages/settings/LicensePackagePage';
 
 // Organization Pages
 import { OrganizationListPage } from './pages/organizations/OrganizationListPage';
@@ -288,17 +295,17 @@ function App() {
                   } />
                   <Route path="/financial/revenue" element={
                     <PermissionRoute permission="reports:read">
-                      <FinancialReportsPage />
+                      <RevenueReportsPage />
                     </PermissionRoute>
                   } />
                   <Route path="/financial/expenses" element={
                     <PermissionRoute permission="reports:read">
-                      <FinancialReportsPage />
+                      <ExpenseReportsPage />
                     </PermissionRoute>
                   } />
                   <Route path="/financial/profit-loss" element={
                     <PermissionRoute permission="reports:read">
-                      <FinancialReportsPage />
+                      <ProfitLossReportPage />
                     </PermissionRoute>
                   } />
 
@@ -331,7 +338,11 @@ function App() {
 
                   {/* Settings Routes */}
                   <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/settings/profile" element={<ProfilePage />} />
+                  <Route path="/settings/profile" element={<UserProfilePage />} />
+                  <Route path="/settings/change-password" element={<ChangePasswordPage />} />
+                  <Route path="/settings/theme" element={<ThemeSettingsPage />} />
+                  <Route path="/settings/license" element={<LicensePackagePage />} />
+
 
                   {/* Default redirect */}
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />

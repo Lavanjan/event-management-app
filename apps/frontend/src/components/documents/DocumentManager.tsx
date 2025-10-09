@@ -87,10 +87,10 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
   }, [entityType, entityId, filters]);
 
   const handleUploadComplete = (uploadedDocuments: Document[]) => {
-    setDocuments(prev => [...uploadedDocuments, ...prev]);
-    setTotalCount(prev => prev + uploadedDocuments.length);
+    setDocuments(prev => [...uploadedDocuments, ...(prev || [])]);
+    setTotalCount(prev => (prev || 0) + uploadedDocuments.length);
     setActiveTab('list');
-    
+
     toast({
       title: 'Upload Complete',
       description: `${uploadedDocuments.length} document(s) uploaded successfully`,
@@ -107,9 +107,9 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
   };
 
   const handleDocumentDelete = (documentId: string) => {
-    setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-    setTotalCount(prev => prev - 1);
-    
+    setDocuments(prev => (prev || []).filter(doc => doc.id !== documentId));
+    setTotalCount(prev => Math.max(0, (prev || 0) - 1));
+
     toast({
       title: 'Document Deleted',
       description: 'Document has been deleted successfully',
@@ -168,7 +168,7 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 h-full">
         <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
           <TabsTrigger value="list">
             Documents ({documents.length})
@@ -181,7 +181,7 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
           )}
         </TabsList>
 
-        <TabsContent value="list" className="flex-1 overflow-hidden flex flex-col">
+        <TabsContent value="list" className="flex-1 flex flex-col h-full">
           <div className="overflow-y-auto flex-1 space-y-4 pr-2">
             {showFilters && (
               <Card className="flex-shrink-0">
@@ -275,7 +275,7 @@ export const DocumentManager: React.FC<DocumentManagerProps> = ({
         </TabsContent>
 
         {allowUpload && (
-          <TabsContent value="upload" className="flex-1 overflow-hidden">
+          <TabsContent value="upload" className="flex-1 h-full">
             <div className="overflow-y-auto h-full pr-2">
               <DocumentUpload
                 entityType={entityType}

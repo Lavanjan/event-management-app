@@ -94,6 +94,9 @@ export class User {
   @Column({ default: false, name: 'requires_verification' })
   requiresVerification: boolean;
 
+  @Column('jsonb', { nullable: true })
+  preferences: Record<string, any>;
+
   @ManyToMany(() => Role, role => role.users, { eager: true })
   @JoinTable({
     name: 'user_roles',

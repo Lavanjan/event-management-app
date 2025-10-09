@@ -20,12 +20,14 @@ import {
   BarChart3,
   FileText,
   CreditCard,
+  Lock,
+  Palette,
+  Crown,
   TrendingUp,
   Archive,
   Cog,
   Building2,
   Tag,
-  Crown,
   Layers,
 } from 'lucide-react';
 import { RootState } from '../../store';
@@ -231,26 +233,7 @@ const staticNavigation: any[] = [
       },
     ],
   },
-  {
-    name: 'Users',
-    icon: Users,
-    permission: 'users.read',
-    children: [
-      {
-        name: 'All Users',
-        href: '/users',
-        icon: User,
-        permission: 'users.read',
-      },
 
-      {
-        name: 'User Roles',
-        href: '/users/roles',
-        icon: UserCheck,
-        permission: 'users.read',
-      },
-    ],
-  },
   {
     name: 'Roles',
     icon: Shield,
@@ -302,13 +285,25 @@ const staticNavigation: any[] = [
     permission: 'settings.read',
     children: [
       {
-        name: 'General Settings',
-        href: '/settings',
-        icon: Cog,
+        name: 'Change Password',
+        href: '/settings/change-password',
+        icon: Lock,
         permission: 'settings.read',
       },
       {
-        name: 'User Profile',
+        name: 'Theme Changing',
+        href: '/settings/theme',
+        icon: Palette,
+        permission: 'settings.read',
+      },
+      {
+        name: 'License Package',
+        href: '/settings/license',
+        icon: Crown,
+        permission: 'settings.read',
+      },
+      {
+        name: 'User Details',
         href: '/settings/profile',
         icon: User,
         permission: 'settings.read',

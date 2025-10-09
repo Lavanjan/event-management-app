@@ -562,6 +562,23 @@ If you did not expect this email, please contact our support team immediately.
     }
   }
 
+  async sendBookingConfirmation(to: string, subject: string, htmlContent: string, textContent: string): Promise<void> {
+    try {
+      await this.transporter.sendMail({
+        from: this.configService.get('SMTP_FROM', 'noreply@eventbooking.com'),
+        to,
+        subject,
+        html: htmlContent,
+        text: textContent,
+      });
+
+      this.logger.log(`Booking confirmation email sent to ${to}`);
+    } catch (error) {
+      this.logger.error(`Failed to send booking confirmation email to ${to}:`, error);
+      throw error;
+    }
+  }
+
   private generateUserVerificationHtml(data: UserVerificationData): string {
     return `
 <!DOCTYPE html>

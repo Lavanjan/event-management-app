@@ -22,6 +22,7 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { PaymentModule } from './modules/payments/payment.module';
 import { FeaturePackagesModule } from './modules/feature-packages/feature-packages.module';
 import { UserPermissionsModule } from './modules/user-permissions/user-permissions.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 import { createWinstonLogger } from './common/config/winston.config';
 import { validationSchema } from './common/config/validation.schema';
@@ -94,6 +95,7 @@ import { validationSchema } from './common/config/validation.schema';
     PaymentModule,
     FeaturePackagesModule,
     UserPermissionsModule,
+    SettingsModule,
   ],
   controllers: [],
   providers: [],

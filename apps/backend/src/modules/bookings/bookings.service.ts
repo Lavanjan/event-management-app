@@ -388,14 +388,13 @@ If you have any questions or need to make changes to your booking, please contac
 We look forward to serving you!
     `;
 
-    // Use the email service's sendMail method directly
-    await this.emailService['transporter'].sendMail({
-      from: process.env.SMTP_FROM || 'noreply@eventbooking.com',
-      to: booking.customerEmail,
+    // Use the email service's sendBookingConfirmation method
+    await this.emailService.sendBookingConfirmation(
+      booking.customerEmail,
       subject,
-      html: htmlContent,
-      text: textContent,
-    });
+      htmlContent,
+      textContent
+    );
   }
 
   private async sendBookingUpdateEmail(booking: Booking, event: Event): Promise<void> {
@@ -509,14 +508,13 @@ If you have any questions about these changes or need further assistance, please
 Thank you for choosing our services!
     `;
 
-    // Use the email service's sendMail method directly
-    await this.emailService['transporter'].sendMail({
-      from: process.env.SMTP_FROM || 'noreply@eventbooking.com',
-      to: booking.customerEmail,
+    // Use the email service's sendBookingConfirmation method
+    await this.emailService.sendBookingConfirmation(
+      booking.customerEmail,
       subject,
-      html: htmlContent,
-      text: textContent,
-    });
+      htmlContent,
+      textContent
+    );
   }
 
   async findAll(

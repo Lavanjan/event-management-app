@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import {
   DollarSign,
   TrendingUp,
@@ -14,13 +13,12 @@ import {
   Users,
   Package,
   Download,
-  Calendar,
-  Mail,
-  Phone
+  Calendar
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDashboardStats, useRecentBookings, useInventoryAlerts } from '../../hooks/useDashboard';
 import { useCurrency } from '../../contexts/CurrencyContext';
+import { BookingDetailsModal } from '../../components/modals/BookingDetailsModal';
 
 export function OrganizationAdminDashboard() {
   const { formatAmount } = useCurrency();
@@ -114,16 +112,16 @@ export function OrganizationAdminDashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="text-center pt-4">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="h-12 w-12 bg-teal-100 rounded-full flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-teal-600" />
+          <CardContent className="text-center pt-3 pb-3">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="h-10 w-10 bg-teal-100 rounded-full flex items-center justify-center">
+                <DollarSign className="h-5 w-5 text-teal-600" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <p className="text-xs font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900 truncate w-full">{formatAmount(orgStats.totalRevenue.value)}</p>
+                <p className="text-xl font-bold text-gray-900 truncate w-full">{formatAmount(orgStats.totalRevenue.value)}</p>
                 <div className="flex items-center justify-center text-xs text-gray-500">
                   {orgStats.totalRevenue.trend === 'up' ? (
                     <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
@@ -140,14 +138,14 @@ export function OrganizationAdminDashboard() {
         </Card>
 
         <Card>
-          <CardContent className="text-center pt-4">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
+          <CardContent className="text-center pt-3 pb-3">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Users className="h-5 w-5 text-blue-600" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <p className="text-xs font-medium text-gray-600">Total Bookings</p>
-                <p className="text-2xl font-bold text-gray-900 truncate w-full">{orgStats.totalBookings.value}</p>
+                <p className="text-xl font-bold text-gray-900 truncate w-full">{orgStats.totalBookings.value}</p>
                 <div className="flex items-center justify-center text-xs text-gray-500">
                   {orgStats.totalBookings.trend === 'up' ? (
                     <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
@@ -164,14 +162,14 @@ export function OrganizationAdminDashboard() {
         </Card>
 
         <Card>
-          <CardContent className="text-center pt-4">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-purple-600" />
+          <CardContent className="text-center pt-3 pb-3">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-purple-600" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <p className="text-xs font-medium text-gray-600">Avg. Booking Value</p>
-                <p className="text-2xl font-bold text-gray-900 truncate w-full">{formatAmount(orgStats.averageBookingValue.value)}</p>
+                <p className="text-xl font-bold text-gray-900 truncate w-full">{formatAmount(orgStats.averageBookingValue.value)}</p>
                 <div className="flex items-center justify-center text-xs text-gray-500">
                   {orgStats.averageBookingValue.trend === 'up' ? (
                     <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
@@ -188,14 +186,14 @@ export function OrganizationAdminDashboard() {
         </Card>
 
         <Card>
-          <CardContent className="text-center pt-4">
-            <div className="flex flex-col items-center space-y-3">
-              <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <Package className="h-6 w-6 text-orange-600" />
+          <CardContent className="text-center pt-3 pb-3">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="h-10 w-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <Package className="h-5 w-5 text-orange-600" />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <p className="text-xs font-medium text-gray-600">Profit Margin</p>
-                <p className="text-2xl font-bold text-gray-900 truncate w-full">{orgStats.profitMargin.value.toFixed(1)}%</p>
+                <p className="text-xl font-bold text-gray-900 truncate w-full">{orgStats.profitMargin.value.toFixed(1)}%</p>
                 <div className="flex items-center justify-center text-xs text-gray-500">
                   {orgStats.profitMargin.trend === 'up' ? (
                     <ArrowUpRight className="h-3 w-3 text-green-600 mr-1" />
@@ -327,12 +325,18 @@ export function OrganizationAdminDashboard() {
                   <div className="text-right space-y-1">
                     <p className="text-sm font-medium">{formatAmount(booking.totalAmount)}</p>
                     <div className="flex flex-col gap-1">
-                      <Badge variant={getStatusColor(booking.status)} className="text-xs">
-                        {booking.status}
-                      </Badge>
-                      <Badge variant={getPaymentStatusColor(booking.paymentStatus)} className="text-xs">
-                        {booking.paymentStatus?.replace('_', ' ')}
-                      </Badge>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Status:</span>
+                        <Badge variant={getStatusColor(booking.status)} className="text-xs">
+                          {booking.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-muted-foreground">Payment:</span>
+                        <Badge variant={getPaymentStatusColor(booking.paymentStatus)} className="text-xs">
+                          {booking.paymentStatus?.replace('_', ' ')}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -388,91 +392,16 @@ export function OrganizationAdminDashboard() {
       </div>
 
       {/* Booking Details Modal */}
-      <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Booking Details</DialogTitle>
-          </DialogHeader>
-          {selectedBooking && (
-            <div className="space-y-6">
-              {/* Customer Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-lg">Customer Information</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{selectedBooking.customerName}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedBooking.customerEmail}</span>
-                    </div>
-                    {selectedBooking.customerPhone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{selectedBooking.customerPhone}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-lg">Event Information</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{selectedBooking.eventName}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        Booked on {format(new Date(selectedBooking.createdAt), 'MMM dd, yyyy HH:mm')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Information */}
-              <div className="space-y-3">
-                <h3 className="font-semibold text-lg">Payment Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="text-sm font-medium">Total Amount</span>
-                    <span className="font-semibold">{formatAmount(selectedBooking.totalAmount)}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="text-sm font-medium">Status</span>
-                    <Badge variant={getStatusColor(selectedBooking.status)}>
-                      {selectedBooking.status}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                    <span className="text-sm font-medium">Payment</span>
-                    <Badge variant={getPaymentStatusColor(selectedBooking.paymentStatus)}>
-                      {selectedBooking.paymentStatus?.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => setShowBookingModal(false)}>
-                  Close
-                </Button>
-                <Button onClick={() => {
-                  setShowBookingModal(false);
-                  navigate(`/bookings/${selectedBooking.id}`);
-                }}>
-                  View Full Details
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {selectedBooking && (
+        <BookingDetailsModal
+          booking={selectedBooking}
+          isOpen={showBookingModal}
+          onClose={() => {
+            setShowBookingModal(false);
+            setSelectedBooking(null);
+          }}
+        />
+      )}
     </div>
   );
 }
