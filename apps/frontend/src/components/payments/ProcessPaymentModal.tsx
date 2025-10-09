@@ -42,7 +42,6 @@ interface PaymentFormData {
   bookingId: string;
   paymentMethod: string;
   amount: number;
-  currency: string;
   description: string;
   notes: string;
   dueDate: string;
@@ -62,18 +61,19 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
     bookingId: bookingId || '',
     paymentMethod: '',
     amount: 0,
-    currency: currencyFromContext,
     description: '',
     notes: '',
     dueDate: '',
   });
 
   // Use hooks for data fetching and mutations
-  // @ts-ignore
-  const { data: bookingsData, isLoading: bookingsLoading } = useBookingsWithOutstandingBalance();
+  const { data: bookingsData } = useBookingsWithOutstandingBalance();
   const createPaymentMutation = useCreatePayment();
 
-  const bookings = bookingsData || [];
+  // Handle nested data structure: { success: true, data: { data: [...] } }
+  const bookings = Array.isArray(bookingsData?.data?.data) ? bookingsData.data.data :
+                   Array.isArray(bookingsData?.data) ? bookingsData.data :
+                   Array.isArray(bookingsData) ? bookingsData : [];
 
   useEffect(() => {
     if (isOpen && bookingId) {
@@ -82,15 +82,14 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
   }, [isOpen, bookingId]);
 
   useEffect(() => {
-    if (formData.bookingId) {
-      // @ts-ignore
+    if (formData.bookingId && Array.isArray(bookings)) {
       const booking = bookings.find((b: any) => b.id === formData.bookingId);
       setSelectedBooking(booking || null);
       if (booking && formData.amount === 0) {
         setFormData(prev => ({
           ...prev,
-          amount: booking.remainingAmount,
-          description: `Payment for ${booking.eventName}`,
+          amount: booking.balanceAmount || 0,
+          description: `Payment for ${booking.event?.name || 'Event'}`,
         }));
       }
     }
@@ -108,7 +107,7 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
       return;
     }
 
-    if (selectedBooking && formData.amount > selectedBooking.remainingAmount) {
+    if (selectedBooking && formData.amount > (selectedBooking as any).balanceAmount) {
       toast({
         title: 'Validation Error',
         description: 'Payment amount cannot exceed remaining balance.',
@@ -123,6 +122,7 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
         paymentType: 'payment',
         paymentMethod: formData.paymentMethod as any,
         amount: formData.amount,
+        currency: currencyFromContext,
         description: formData.description,
         metadata: {
           notes: formData.notes,
@@ -167,16 +167,21 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                   <SelectValue placeholder="Select booking" />
                 </SelectTrigger>
                 <SelectContent>
-                  {bookings.map((booking: any) => (
+                  {Array.isArray(bookings) && bookings.map((booking: any) => (
                     <SelectItem key={booking.id} value={booking.id}>
                       <div>
-                        <div className="font-medium">{booking.eventName}</div>
+                        <div className="font-medium">{booking.event?.name || 'Unknown Event'}</div>
                         <div className="text-sm text-gray-500">
-                          {booking.customerName} - Outstanding: {formatCurrencyAmount(booking.remainingAmount)}
+                          {booking.customerName} - Outstanding: {formatCurrencyAmount(booking.balanceAmount || 0)}
                         </div>
                       </div>
                     </SelectItem>
                   ))}
+                  {(!Array.isArray(bookings) || bookings.length === 0) && (
+                    <SelectItem value="">
+                      No bookings with outstanding balance
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -220,27 +225,9 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
               </div>
               {selectedBooking && (
                 <div className="text-sm text-gray-500">
-                  Outstanding: {formatCurrencyAmount(selectedBooking.remainingAmount)}
+                  Outstanding: {formatCurrencyAmount((selectedBooking as any).balanceAmount)}
                 </div>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Select
-                value={formData.currency}
-                onValueChange={(value) => handleInputChange('currency', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="CAD">CAD</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
@@ -289,20 +276,20 @@ export const ProcessPaymentModal: React.FC<ProcessPaymentModalProps> = ({
                 </div>
                 <div>
                   <span className="text-gray-500">Total Amount:</span>
-                  <div className="font-medium">{formatCurrencyAmount(selectedBooking.totalAmount)}</div>
+                  <div className="font-medium">{formatCurrencyAmount((selectedBooking as any).totalAmount)}</div>
                 </div>
                 <div>
                   <span className="text-gray-500">Paid Amount:</span>
-                  <div className="font-medium">{formatCurrencyAmount(selectedBooking.paidAmount)}</div>
+                  <div className="font-medium">{formatCurrencyAmount((selectedBooking as any).totalAmount - (selectedBooking as any).balanceAmount)}</div>
                 </div>
                 <div>
                   <span className="text-gray-500">Outstanding:</span>
-                  <div className="font-medium text-orange-600">{formatCurrencyAmount(selectedBooking.remainingAmount)}</div>
+                  <div className="font-medium text-orange-600">{formatCurrencyAmount((selectedBooking as any).balanceAmount)}</div>
                 </div>
                 <div>
                   <span className="text-gray-500">After Payment:</span>
                   <div className="font-medium text-green-600">
-                    {formatCurrencyAmount(selectedBooking.remainingAmount - formData.amount)}
+                    {formatCurrencyAmount((selectedBooking as any).balanceAmount - formData.amount)}
                   </div>
                 </div>
               </div>

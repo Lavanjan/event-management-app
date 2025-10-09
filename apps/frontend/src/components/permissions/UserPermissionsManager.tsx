@@ -17,7 +17,7 @@ import {
   Users,
   Shield,
   Settings,
-
+  Plus,
   AlertCircle,
   ArrowUpDown,
   MoreHorizontal,
@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import { useToast } from '../../hooks/use-toast';
+import { CreateUserModal } from '../users/CreateUserModal';
 
 interface User {
   id: string;
@@ -76,6 +77,7 @@ export const UserPermissionsManager: React.FC<UserPermissionsManagerProps> = ({
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
   // Fetch organization users with their permission counts
   const { data: users = [] } = useQuery({
@@ -280,6 +282,12 @@ export const UserPermissionsManager: React.FC<UserPermissionsManagerProps> = ({
 
   const actions: ActionButton[] = [
     {
+      icon: Plus,
+      label: 'Create User',
+      onClick: () => setShowCreateUserModal(true),
+      variant: 'default',
+    },
+    {
       icon: Download,
       label: 'Export',
       onClick: () => {
@@ -345,6 +353,19 @@ export const UserPermissionsManager: React.FC<UserPermissionsManagerProps> = ({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Create User Modal */}
+      <CreateUserModal
+        open={showCreateUserModal}
+        onOpenChange={setShowCreateUserModal}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['organization-users'] });
+          toast({
+            title: 'Success',
+            description: 'User created successfully',
+          });
+        }}
+      />
     </div>
   );
 };

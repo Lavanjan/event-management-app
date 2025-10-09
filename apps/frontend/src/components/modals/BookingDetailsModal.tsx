@@ -290,119 +290,162 @@ export function BookingDetailsModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Booking Details</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            Booking Details
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Customer Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Customer Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm text-muted-foreground">Name</Label>
-                <p className="font-medium">{booking.customerName}</p>
+          {/* Booking Summary */}
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="font-medium">{booking.customerName}</div>
+                  <div className="text-sm text-muted-foreground">{booking.customerEmail}</div>
+                </div>
               </div>
-              <div>
-                <Label className="text-sm text-muted-foreground">Email</Label>
-                <p className="font-medium flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
-                  {booking.customerEmail}
-                </p>
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="font-medium">{booking.event?.name || 'Event'}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {booking.startDate ? format(new Date(booking.startDate), 'MMM dd, yyyy') : 'Date TBD'}
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label className="text-sm text-muted-foreground">Phone</Label>
-                <p className="font-medium flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  {booking.customerPhone}
-                </p>
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <div className="font-medium">{formatAmount(Number(booking.totalAmount))}</div>
+                  <div className="text-sm text-muted-foreground">
+                    <Badge variant="outline" className="text-xs">
+                      {booking.status}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Event & Booking Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Event & Booking Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm text-muted-foreground">Event</Label>
-                <p className="font-medium">{booking.event?.name}</p>
-                <p className="text-sm text-muted-foreground">{booking.event?.location}</p>
-              </div>
-              <div>
-                <Label className="text-sm text-muted-foreground">Duration Type</Label>
-                <Badge variant="outline" className="mt-1">
-                  {booking.durationType?.replace('_', ' ').toUpperCase()}
-                </Badge>
-              </div>
-              {booking.startDate && (
-                <div>
-                  <Label className="text-sm text-muted-foreground">Start Date</Label>
-                  <p className="font-medium">{format(new Date(booking.startDate), 'PPP p')}</p>
+          {/* Event & Booking Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold">Event Details</h3>
                 </div>
-              )}
-              {booking.endDate && (
-                <div>
-                  <Label className="text-sm text-muted-foreground">End Date</Label>
-                  <p className="font-medium">{format(new Date(booking.endDate), 'PPP p')}</p>
+                <div className="space-y-2">
+                  <div>
+                    <div className="font-medium">{booking.event?.name}</div>
+                    <div className="text-sm text-muted-foreground">{booking.event?.location}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {booking.durationType?.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                  </div>
                 </div>
-              )}
-              <div>
-                <Label className="text-sm text-muted-foreground">Status</Label>
-                <div className="mt-1">
+              </div>
+
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold">Contact Info</h3>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm">{booking.customerPhone}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold">Schedule</h3>
+                </div>
+                <div className="space-y-2">
+                  {booking.startDate && (
+                    <div>
+                      <div className="text-sm text-muted-foreground">Start</div>
+                      <div className="font-medium">{format(new Date(booking.startDate), 'PPP p')}</div>
+                    </div>
+                  )}
+                  {booking.endDate && (
+                    <div>
+                      <div className="text-sm text-muted-foreground">End</div>
+                      <div className="font-medium">{format(new Date(booking.endDate), 'PPP p')}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="font-semibold">Status</h3>
+                </div>
+                <div className="flex gap-2">
                   <Badge>{booking.status}</Badge>
-                </div>
-              </div>
-              <div>
-                <Label className="text-sm text-muted-foreground">Payment Status</Label>
-                <div className="mt-1">
                   <Badge variant="secondary">{booking.paymentStatus}</Badge>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Payment Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Payment Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Total Amount:</span>
-                <span className="text-xl font-bold">
-                  {formatAmount(Number(booking.totalAmount))}
-                </span>
+          {/* Payment Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                <Badge variant="outline" className="text-blue-600 border-blue-600">
+                  Total
+                </Badge>
               </div>
-              <Separator />
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Advance Paid:</span>
-                <span className="font-semibold text-green-600">
-                  {formatAmount(Number(booking.advanceAmount))}
-                </span>
+              <div className="text-2xl font-bold text-blue-600">
+                {formatAmount(Number(booking.totalAmount))}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Balance Due:</span>
-                <span className="font-semibold text-orange-600">
-                  {formatAmount(Number(booking.balanceAmount))}
-                </span>
+              <div className="text-sm text-muted-foreground">
+                Booking Amount
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <Badge variant="outline" className="text-green-600 border-green-600">
+                  Paid
+                </Badge>
+              </div>
+              <div className="text-2xl font-bold text-green-600">
+                {formatAmount(Number(booking.advanceAmount))}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Advance Payment
+              </div>
+            </div>
+
+            <div className="p-4 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <TrendingDown className="h-5 w-5 text-orange-600" />
+                <Badge variant="outline" className="text-orange-600 border-orange-600">
+                  Due
+                </Badge>
+              </div>
+              <div className="text-2xl font-bold text-orange-600">
+                {formatAmount(Number(booking.balanceAmount))}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Balance Due
+              </div>
+            </div>
+          </div>
 
           {/* Inventory Allocations */}
           {booking.inventoryAllocations && booking.inventoryAllocations.length > 0 && (

@@ -214,15 +214,27 @@ export class MenuService {
         permission: 'settings.read',
         children: [
           {
-            name: 'General Settings',
-            href: '/settings',
-            icon: 'Cog',
-            permission: 'settings.read',
-          },
-          {
             name: 'User Profile',
             href: '/settings/profile',
             icon: 'User',
+            permission: 'settings.read',
+          },
+          {
+            name: 'Change Password',
+            href: '/settings/change-password',
+            icon: 'Lock',
+            permission: 'settings.read',
+          },
+          {
+            name: 'Theme Setting',
+            href: '/settings/theme',
+            icon: 'Palette',
+            permission: 'settings.read',
+          },
+          {
+            name: 'License Package',
+            href: '/settings/license',
+            icon: 'Crown',
             permission: 'settings.read',
           },
         ],

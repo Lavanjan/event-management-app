@@ -61,6 +61,7 @@ export interface CreatePaymentRequest {
   paymentType: Payment['paymentType'];
   paymentMethod: Payment['paymentMethod'];
   amount: number;
+  currency?: string;
   description?: string;
   metadata?: any;
 }

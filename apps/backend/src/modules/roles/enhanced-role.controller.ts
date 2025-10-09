@@ -225,4 +225,56 @@ export class EnhancedRoleController {
       },
     };
   }
+
+  @Patch(':id/permissions')
+  @RequirePermission('users.update')
+  @ApiOperation({ summary: 'Update role permissions' })
+  @ApiResponse({ status: 200, description: 'Role permissions updated successfully' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async updateRolePermissions(
+    @Param('id') id: string,
+    @Body() updatePermissionsDto: { permissions: string[] },
+    @CurrentOrganization() organizationId: string,
+    @CurrentUser() user: User,
+  ) {
+    const role = await this.enhancedRoleService.updateRolePermissions(
+      id,
+      updatePermissionsDto.permissions,
+      organizationId,
+      user.id
+    );
+
+    return {
+      success: true,
+      data: role,
+      message: 'Role permissions updated successfully',
+    };
+  }
+
+  @Patch(':id/permissions/:permissionKey')
+  @RequirePermission('users.update')
+  @ApiOperation({ summary: 'Toggle a specific role permission' })
+  @ApiResponse({ status: 200, description: 'Permission toggled successfully' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  async toggleRolePermission(
+    @Param('id') id: string,
+    @Param('permissionKey') permissionKey: string,
+    @Body() toggleDto: { enabled: boolean },
+    @CurrentOrganization() organizationId: string,
+    @CurrentUser() user: User,
+  ) {
+    const role = await this.enhancedRoleService.toggleRolePermission(
+      id,
+      permissionKey,
+      toggleDto.enabled,
+      organizationId,
+      user.id
+    );
+
+    return {
+      success: true,
+      data: role,
+      message: `Permission ${toggleDto.enabled ? 'enabled' : 'disabled'} successfully`,
+    };
+  }
 }

@@ -61,17 +61,17 @@ export function ManagementLayout({
       </div>
 
       {/* Stats Cards */}
-      <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 ${stats.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+      <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${stats.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
         {stats.map((stat, index) => (
           <Card key={index}>
-            <CardContent className="text-center pt-4">
-              <div className="flex flex-col items-center space-y-3">
-                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.iconColor || 'bg-teal-100'}`}>
-                  <stat.icon className={`h-6 w-6 ${stat.iconColor ? 'text-white' : 'text-teal-600'}`} />
+            <CardContent className="text-center pt-3 pb-3">
+              <div className="flex flex-col items-center space-y-2">
+                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${stat.iconColor || 'bg-gradient-to-br from-[#14A76C] to-[#0f8a5f]'}`}>
+                  <stat.icon className={`h-6 w-6 ${stat.iconColor ? 'text-white' : 'text-white'}`} />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <p className="text-xs font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900 truncate w-full">{stat.value}</p>
+                  <p className="text-xl font-bold text-gray-900 truncate w-full">{stat.value}</p>
                 </div>
               </div>
             </CardContent>

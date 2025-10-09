@@ -4,11 +4,11 @@ import {
   AlertTriangle,
   Package,
   TrendingDown,
-  RefreshCw,
+
   Filter,
   Search,
   Download,
-  ArrowLeft,
+
   Eye,
   Edit,
   BarChart3
@@ -22,144 +22,63 @@ import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { InventoryItem } from '../../types';
-
-// Mock data for demonstration
-const mockLowStockItems: InventoryItem[] = [
-  {
-    id: '1',
-    name: 'Professional Sound System',
-    description: 'High-quality sound system for events',
-    category: { id: '1', name: 'Audio Equipment' },
-    brand: 'Bose',
-    sku: 'BSE-001',
-    quantity: 50,
-    availableQuantity: 8,
-    quantityUnit: 'pieces',
-    unitPrice: 150,
-    lowStockThreshold: 10,
-    isActive: true,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-09-29'),
-  },
-  {
-    id: '2',
-    name: 'LED Stage Lights',
-    description: 'Colorful LED lights for stage decoration',
-    category: { id: '2', name: 'Lighting' },
-    brand: 'Philips',
-    sku: 'PHL-002',
-    quantity: 100,
-    availableQuantity: 5,
-    quantityUnit: 'pieces',
-    unitPrice: 75,
-    lowStockThreshold: 15,
-    isActive: true,
-    createdAt: new Date('2024-02-10'),
-    updatedAt: new Date('2024-09-29'),
-  },
-  {
-    id: '3',
-    name: 'Catering Tables',
-    description: 'Round tables for dining events',
-    category: { id: '3', name: 'Furniture' },
-    brand: 'EventPro',
-    sku: 'EP-003',
-    quantity: 30,
-    availableQuantity: 0,
-    quantityUnit: 'pieces',
-    unitPrice: 25,
-    lowStockThreshold: 5,
-    isActive: true,
-    createdAt: new Date('2024-03-05'),
-    updatedAt: new Date('2024-09-29'),
-  },
-  {
-    id: '4',
-    name: 'Decorative Flowers',
-    description: 'Fresh flowers for event decoration',
-    category: { id: '4', name: 'Decoration' },
-    brand: 'FloralCo',
-    sku: 'FC-004',
-    quantity: 20.5,
-    availableQuantity: 2.5,
-    quantityUnit: 'kg',
-    unitPrice: 12,
-    lowStockThreshold: 5,
-    isActive: true,
-    createdAt: new Date('2024-04-12'),
-    updatedAt: new Date('2024-09-29'),
-  },
-  {
-    id: '5',
-    name: 'Wine Glasses',
-    description: 'Crystal wine glasses for formal events',
-    category: { id: '5', name: 'Tableware' },
-    brand: 'Crystal Co',
-    sku: 'CC-005',
-    quantity: 200,
-    availableQuantity: 12,
-    quantityUnit: 'pieces',
-    unitPrice: 8,
-    lowStockThreshold: 20,
-    isActive: true,
-    createdAt: new Date('2024-05-20'),
-    updatedAt: new Date('2024-09-29'),
-  },
-];
+import { useLowStockItems, useOutOfStockItems } from '../../hooks/useInventory';
+import { useCurrency } from '../../contexts/CurrencyContext';
 
 export function LowStockAlertsPage() {
   const navigate = useNavigate();
+  const { formatAmount } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('urgency');
 
-  const items = mockLowStockItems;
+  // Fetch real data from backend
+  const { data: lowStockData, isLoading: lowStockLoading, refetch: refetchLowStock } = useLowStockItems();
+  const { data: outOfStockData, isLoading: outOfStockLoading, refetch: refetchOutOfStock } = useOutOfStockItems();
 
-  // Filter and sort items
-  const filteredItems = items.filter(item => {
+  const lowStockItems = lowStockData || [];
+  const outOfStockItems = outOfStockData || [];
+  const allItems = [...lowStockItems, ...outOfStockItems];
+
+  // Filter items based on search and category
+  const filteredLowStockItems = lowStockItems.filter((item: InventoryItem) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         // @ts-ignore
-                         (item.category?.name || item.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.category?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (item.brand && item.brand.toLowerCase().includes(searchTerm.toLowerCase()));
-    // @ts-ignore
-    const matchesCategory = categoryFilter === 'all' || item.category?.name === categoryFilter || item.category === categoryFilter;
+    const matchesCategory = categoryFilter === 'all' || item.category?.name === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
-  const lowStockItems = filteredItems.filter(item => 
-    item.availableQuantity <= item.lowStockThreshold && item.availableQuantity > 0
-  );
-  
-  const outOfStockItems = filteredItems.filter(item => item.availableQuantity === 0);
+  const filteredOutOfStockItems = outOfStockItems.filter((item: InventoryItem) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.category?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (item.brand && item.brand.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = categoryFilter === 'all' || item.category?.name === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   // Sort items based on urgency
-  const sortedLowStockItems = [...lowStockItems].sort((a, b) => {
+  const sortedLowStockItems = [...filteredLowStockItems].sort((a, b) => {
     if (sortBy === 'urgency') {
-      const aUrgency = a.availableQuantity / a.lowStockThreshold;
-      const bUrgency = b.availableQuantity / b.lowStockThreshold;
+      const aUrgency = a.availableQuantity / (a.lowStockThreshold || 1);
+      const bUrgency = b.availableQuantity / (b.lowStockThreshold || 1);
       return aUrgency - bUrgency;
     } else if (sortBy === 'name') {
       return a.name.localeCompare(b.name);
     } else if (sortBy === 'category') {
-      // @ts-ignore
-      return (a.category?.name || a.category || '').localeCompare(b.category?.name || b.category || '');
+      return (a.category?.name || '').localeCompare(b.category?.name || '');
     }
     return 0;
   });
 
-  // @ts-ignore
-  const categories = Array.from(new Set(items.map(item => item.category?.name || item.category)));
+  // Get unique categories from all items
+  const categories = Array.from(new Set(allItems.map(item => item.category?.name || item.category)));
 
   const formatQuantity = (quantity: number, unit: string) => {
     return `${quantity.toFixed(quantity % 1 === 0 ? 0 : 2)} ${unit}`;
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
+
 
   const getStockPercentage = (item: InventoryItem) => {
     return (item.availableQuantity / item.quantity) * 100;
@@ -193,7 +112,7 @@ export function LowStockAlertsPage() {
       unit: item.quantityUnit,
       status: item.availableQuantity === 0 ? 'Out of Stock' : 'Low Stock',
       urgency: getUrgencyLevel(item),
-      value: formatCurrency(item.quantity * item.unitPrice)
+      value: formatAmount(item.quantity * item.unitPrice)
     }));
 
     const csvContent = [
@@ -210,13 +129,8 @@ export function LowStockAlertsPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleRefresh = () => {
-    // Simulate API call - in real app this would refetch data
-    console.log('Refreshing low stock alerts...');
-  };
-
-  const totalAlerts = outOfStockItems.length + lowStockItems.length;
-  const totalValue = [...outOfStockItems, ...lowStockItems].reduce(
+  const totalAlerts = filteredOutOfStockItems.length + filteredLowStockItems.length;
+  const totalValue = [...filteredOutOfStockItems, ...filteredLowStockItems].reduce(
     (sum, item) => sum + (item.quantity * item.unitPrice), 0
   );
 
@@ -230,36 +144,24 @@ export function LowStockAlertsPage() {
     {
       icon: TrendingDown,
       label: 'Out of Stock',
-      value: outOfStockItems.length,
+      value: filteredOutOfStockItems.length,
       iconColor: 'bg-red-100',
     },
     {
       icon: Package,
       label: 'Low Stock',
-      value: lowStockItems.length,
+      value: filteredLowStockItems.length,
       iconColor: 'bg-yellow-100',
     },
     {
       icon: BarChart3,
       label: 'Total Value',
-      value: formatCurrency(totalValue),
+      value: formatAmount(totalValue),
       iconColor: 'bg-blue-100',
     },
   ];
 
   const actions: ActionButton[] = [
-    {
-      icon: ArrowLeft,
-      label: 'Back to Inventory',
-      onClick: () => navigate('/inventory'),
-      variant: 'outline',
-    },
-    {
-      icon: RefreshCw,
-      label: 'Refresh',
-      onClick: handleRefresh,
-      variant: 'outline',
-    },
     {
       icon: Download,
       label: 'Export',
@@ -277,7 +179,15 @@ export function LowStockAlertsPage() {
       tableTitle="Stock Alerts"
       tableDescription="Manage items that are low in stock or out of stock"
     >
-      <div className="space-y-6">
+      {(lowStockLoading || outOfStockLoading) ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading stock alerts...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
         {/* Filters and Search */}
         <Card>
           <CardHeader>
@@ -332,8 +242,8 @@ export function LowStockAlertsPage() {
       <Tabs defaultValue="all" className="space-y-4">
         <TabsList>
           <TabsTrigger value="all">All Alerts ({totalAlerts})</TabsTrigger>
-          <TabsTrigger value="critical">Critical ({outOfStockItems.length})</TabsTrigger>
-          <TabsTrigger value="low">Low Stock ({lowStockItems.length})</TabsTrigger>
+          <TabsTrigger value="critical">Critical ({filteredOutOfStockItems.length})</TabsTrigger>
+          <TabsTrigger value="low">Low Stock ({filteredLowStockItems.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
@@ -348,7 +258,7 @@ export function LowStockAlertsPage() {
           ) : (
             <div className="space-y-4">
               {/* Out of Stock Items */}
-              {outOfStockItems.map((item) => (
+              {filteredOutOfStockItems.map((item: InventoryItem) => (
                 <Card key={item.id} className="border-l-4 border-l-red-500">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
@@ -381,7 +291,7 @@ export function LowStockAlertsPage() {
                         </div>
                         <Progress value={0} className="w-24 h-2" />
                         <div className="text-xs text-muted-foreground">
-                          Value: {formatCurrency(item.quantity * item.unitPrice)}
+                          Value: {formatAmount(item.quantity * item.unitPrice)}
                         </div>
                         <div className="flex space-x-1">
                           <Button size="sm" variant="outline" onClick={() => navigate(`/inventory/${item.id}`)}>
@@ -475,7 +385,7 @@ export function LowStockAlertsPage() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {outOfStockItems.map((item) => (
+              {outOfStockItems.map((item: InventoryItem) => (
                 <Card key={item.id} className="border-l-4 border-l-red-500">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
@@ -492,7 +402,7 @@ export function LowStockAlertsPage() {
                             <strong>Category:</strong> {item.category?.name || item.category}
                           </span>
                           <span className="text-muted-foreground">
-                            <strong>Value:</strong> {formatCurrency(item.quantity * item.unitPrice)}
+                            <strong>Value:</strong> {formatAmount(item.quantity * item.unitPrice)}
                           </span>
                         </div>
                       </div>
@@ -586,7 +496,8 @@ export function LowStockAlertsPage() {
           )}
         </TabsContent>
       </Tabs>
-      </div>
+        </div>
+      )}
     </ManagementLayout>
   );
 }

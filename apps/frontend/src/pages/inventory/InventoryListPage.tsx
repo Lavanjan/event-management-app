@@ -7,7 +7,8 @@ import {
   TrendingDown,
   RefreshCw,
   Bell,
-  Download
+  Download,
+  Plus
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
@@ -38,6 +39,7 @@ export function InventoryListPage() {
     sortOrder: 'ASC',
   });
   const [showLowStockAlerts, setShowLowStockAlerts] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: inventoryData, isLoading, error, refetch } = useInventoryList(filters);
   const { data: stats, isLoading: statsLoading } = useInventoryStats();
@@ -162,16 +164,10 @@ export function InventoryListPage() {
 
   const actions: ActionButton[] = [
     {
-      icon: Bell,
-      label: `Alerts ${(lowStockItems.length > 0 || outOfStockItems.length > 0) ? `(${lowStockItems.length + outOfStockItems.length})` : ''}`,
-      onClick: () => navigate('/inventory/alerts'),
-      variant: 'outline',
-    },
-    {
-      icon: RefreshCw,
-      label: 'Refresh',
-      onClick: handleRefresh,
-      variant: 'outline',
+      icon: Plus,
+      label: 'Create Item',
+      onClick: () => setShowCreateModal(true),
+      variant: 'default',
     },
     {
       icon: Download,
@@ -206,9 +202,6 @@ export function InventoryListPage() {
         tableDescription="Manage and track all your inventory items with advanced filtering and search capabilities."
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-end">
-            <CreateInventoryDialog onInventoryCreated={() => {}} />
-          </div>
           <InventoryDataTable
             columns={columns}
             data={inventoryData?.data || []}
@@ -225,6 +218,18 @@ export function InventoryListPage() {
           />
         </div>
       </ManagementLayout>
+
+      {/* Create Inventory Modal */}
+      <CreateInventoryDialog
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        showTrigger={false}
+        onInventoryCreated={() => {
+          setShowCreateModal(false);
+          // Refresh the inventory list
+          refetch();
+        }}
+      />
     </div>
   );
 }

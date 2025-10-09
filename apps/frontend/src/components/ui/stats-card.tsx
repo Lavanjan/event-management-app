@@ -54,24 +54,24 @@ export function StatsCard({
   return (
     <div
       className={cn(
-        'rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-200',
+        'rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-200',
         colorClasses.bg,
         className
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className={cn('text-sm font-medium opacity-90', colorClasses.text)}>
+          <p className={cn('text-xs font-medium opacity-90', colorClasses.text)}>
             {title}
           </p>
-          <p className={cn('text-3xl font-bold mt-2', colorClasses.text)}>
+          <p className={cn('text-2xl font-bold mt-1', colorClasses.text)}>
             {value}
           </p>
           {trend && (
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1">
               <span
                 className={cn(
-                  'text-xs font-medium px-2 py-1 rounded-full',
+                  'text-xs font-medium px-1.5 py-0.5 rounded-full',
                   trend.isPositive
                     ? 'bg-white/20 text-white'
                     : 'bg-white/20 text-white'
@@ -83,7 +83,7 @@ export function StatsCard({
           )}
         </div>
         {icon && (
-          <div className={cn('text-4xl opacity-80', colorClasses.icon)}>
+          <div className={cn('text-3xl opacity-80', colorClasses.icon)}>
             {icon}
           </div>
         )}
@@ -104,23 +104,23 @@ export function StatsCardWhite({
   return (
     <div
       className={cn(
-        'rounded-2xl p-6 bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200',
+        'rounded-2xl p-4 bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200',
         className
       )}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600">
+          <p className="text-xs font-medium text-gray-600">
             {title}
           </p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">
+          <p className="text-2xl font-bold text-gray-900 mt-1">
             {value}
           </p>
           {trend && (
-            <div className="flex items-center mt-2">
+            <div className="flex items-center mt-1">
               <span
                 className={cn(
-                  'text-xs font-medium px-2 py-1 rounded-full',
+                  'text-xs font-medium px-1.5 py-0.5 rounded-full',
                   trend.isPositive
                     ? 'bg-green-100 text-green-700'
                     : 'bg-red-100 text-red-700'
@@ -132,7 +132,7 @@ export function StatsCardWhite({
           )}
         </div>
         {icon && (
-          <div className={cn('text-4xl', iconColor)}>
+          <div className={cn('text-3xl', iconColor)}>
             {icon}
           </div>
         )}

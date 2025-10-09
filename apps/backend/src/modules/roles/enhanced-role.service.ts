@@ -407,4 +407,76 @@ export class EnhancedRoleService {
 
     return await manager.save(RolePermission, rolePermissions);
   }
+
+  async updateRolePermissions(
+    roleId: string,
+    permissions: string[],
+    organizationId: string,
+    userId: string
+  ): Promise<RoleWithPermissions> {
+    return await this.dataSource.transaction(async manager => {
+      // Verify role exists and belongs to organization
+      const role = await manager.findOne(Role, {
+        where: { id: roleId, organizationId },
+      });
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      // Remove existing permissions
+      await manager.delete(RolePermission, { roleId });
+
+      // Add new permissions
+      if (permissions.length > 0) {
+        await this.createRolePermissions(roleId, permissions, organizationId, userId, manager);
+      }
+
+      // Return updated role with permissions
+      return this.findOne(roleId, organizationId);
+    });
+  }
+
+  async toggleRolePermission(
+    roleId: string,
+    permissionKey: string,
+    enabled: boolean,
+    organizationId: string,
+    userId: string
+  ): Promise<RoleWithPermissions> {
+    return await this.dataSource.transaction(async manager => {
+      // Verify role exists and belongs to organization
+      const role = await manager.findOne(Role, {
+        where: { id: roleId, organizationId },
+      });
+
+      if (!role) {
+        throw new NotFoundException('Role not found');
+      }
+
+      // Find existing permission
+      const existingPermission = await manager.findOne(RolePermission, {
+        where: { roleId, permissionKey },
+      });
+
+      if (enabled) {
+        if (!existingPermission) {
+          // Create new permission
+          await this.createRolePermissions(roleId, [permissionKey], organizationId, userId, manager);
+        } else {
+          // Enable existing permission
+          existingPermission.enabled = true;
+          await manager.save(RolePermission, existingPermission);
+        }
+      } else {
+        if (existingPermission) {
+          // Remove permission
+          await manager.delete(RolePermission, { id: existingPermission.id });
+        }
+      }
+
+      // Return updated role with permissions
+      return this.findOne(roleId, organizationId);
+    });
+  }
 }

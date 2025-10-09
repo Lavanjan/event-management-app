@@ -10,7 +10,7 @@ import {
   Download,
   RefreshCw,
   TrendingUp,
-
+  Plus,
   Calendar,
   DollarSign,
   ArrowUpDown,
@@ -379,7 +379,7 @@ const createColumns = (
               <DialogHeader className="flex-shrink-0">
                 <DialogTitle>Documents - {booking.customerName}</DialogTitle>
               </DialogHeader>
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
                 <DocumentManager
                   entityType="booking"
                   entityId={booking.id}
@@ -456,6 +456,8 @@ export function BookingListPage() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedBookingForReports, setSelectedBookingForReports] = useState<Booking | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
 
   const { data: bookingData, isLoading, error } = useBookingList(filters);
   const bookings = bookingData?.data || [];
@@ -595,6 +597,12 @@ export function BookingListPage() {
 
   const actions: ActionButton[] = [
     {
+      icon: Plus,
+      label: 'Create Booking',
+      onClick: () => setShowCreateModal(true),
+      variant: 'default',
+    },
+    {
       icon: Download,
       label: 'Export',
       onClick: () => {
@@ -616,9 +624,6 @@ export function BookingListPage() {
         tableDescription="Manage and track all customer bookings with advanced filtering and search capabilities."
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-end">
-            <CreateBookingDialog onBookingCreated={handleBookingUpdated} />
-          </div>
           <DataTable
             columns={columns}
             data={bookings}
@@ -661,6 +666,18 @@ export function BookingListPage() {
         booking={selectedBookingForReports}
         isOpen={!!selectedBookingForReports}
         onClose={() => setSelectedBookingForReports(null)}
+      />
+
+      {/* Create Booking Modal */}
+      <CreateBookingDialog
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        showTrigger={false}
+        onBookingCreated={() => {
+          setShowCreateModal(false);
+          // Refresh the bookings list
+          window.location.reload();
+        }}
       />
     </div>
   );

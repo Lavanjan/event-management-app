@@ -14,6 +14,8 @@ import {
   CalendarDays,
   DollarSign,
   XCircle,
+  Plus,
+
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -143,11 +145,25 @@ const createColumns = (
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
+
+      // Handle null/undefined status
+      if (!status) {
+        return (
+          <Badge variant="secondary">
+            DRAFT
+          </Badge>
+        );
+      }
+
       const variant = status === 'PUBLISHED' ? 'default' :
                     status === 'DRAFT' ? 'secondary' : 'destructive';
+
+      // Format status for display
+      const displayStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+
       return (
         <Badge variant={variant}>
-          {status}
+          {displayStatus}
         </Badge>
       );
     },
@@ -200,6 +216,7 @@ export function EventListPage() {
     sortBy: 'createdAt',
     sortOrder: 'DESC',
   });
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const { data: eventData, isLoading, error } = useEventList(filters);
 
@@ -214,14 +231,12 @@ export function EventListPage() {
     duplicateEvent.mutate({ id, newName });
   };
 
-  const handleEventUpdated = () => {
-    // Refetch events data
-  };
+
 
   const columns = useMemo(() => createColumns(
     (id: string) => deleteEvent.mutate(id),
     handleDuplicate,
-    handleEventUpdated
+    () => {} // Empty callback for event updated
   ), [deleteEvent, duplicateEvent, events]);
 
   const handleSearch = (search: string) => {
@@ -304,6 +319,12 @@ export function EventListPage() {
 
   const actions: ActionButton[] = [
     {
+      icon: Plus,
+      label: 'Create Event',
+      onClick: () => setShowCreateModal(true),
+      variant: 'default',
+    },
+    {
       icon: TrendingUp,
       label: 'Export',
       onClick: () => {
@@ -315,6 +336,7 @@ export function EventListPage() {
   ];
 
   return (
+    <>
     <ManagementLayout
       title="Events"
       description="Manage and organize your events"
@@ -324,9 +346,6 @@ export function EventListPage() {
       tableDescription="Manage and track all your events with advanced filtering and search capabilities."
     >
       <div className="space-y-4">
-        <div className="flex items-center justify-end">
-          <CreateEventDialog onEventCreated={handleEventUpdated} />
-        </div>
         <DataTable
           columns={columns}
           data={events}
@@ -349,6 +368,19 @@ export function EventListPage() {
         />
       </div>
     </ManagementLayout>
+
+    {/* Create Event Modal */}
+    <CreateEventDialog
+      open={showCreateModal}
+      onOpenChange={setShowCreateModal}
+      showTrigger={false}
+      onEventCreated={() => {
+        setShowCreateModal(false);
+        // Refresh the events list
+        window.location.reload();
+      }}
+    />
+    </>
   );
 }
 
