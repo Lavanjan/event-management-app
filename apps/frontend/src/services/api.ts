@@ -1,12 +1,15 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import { store } from '../store';
 import { logout, updateTokens } from '../store/slices/authSlice';
-import { config } from '../config/environment';
+import { logEnvVars } from '../config/environment';
+
+const API_BASE_URL = `${import.meta.env.VITE_API_PROXY_TARGET}/api` || 'http://147.93.179.153:3004';
+console.log('🔍 API Base URL:', API_BASE_URL);
 
 // Create axios instance with enhanced security configuration
 const api: AxiosInstance = axios.create({
-  baseURL: config.apiBaseUrl,
-  timeout: config.apiTimeout,
+  baseURL: API_BASE_URL,
+  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
   withCredentials: true, // Include cookies in all requests
   headers: {
     'Content-Type': 'application/json',
@@ -17,6 +20,7 @@ const api: AxiosInstance = axios.create({
 // Request interceptor to add auth token and security headers
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    logEnvVars();
     const state = store.getState();
     const token = state.auth.accessToken;
 
@@ -27,11 +31,13 @@ api.interceptors.request.use(
     // Add security headers
     if (config.headers) {
       config.headers['X-Client-Version'] = import.meta.env.VITE_APP_VERSION || '1.0.0';
-      config.headers['X-Request-ID'] = crypto.randomUUID();
+      // config.headers['X-Request-ID'] = crypto.randomUUID();
 
       // Add CSRF token if available and enabled
       if (import.meta.env.VITE_ENABLE_CSRF === 'true') {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const csrfToken = document
+          .querySelector('meta[name="csrf-token"]')
+          ?.getAttribute('content');
         if (csrfToken) {
           config.headers['X-CSRF-Token'] = csrfToken;
         }
@@ -56,16 +62,24 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     // Log successful responses in development
     if (import.meta.env.VITE_ENABLE_REQUEST_LOGGING === 'true') {
-      console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+      console.log(
+        `✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`
+      );
     }
     return response;
   },
   async error => {
     const originalRequest = error.config;
 
+    console.error('Axios error.config:', error.config);
+    console.error('Axios error.response:', error.response);
+
     // Log errors in development
     if (import.meta.env.VITE_ENABLE_REQUEST_LOGGING === 'true') {
-      console.error(`❌ API Error: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status}`, error.response?.data);
+      console.error(
+        `❌ API Error: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status}`,
+        error.response?.data
+      );
     }
 
     // Handle 401 Unauthorized - Token refresh
@@ -77,15 +91,19 @@ api.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          const response = await axios.post(config.apiBaseUrl + '/auth/refresh', {
-            refreshToken,
-          }, {
-            withCredentials: true,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest',
+          const response = await axios.post(
+            `${API_BASE_URL}/auth/refresh`,
+            {
+              refreshToken,
+            },
+            {
+              withCredentials: true,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+              },
             }
-          });
+          );
 
           const { accessToken, refreshToken: newRefreshToken } = response.data;
 

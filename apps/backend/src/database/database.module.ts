@@ -60,7 +60,7 @@ import {
           UserPermission,
         ],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
-        synchronize: false, // Disabled to use migrations instead
+        synchronize: true, // Disabled to use migrations instead
         logging: configService.get('NODE_ENV') === 'development',
         ssl: configService.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
         extra: {

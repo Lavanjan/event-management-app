@@ -47,7 +47,7 @@ async function bootstrap() {
     // CORS configuration
     if (configService.get('ENABLE_CORS', true)) {
       const allowedOrigins = [
-        configService.get('FRONTEND_URL', 'http://localhost:4200'),
+        configService.get('FRONTEND_URL', 'http://147.93.179.153:4201'),
         configService.get('FRONTEND_URL_ALT', 'http://147.93.179.153:4201'),
         configService.get('BACKEND_URL', 'http://localhost:3000'),
       ].filter(Boolean); // Remove any undefined values
@@ -65,8 +65,9 @@ async function bootstrap() {
           'Access-Control-Allow-Origin',
           'Access-Control-Allow-Headers',
           'Access-Control-Allow-Methods',
+           'X-Client-Version',
         ],
-        exposedHeaders: ['Set-Cookie'],
+        exposedHeaders: ['Set-Cookie', 'X-Client-Version',],
         optionsSuccessStatus: 200,
       });
     }

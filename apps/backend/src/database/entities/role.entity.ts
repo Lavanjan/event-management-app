@@ -42,7 +42,7 @@ export class Role {
   scope: RoleScope;
 
   @Column({ nullable: true, name: 'organization_id', type: 'uuid' })
-  organizationId: string;
+  organizationId?: string | null;
 
   // @ManyToOne('Organization', 'roles', {
   //   nullable: true,
@@ -86,15 +86,22 @@ export class Role {
   updatedAt: Date;
 
   hasPermission(resource: string, action: string): boolean {
-    return this.rolePermissions?.some(
-      rolePermission => rolePermission.module === resource && rolePermission.action === action && rolePermission.enabled
-    ) || false;
+    return (
+      this.rolePermissions?.some(
+        rolePermission =>
+          rolePermission.module === resource &&
+          rolePermission.action === action &&
+          rolePermission.enabled
+      ) || false
+    );
   }
 
   hasPermissionByKey(permissionKey: string): boolean {
-    return this.rolePermissions?.some(
-      rolePermission => rolePermission.permissionKey === permissionKey && rolePermission.enabled
-    ) || false;
+    return (
+      this.rolePermissions?.some(
+        rolePermission => rolePermission.permissionKey === permissionKey && rolePermission.enabled
+      ) || false
+    );
   }
 
   isGlobalRole(): boolean {

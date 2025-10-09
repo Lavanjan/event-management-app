@@ -2,7 +2,15 @@
  * Environment Configuration Service
  * Centralizes all environment variable access with type safety and validation
  */
-
+export function logEnvVars() {
+  if (typeof window !== 'undefined') {
+    console.log('🔍 Environment Variables:');
+    console.log('VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+    console.log('VITE_API_TIMEOUT:', import.meta.env.VITE_API_TIMEOUT);
+    console.log('VITE_ENABLE_REQUEST_LOGGING:', import.meta.env.VITE_ENABLE_REQUEST_LOGGING);
+    console.log('VITE_APP_ENVIRONMENT:', import.meta.env.VITE_APP_ENVIRONMENT);
+  }
+}
 export interface EnvironmentConfig {
   // API Configuration
   apiBaseUrl: string;
