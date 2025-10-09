@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: event-booking-postgres-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-event_booking}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - event-booking-network-local
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for sessions and caching
+  redis:
+    image: redis:7-alpine
+    container_name: event-booking-redis-local
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data_local:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redispassword}
+    networks:
+      - event-booking-network-local
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: event-booking-backend-local
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${BACKEND_PORT:-6000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-password}
+      DB_NAME: ${DB_NAME:-event_booking}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redispassword}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your_local_development_jwt_secret_key_minimum_32_characters}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      REFRESH_TOKEN_EXPIRES_IN: ${REFRESH_TOKEN_EXPIRES_IN:-7d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+      RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
+      RATE_LIMIT_LIMIT: ${RATE_LIMIT_LIMIT:-1000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@localhost.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin123!}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      FRONTEND_URL_ALT: ${FRONTEND_URL_ALT:-http://localhost:4201}
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:3000}
+      COOKIE_SECRET: ${COOKIE_SECRET:-your_local_cookie_secret_key}
+      ENABLE_CORS: ${ENABLE_CORS:-true}
+      ENABLE_SWAGGER: ${ENABLE_SWAGGER:-true}
+    ports:
+      - "${BACKEND_PORT:-6000}:6000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - backend_uploads_local:/app/uploads
+    networks:
+      - event-booking-network-local
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React App
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_APP_NAME: ${VITE_APP_NAME:-Event Booking System}
+    container_name: event-booking-frontend-local
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-6001}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - event-booking-network-local
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data_local:
+    driver: local
+  redis_data_local:
+    driver: local
+  backend_uploads_local:
+    driver: local
+
+networks:
+  event-booking-network-local:
+    driver: bridge

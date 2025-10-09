@@ -46,11 +46,20 @@ async function bootstrap() {
 
     // CORS configuration
     if (configService.get('ENABLE_CORS', true)) {
-      const allowedOrigins = [
-        configService.get('FRONTEND_URL', 'http://localhost:4200'),
-        configService.get('FRONTEND_URL_ALT', 'http://localhost:4201'),
-        configService.get('BACKEND_URL', 'http://localhost:3000'),
-      ].filter(Boolean); // Remove any undefined values
+      const corsOrigin = configService.get('CORS_ORIGIN');
+      let allowedOrigins = [];
+
+      if (corsOrigin) {
+        // If CORS_ORIGIN is set, use it (comma-separated list)
+        allowedOrigins = corsOrigin.split(',').map(origin => origin.trim());
+      } else {
+        // Fallback to individual environment variables
+        allowedOrigins = [
+          configService.get('FRONTEND_URL', 'http://localhost:6001'),
+          configService.get('FRONTEND_URL_ALT', 'http://localhost:4201'),
+          configService.get('BACKEND_URL', 'http://localhost:6000'),
+        ].filter(Boolean);
+      }
 
       app.enableCors({
         origin: allowedOrigins,

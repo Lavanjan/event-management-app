@@ -27,6 +27,9 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { createWinstonLogger } from './common/config/winston.config';
 import { validationSchema } from './common/config/validation.schema';
 
+// Controllers
+import { HealthController } from './controllers/health.controller';
+
 @Module({
   imports: [
     // Configuration
@@ -97,7 +100,7 @@ import { validationSchema } from './common/config/validation.schema';
     UserPermissionsModule,
     SettingsModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [],
 })
 export class AppModule {}
