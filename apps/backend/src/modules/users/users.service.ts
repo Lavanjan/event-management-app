@@ -51,7 +51,9 @@ export class UsersService {
       // Check if any of the roles are system roles (only Product Admin can assign system roles)
       const systemRoles = roles.filter(role => role.isSystemRoleType());
       if (systemRoles.length > 0) {
-        throw new BadRequestException('Cannot assign system roles (Product Admin, Organization Admin) to users. These are static roles.');
+        throw new BadRequestException(
+          'Cannot assign system roles (Product Admin, Organization Admin) to users. These are static roles.'
+        );
       }
     }
 
@@ -176,7 +178,15 @@ export class UsersService {
     organizationId: string,
     findUsersDto: FindUsersDto
   ): Promise<PaginatedResponseDto<User>> {
-    const { page = 1, limit = 10, search, sortBy = 'firstName', sortOrder = 'ASC', role, status } = findUsersDto;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'firstName',
+      sortOrder = 'ASC',
+      role,
+      status,
+    } = findUsersDto;
 
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
@@ -261,7 +271,9 @@ export class UsersService {
       // Check if any of the roles are system roles (only Product Admin can assign system roles)
       const systemRoles = roles.filter(role => role.isSystemRoleType());
       if (systemRoles.length > 0) {
-        throw new BadRequestException('Cannot assign system roles (Product Admin, Organization Admin) to users. These are static roles.');
+        throw new BadRequestException(
+          'Cannot assign system roles (Product Admin, Organization Admin) to users. These are static roles.'
+        );
       }
 
       user.roles = roles;
@@ -433,7 +445,7 @@ export class UsersService {
     verificationToken: string,
     verificationOtp: string
   ): Promise<void> {
-    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:4201');
+    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://147.93.179.153:4201');
     const verificationUrl = `${frontendUrl}/verify-otp?token=${verificationToken}`;
 
     const verificationData: UserVerificationData = {

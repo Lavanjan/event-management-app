@@ -48,7 +48,7 @@ async function bootstrap() {
     if (configService.get('ENABLE_CORS', true)) {
       const allowedOrigins = [
         configService.get('FRONTEND_URL', 'http://localhost:4200'),
-        configService.get('FRONTEND_URL_ALT', 'http://localhost:4201'),
+        configService.get('FRONTEND_URL_ALT', 'http://147.93.179.153:4201'),
         configService.get('BACKEND_URL', 'http://localhost:3000'),
       ].filter(Boolean); // Remove any undefined values
 

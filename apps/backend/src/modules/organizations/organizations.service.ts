@@ -139,12 +139,13 @@ export class OrganizationsService {
 
       // Assign selected package to organization if provided
       if (selectedPackage) {
-        const organizationPackageRepository = queryRunner.manager.getRepository(OrganizationPackage);
+        const organizationPackageRepository =
+          queryRunner.manager.getRepository(OrganizationPackage);
         const featurePackageRepository = queryRunner.manager.getRepository(FeaturePackage);
 
         // Verify the package exists and is active
         const featurePackage = await featurePackageRepository.findOne({
-          where: { id: selectedPackage, isActive: true }
+          where: { id: selectedPackage, isActive: true },
         });
 
         if (featurePackage) {
@@ -157,7 +158,9 @@ export class OrganizationsService {
           });
 
           await queryRunner.manager.save(orgPackage);
-          this.logger.log(`Assigned feature package ${selectedPackage} to organization ${savedOrganization.id}`);
+          this.logger.log(
+            `Assigned feature package ${selectedPackage} to organization ${savedOrganization.id}`
+          );
         } else {
           this.logger.warn(`Feature package ${selectedPackage} not found or inactive`);
         }
@@ -179,7 +182,7 @@ export class OrganizationsService {
           organizationName: savedOrganization.name,
           verificationOtp: verificationOtp,
           verificationUrl: `${
-            process.env.FRONTEND_URL || 'http://localhost:4201'
+            process.env.FRONTEND_URL || 'http://147.93.179.153:4201'
           }/verify-otp?token=${savedAdmin.id}`,
           // Don't send password in verification email - will be sent after verification
         });
@@ -435,9 +438,9 @@ export class OrganizationsService {
       lastName: adminUser.lastName,
       organizationName: organization.name,
       otp: newOtp,
-      verificationUrl: `${process.env.FRONTEND_URL || 'http://localhost:4201'}/verify-otp?token=${
-        adminUser.id
-      }`,
+      verificationUrl: `${
+        process.env.FRONTEND_URL || 'http://147.93.179.153:4201'
+      }/verify-otp?token=${adminUser.id}`,
       expiryMinutes: 1440, // 24 hours
     });
 
@@ -611,31 +614,35 @@ export class OrganizationsService {
     });
 
     // Create role permissions
-    const rolePermissions = Array.from(permissionKeys).map(key => {
-      const masterPerm = masterPermissions.find(mp => mp.key === key);
-      if (!masterPerm) {
-        this.logger.warn(`Master permission not found for key: ${key}`);
-        return null;
-      }
+    const rolePermissions = Array.from(permissionKeys)
+      .map(key => {
+        const masterPerm = masterPermissions.find(mp => mp.key === key);
+        if (!masterPerm) {
+          this.logger.warn(`Master permission not found for key: ${key}`);
+          return null;
+        }
 
-      return rolePermissionRepository.create({
-        organizationId,
-        roleId,
-        permissionKey: key,
-        name: masterPerm.name,
-        description: masterPerm.description,
-        category: masterPerm.category,
-        module: masterPerm.module,
-        action: masterPerm.action,
-        enabled: true,
-        grantedBy: null, // System assignment
-        grantedAt: new Date(),
-      });
-    }).filter(Boolean);
+        return rolePermissionRepository.create({
+          organizationId,
+          roleId,
+          permissionKey: key,
+          name: masterPerm.name,
+          description: masterPerm.description,
+          category: masterPerm.category,
+          module: masterPerm.module,
+          action: masterPerm.action,
+          enabled: true,
+          grantedBy: null, // System assignment
+          grantedAt: new Date(),
+        });
+      })
+      .filter(Boolean);
 
     if (rolePermissions.length > 0) {
       await rolePermissionRepository.save(rolePermissions);
-      this.logger.log(`Assigned ${rolePermissions.length} permissions to organization admin role for organization ${organizationId}`);
+      this.logger.log(
+        `Assigned ${rolePermissions.length} permissions to organization admin role for organization ${organizationId}`
+      );
     }
   }
 
@@ -654,7 +661,7 @@ export class OrganizationsService {
         where: {
           name: 'Organization Admin',
           organizationId,
-          scope: RoleScope.ORGANIZATION
+          scope: RoleScope.ORGANIZATION,
         },
       });
 
@@ -671,10 +678,15 @@ export class OrganizationsService {
       await this.assignPermissionsToAdminRole(adminRole.id, organizationId, queryRunner);
 
       await queryRunner.commitTransaction();
-      this.logger.log(`Updated permissions for organization admin role in organization ${organizationId}`);
+      this.logger.log(
+        `Updated permissions for organization admin role in organization ${organizationId}`
+      );
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.logger.error(`Failed to update organization admin permissions for ${organizationId}:`, error);
+      this.logger.error(
+        `Failed to update organization admin permissions for ${organizationId}:`,
+        error
+      );
       throw error;
     } finally {
       await queryRunner.release();

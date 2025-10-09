@@ -31,6 +31,7 @@ import {
 import { RootState } from '../../store';
 import { cn } from '../../utils/cn';
 import { menuService, MenuItemDto } from '../../services/menuService';
+import logo from '../../assets/eventorra.png';
 
 // Icon mapping for backend icon names to actual icon components
 const iconMap: Record<string, any> = {
@@ -326,7 +327,11 @@ export function Sidebar() {
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   // Fetch menu items from backend
-  const { data: menuData, isLoading, error } = useQuery({
+  const {
+    data: menuData,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['userMenu'],
     queryFn: () => menuService.getUserMenu(),
     enabled: !!user,
@@ -335,7 +340,6 @@ export function Sidebar() {
 
   // @ts-ignore
   const navigation = menuData?.menuItems?.map(convertMenuItemToNavigation) || [];
-
 
   // Access control is now handled by the backend
   // @ts-ignore
@@ -346,9 +350,7 @@ export function Sidebar() {
 
   const toggleMenu = (menuName: string) => {
     setExpandedMenus(prev =>
-      prev.includes(menuName)
-        ? prev.filter(name => name !== menuName)
-        : [...prev, menuName]
+      prev.includes(menuName) ? prev.filter(name => name !== menuName) : [...prev, menuName]
     );
   };
 
@@ -361,8 +363,10 @@ export function Sidebar() {
       return location.pathname === item.href || location.pathname.startsWith(item.href + '/');
     }
     if (item.children) {
-      return item.children.some(child =>
-        child.href && (location.pathname === child.href || location.pathname.startsWith(child.href + '/'))
+      return item.children.some(
+        child =>
+          child.href &&
+          (location.pathname === child.href || location.pathname.startsWith(child.href + '/'))
       );
     }
     return false;
@@ -374,8 +378,10 @@ export function Sidebar() {
 
     navigation.forEach(item => {
       if (item.children) {
-        const hasActiveChild = item.children.some(child =>
-          child.href && (location.pathname === child.href || location.pathname.startsWith(child.href + '/'))
+        const hasActiveChild = item.children.some(
+          child =>
+            child.href &&
+            (location.pathname === child.href || location.pathname.startsWith(child.href + '/'))
         );
         if (hasActiveChild) {
           activeParentMenus.push(item.name);
@@ -449,14 +455,12 @@ export function Sidebar() {
             className="focus:outline-none focus:ring-2 focus:ring-teal-500 rounded-lg"
           >
             <img
-              src="/src/assets/eventorra.png"
+              src={logo}
               alt="Eventorra"
               className="h-10 w-auto hover:opacity-80 transition-opacity"
             />
           </button>
         </div>
-
-
 
         {/* Menu Label */}
         <div className="px-6 py-4">
@@ -465,7 +469,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto space-y-2 px-4 pb-4">
-          {navigation.map((item) => {
+          {navigation.map(item => {
             if (!canAccessMenuItem(item)) return null;
 
             const isActive = isActiveMenu(item);
@@ -475,8 +479,11 @@ export function Sidebar() {
 
             if (hasChildren) {
               // For parent menus, only highlight if a child is active, not the parent itself
-              const hasActiveChild = item.children?.some(child =>
-                child.href && (location.pathname === child.href || location.pathname.startsWith(child.href + '/'))
+              const hasActiveChild = item.children?.some(
+                child =>
+                  child.href &&
+                  (location.pathname === child.href ||
+                    location.pathname.startsWith(child.href + '/'))
               );
 
               return (
@@ -508,13 +515,13 @@ export function Sidebar() {
 
                   {isExpanded && (
                     <div className="ml-8 space-y-1 border-l-2 border-gray-100 pl-4">
-                      {item.children?.map((child) => {
+                      {item.children?.map(child => {
                         if (!canAccessMenuItem(child)) return null;
 
-                        const isChildActive = child.href && (
-                          location.pathname === child.href ||
-                          location.pathname.startsWith(child.href + '/')
-                        );
+                        const isChildActive =
+                          child.href &&
+                          (location.pathname === child.href ||
+                            location.pathname.startsWith(child.href + '/'));
                         const ChildIcon = child.icon;
 
                         return (
@@ -572,18 +579,16 @@ export function Sidebar() {
           <div className="flex items-center space-x-3">
             <div className="h-10 w-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center shadow-md">
               <span className="text-white text-sm font-semibold">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {user?.firstName?.[0]}
+                {user?.lastName?.[0]}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-xs text-gray-500 truncate">
-                {user?.email}
-              </p>
+              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
-          
           </div>
         </div>
       </div>

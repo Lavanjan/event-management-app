@@ -5,7 +5,7 @@ async function testLoginAndRoles() {
     console.log('🔐 Testing login for new organization admin...');
 
     // Step 1: Login
-    const loginResponse = await axios.post('http://localhost:3004/api/auth/login', {
+    const loginResponse = await axios.post('http://147.93.179.153:3004/api/auth/login', {
       email: 'testfixed3@example.com',
       password: 'TestPassword123!',
     });
@@ -20,7 +20,7 @@ async function testLoginAndRoles() {
     console.log('\n🔧 Testing enhanced roles API...');
 
     try {
-      const rolesResponse = await axios.get('http://localhost:3004/api/enhanced-roles', {
+      const rolesResponse = await axios.get('http://147.93.179.153:3004/api/enhanced-roles', {
         headers: {
           Cookie: `sessionId=${sessionId}`,
         },
@@ -37,7 +37,7 @@ async function testLoginAndRoles() {
 
     try {
       const inventoryResponse = await axios.get(
-        'http://localhost:3004/api/inventory/out-of-stock',
+        'http://147.93.179.153:3004/api/inventory/out-of-stock',
         {
           headers: {
             Cookie: `sessionId=${sessionId}`,

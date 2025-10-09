@@ -61,7 +61,7 @@ services:
       SMTP_PASS: your-app-password
       FRONTEND_URL: http://localhost:4200
       FRONTEND_URL_ALT: http://localhost:4201
-      BACKEND_URL: http://localhost:3004
+      BACKEND_URL: http://147.93.179.153:3004
     ports:
       - "3000:3000"
     depends_on:

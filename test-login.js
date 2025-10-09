@@ -6,7 +6,8 @@ async function testLogin() {
     // First, let's get the user's current password from database
     // We know the user was created and verified, so let's try to login
 
-    const apiUrl = process.env.VITE_API_URL || process.env.BACKEND_URL || 'http://localhost:3004';
+    const apiUrl =
+      process.env.VITE_API_URL || process.env.BACKEND_URL || 'http://147.93.179.153:3004';
     const response = await fetch(`${apiUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
@@ -28,7 +29,8 @@ async function testLogin() {
       console.log('Cookies received:', cookies);
 
       // Test inventory API with the session
-      const apiUrl = process.env.VITE_API_URL || process.env.BACKEND_URL || 'http://localhost:3004';
+      const apiUrl =
+        process.env.VITE_API_URL || process.env.BACKEND_URL || 'http://147.93.179.153:3004';
       const inventoryResponse = await fetch(
         `${apiUrl}/api/inventory?page=1&limit=20&search=&sortBy=name&sortOrder=ASC`,
         {

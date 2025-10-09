@@ -52,11 +52,11 @@ export class VerificationController {
       await this.validateVerificationData(token, otp);
 
       // Redirect to frontend OTP verification page with token and email
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4201';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://147.93.179.153:4201';
       return res.redirect(`${frontendUrl}/verify-otp?token=${token}`);
     } catch (error) {
       // Redirect to frontend with error message
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4201';
+      const frontendUrl = process.env.FRONTEND_URL || 'http://147.93.179.153:4201';
       const errorMessage = encodeURIComponent(error.message);
       return res.redirect(`${frontendUrl}/auth/verification-error?error=${errorMessage}`);
     }

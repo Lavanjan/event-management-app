@@ -16,7 +16,7 @@ async function updateOrganizationPermissions() {
 
     // Get current permissions
     const currentResponse = await fetch(
-      `http://localhost:3004/api/organizations/${organizationId}/permissions`,
+      `http://147.93.179.153:3004/api/organizations/${organizationId}/permissions`,
       {
         method: 'GET',
         headers: {
@@ -42,7 +42,7 @@ async function updateOrganizationPermissions() {
 
     // Update permissions
     const updateResponse = await fetch(
-      `http://localhost:3004/api/organizations/${organizationId}/permissions`,
+      `http://147.93.179.153:3004/api/organizations/${organizationId}/permissions`,
       {
         method: 'PUT',
         headers: {

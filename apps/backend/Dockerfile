@@ -3,17 +3,18 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 # Copy package files
 COPY package*.json ./
-# Install only production dependencies
-RUN npm ci --only=production --no-audit --no-fund && \
+# Use npm install instead of npm ci (no package-lock.json)
+RUN npm install --only=production --no-audit --no-fund && \
     npm cache clean --force
 
 # Stage 2: Builder
 FROM node:22-alpine AS builder
 WORKDIR /app
 # Copy package files
+COPY ../../package*.json ../
 COPY package*.json ./
-# Install all dependencies (including dev)
-RUN npm ci --no-audit --no-fund
+# Use npm install instead of npm ci
+RUN npm install --no-audit --no-fund
 # Copy source code
 COPY . .
 # Build the application
@@ -28,8 +29,8 @@ RUN apk add --no-cache dumb-init
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S -u 1001 -G nodejs nodejs
-# Create uploads directory with proper ownership
-RUN mkdir -p /app/uploads && chown -R nodejs:nodejs /app/uploads    
+# Create uploads and logs directories with proper ownership
+RUN mkdir -p /app/uploads /app/logs && chown -R nodejs:nodejs /app/uploads /app/logs
 # Copy production dependencies from deps stage
 COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=deps --chown=nodejs:nodejs /app/package*.json ./
