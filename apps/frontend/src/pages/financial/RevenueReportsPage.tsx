@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+
 import {
   DollarSign,
   TrendingUp,
-  Calendar,
+
   Download,
   Filter,
   BarChart3,
@@ -33,10 +33,9 @@ import {
 import { PageLoading, ErrorState } from '../../components/forms/LoadingSpinner';
 import { useFinancialReports } from '../../hooks/useFinancial';
 import { useCurrency } from '../../contexts/CurrencyContext';
-import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 export function RevenueReportsPage() {
-  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState({
     from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
     to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
@@ -44,7 +43,7 @@ export function RevenueReportsPage() {
   const [period, setPeriod] = useState('month');
 
   const {
-    data: revenueData,
+    revenue: { data: revenueData } = { data: null },
     isLoading,
     error,
   } = useFinancialReports(dateRange);

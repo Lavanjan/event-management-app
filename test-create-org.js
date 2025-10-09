@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 async function testCreateOrganization() {
   try {
-    const response = await fetch('http://localhost:3002/api/organizations', {
+    const response = await fetch('http://localhost:6000/api/organizations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { settingsService, OrganizationSettings, UserPreferences, UserProfile } from '../services/settingsService';
+import { settingsService, OrganizationSettings, UserPreferences } from '../services/settingsService';
 import { useToast } from './use-toast';
 
 export const SETTINGS_QUERY_KEYS = {

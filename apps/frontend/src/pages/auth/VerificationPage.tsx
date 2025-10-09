@@ -98,7 +98,7 @@ export function VerificationPage() {
     setResendLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3002/api/verify/resend', {
+      const response = await fetch('http://localhost:6000/api/verify/resend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

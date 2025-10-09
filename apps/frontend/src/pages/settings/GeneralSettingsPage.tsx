@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,12 +6,7 @@ import {
   Settings,
   Building,
   Globe,
-  Phone,
-  MapPin,
-  DollarSign,
-  Clock,
-  Mail,
-  Palette,
+
   Save,
   Loader2,
 } from 'lucide-react';
@@ -21,8 +16,7 @@ import { Input } from '../../components/ui/input';
 import { Textarea } from '../../components/ui/textarea';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Switch } from '../../components/ui/switch';
-import { Separator } from '../../components/ui/separator';
+
 import { useOrganizationSettings, useUpdateOrganizationSettings } from '../../hooks/useSettings';
 import { useThreeTierPermissions } from '../../hooks/useThreeTierPermissions';
 
@@ -166,16 +160,22 @@ export function GeneralSettingsPage() {
                 <Input
                   id="displayName"
                   {...register('displayName')}
-                  error={errors.displayName?.message}
+                  className={errors.displayName ? 'border-red-500' : ''}
                 />
+                {errors.displayName && (
+                  <p className="text-sm text-red-500 mt-1">{errors.displayName.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
                   {...register('phone')}
-                  error={errors.phone?.message}
+                  className={errors.phone ? 'border-red-500' : ''}
                 />
+                {errors.phone && (
+                  <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>
+                )}
               </div>
             </div>
             
@@ -196,8 +196,11 @@ export function GeneralSettingsPage() {
                   id="website"
                   {...register('website')}
                   placeholder="https://example.com"
-                  error={errors.website?.message}
+                  className={errors.website ? 'border-red-500' : ''}
                 />
+                {errors.website && (
+                  <p className="text-sm text-red-500 mt-1">{errors.website.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="address">Address</Label>

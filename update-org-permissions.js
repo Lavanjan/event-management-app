@@ -15,7 +15,7 @@ async function updateOrganizationPermissions() {
     console.log('Updating permissions for organization:', organizationId);
     
     // Get current permissions
-    const currentResponse = await fetch(`http://localhost:3002/api/organizations/${organizationId}/permissions`, {
+    const currentResponse = await fetch(`http://localhost:6000/api/organizations/${organizationId}/permissions`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -38,7 +38,7 @@ async function updateOrganizationPermissions() {
     }));
     
     // Update permissions
-    const updateResponse = await fetch(`http://localhost:3002/api/organizations/${organizationId}/permissions`, {
+    const updateResponse = await fetch(`http://localhost:6000/api/organizations/${organizationId}/permissions`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

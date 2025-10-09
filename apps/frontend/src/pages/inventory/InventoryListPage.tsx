@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import {
   Package,
   AlertTriangle,
   TrendingUp,
   TrendingDown,
-  RefreshCw,
-  Bell,
+
   Download,
   Plus
 } from 'lucide-react';
@@ -29,7 +28,6 @@ import { useToast } from '../../hooks/use-toast';
 import { ManagementLayout, StatCard, ActionButton } from '../../components/layout/ManagementLayout';
 
 export function InventoryListPage() {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [filters, setFilters] = useState<InventoryFilters>({
     page: 1,
@@ -95,9 +93,7 @@ export function InventoryListPage() {
     setFilters(prev => ({ ...prev, limit: pageSize, page: 1 }));
   };
 
-  const handleRefresh = () => {
-    refetch();
-  };
+
 
   // Create filter options from stats
   const filterOptions = {

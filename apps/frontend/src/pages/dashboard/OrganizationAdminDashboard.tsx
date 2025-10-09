@@ -12,8 +12,7 @@ import {
   ArrowDownRight,
   Users,
   Package,
-  Download,
-  Calendar
+  Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useDashboardStats, useRecentBookings, useInventoryAlerts } from '../../hooks/useDashboard';

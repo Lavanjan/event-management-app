@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+
 import {
   DollarSign,
   TrendingDown,
-  Calendar,
+
   Download,
   Filter,
   BarChart3,
@@ -37,7 +37,6 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 export function ExpenseReportsPage() {
-  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState({
     from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
     to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
@@ -46,7 +45,7 @@ export function ExpenseReportsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
 
   const {
-    data: expenseData,
+    expenses: { data: expenseData } = { data: null },
     isLoading,
     error,
   } = useFinancialReports(dateRange);

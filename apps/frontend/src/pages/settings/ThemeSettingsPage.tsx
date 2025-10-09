@@ -45,11 +45,10 @@ export function ThemeSettingsPage() {
   const updatePreferences = useUpdateUserPreferences();
 
   const {
-    register,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors, isDirty },
+    formState: { isDirty },
   } = useForm<ThemeFormData>({
     resolver: zodResolver(themeSchema),
     defaultValues: {

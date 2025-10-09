@@ -60,7 +60,6 @@ export function PackageCard({
   isActive = true,
   isCurrent = false,
   isPopular = false,
-  color,
   icon,
   onAction,
   actionLabel = 'Select Package',

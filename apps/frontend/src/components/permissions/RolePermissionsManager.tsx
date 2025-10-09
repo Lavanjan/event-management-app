@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
 import { useThreeTierPermissions } from '../../hooks/useThreeTierPermissions';
 import { api } from '../../services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 // @ts-ignore
 import { Input } from '../ui/input';
@@ -25,7 +25,7 @@ import {
   Trash2,
   MoreHorizontal,
   ArrowUpDown,
-  X,
+
   Download,
   CheckCircle
 } from 'lucide-react';
@@ -41,19 +41,14 @@ interface Role {
   id: string;
   name: string;
   description: string;
+  scope: string;
   isActive: boolean;
   userCount?: number;
   permissions?: string[];
+  permissionKeys: string[];
 }
 
-interface RolePermission {
-  id: string;
-  permissionKey: string;
-  name: string;
-  description: string;
-  category: string;
-  enabled: boolean;
-}
+
 
 interface RolePermissionsManagerProps {
   className?: string;
@@ -88,37 +83,7 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
     },
   });
 
-  // Fetch role permissions for selected role
-  const { data: rolePermissions = [], isLoading: permissionsLoading } = useQuery({
-    queryKey: ['role-permissions', selectedRole?.id],
-    queryFn: async () => {
-      if (!selectedRole) return [];
-      const response = await api.get(`/roles/${selectedRole.id}/permissions`);
-      return response.data.data;
-    },
-    enabled: !!selectedRole,
-  });
 
-  // Update role permission mutation
-  const updateRolePermissionMutation = useMutation({
-    mutationFn: async ({ roleId, permissionKey, enabled }: { roleId: string; permissionKey: string; enabled: boolean }) => {
-      return api.patch(`/roles/${roleId}/permissions/${permissionKey}`, { enabled });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['role-permissions'] });
-      toast({
-        title: 'Success',
-        description: 'Role permission updated successfully',
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to update permission',
-        variant: 'destructive',
-      });
-    },
-  });
 
   // Delete role mutation
   const deleteRoleMutation = useMutation({
@@ -244,30 +209,7 @@ export const RolePermissionsManager: React.FC<RolePermissionsManagerProps> = ({
     },
   ], [deleteRoleMutation, setSelectedRole]);
 
-  const handlePermissionToggle = (permissionKey: string, enabled: boolean) => {
-    if (!selectedRole) return;
-    updateRolePermissionMutation.mutate({
-      roleId: selectedRole.id,
-      permissionKey,
-      enabled,
-    });
-  };
 
-  const isPermissionEnabled = (permissionKey: string) => {
-    return rolePermissions.some((p: RolePermission) => p.permissionKey === permissionKey && p.enabled);
-  };
-
-  const groupPermissionsByCategory = () => {
-    const grouped: { [key: string]: string[] } = {};
-    organizationFeatures?.forEach(feature => {
-      const category = feature.split('.')[0];
-      if (!grouped[category]) {
-        grouped[category] = [];
-      }
-      grouped[category].push(feature);
-    });
-    return grouped;
-  };
 
   if (!hasPermission('roles.read')) {
     return (

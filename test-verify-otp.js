@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 async function testVerifyOTP() {
   try {
-    const response = await fetch('http://localhost:3002/api/verify/email', {
+    const response = await fetch('http://localhost:6000/api/verify/email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

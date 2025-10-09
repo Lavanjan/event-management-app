@@ -68,7 +68,7 @@ export class EmailUtil {
    * Generate verification URL for email verification
    */
   generateVerificationUrl(userId: string, otp: string): string {
-    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3002';
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:6000';
     return `${baseUrl}/api/verify/email?token=${userId}&otp=${otp}`;
   }
 

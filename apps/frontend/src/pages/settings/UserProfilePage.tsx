@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,13 +9,10 @@ import {
   Calendar,
   Save,
   Loader2,
-  Settings,
-  Bell,
-  Palette,
-  Monitor,
-  Globe,
+
   Clock,
   Eye,
+  Palette,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -23,7 +20,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Switch } from '../../components/ui/switch';
+
 import { Separator } from '../../components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useUserProfile, useUpdateUserProfile, useUserPreferences, useUpdateUserPreferences } from '../../hooks/useSettings';
@@ -51,39 +48,7 @@ const preferencesSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PreferencesFormData = z.infer<typeof preferencesSchema>;
 
-const languages = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'hi', label: 'Hindi' },
-  { value: 'ar', label: 'Arabic' },
-];
 
-const dateFormats = [
-  { value: 'MM/dd/yyyy', label: 'MM/DD/YYYY (12/31/2023)' },
-  { value: 'dd/MM/yyyy', label: 'DD/MM/YYYY (31/12/2023)' },
-  { value: 'yyyy-MM-dd', label: 'YYYY-MM-DD (2023-12-31)' },
-  { value: 'MMM dd, yyyy', label: 'MMM DD, YYYY (Dec 31, 2023)' },
-  { value: 'dd MMM yyyy', label: 'DD MMM YYYY (31 Dec 2023)' },
-];
-
-const timezones = [
-  { value: 'UTC', label: 'UTC' },
-  { value: 'America/New_York', label: 'Eastern Time (EST)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PST)' },
-  { value: 'Europe/London', label: 'Greenwich Mean Time (GMT)' },
-  { value: 'Europe/Paris', label: 'Central European Time (CET)' },
-  { value: 'Asia/Tokyo', label: 'Japan Standard Time (JST)' },
-  { value: 'Asia/Kolkata', label: 'India Standard Time (IST)' },
-  { value: 'Asia/Shanghai', label: 'China Standard Time (CST)' },
-  { value: 'Australia/Sydney', label: 'Australian Eastern Time (AEST)' },
-  { value: 'Asia/Colombo', label: 'Sri Lanka Time (SLST)' },
-];
 
 export function UserProfilePage() {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -229,16 +194,22 @@ export function UserProfilePage() {
                       <Input
                         id="firstName"
                         {...profileForm.register('firstName')}
-                        error={profileForm.formState.errors.firstName?.message}
+                        className={profileForm.formState.errors.firstName ? 'border-red-500' : ''}
                       />
+                      {profileForm.formState.errors.firstName && (
+                        <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.firstName.message}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last Name *</Label>
                       <Input
                         id="lastName"
                         {...profileForm.register('lastName')}
-                        error={profileForm.formState.errors.lastName?.message}
+                        className={profileForm.formState.errors.lastName ? 'border-red-500' : ''}
                       />
+                      {profileForm.formState.errors.lastName && (
+                        <p className="text-sm text-red-500 mt-1">{profileForm.formState.errors.lastName.message}</p>
+                      )}
                     </div>
                   </div>
 

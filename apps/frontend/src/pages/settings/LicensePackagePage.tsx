@@ -1,23 +1,14 @@
-import React, { useState } from 'react';
-import { Package, Crown, ArrowUp, Check, X, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { PackageCard, PackageCardGrid } from '../../components/ui/package-card';
 import { useToast } from '../../hooks/use-toast';
-import { featurePackageService, FeaturePackage, OrganizationPackage } from '../../services/featurePackageService';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { featurePackageService } from '../../services/featurePackageService';
+import { useQuery, useMutation } from '@tanstack/react-query';
 
-interface PackageUpgradeRequest {
-  organizationId: string;
-  currentPackageId: string;
-  requestedPackageId: string;
-  reason?: string;
-}
+
 
 export function LicensePackagePage() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Fetch current organization packages
   const { data: currentPackages, isLoading: loadingCurrent } = useQuery({
@@ -36,6 +27,7 @@ export function LicensePackagePage() {
     mutationFn: async (packageId: string) => {
       // This would be implemented in the backend
       // For now, just show a success message
+      console.log('Requesting upgrade to package:', packageId);
       return new Promise((resolve) => setTimeout(resolve, 1000));
     },
     onSuccess: () => {
@@ -57,12 +49,7 @@ export function LicensePackagePage() {
     return currentPackages?.some(cp => cp.featurePackageId === packageId);
   };
 
-  const formatPrice = (price: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(price);
-  };
+
 
 
 
@@ -95,7 +82,6 @@ export function LicensePackagePage() {
                   name={orgPackage.featurePackage.name}
                   description={orgPackage.featurePackage.description}
                   price={orgPackage.featurePackage.price}
-                  currency={orgPackage.featurePackage.currency}
                   billingCycle={orgPackage.featurePackage.billingCycle}
                   features={orgPackage.featurePackage.features}
                   isActive={orgPackage.featurePackage.isActive}
@@ -123,7 +109,6 @@ export function LicensePackagePage() {
                 name={pkg.name}
                 description={pkg.description}
                 price={pkg.price}
-                currency={pkg.currency}
                 billingCycle={pkg.billingCycle}
                 features={pkg.features}
                 isActive={pkg.isActive}

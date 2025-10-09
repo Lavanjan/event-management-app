@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+
 import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Calendar,
+
   Download,
   Filter,
   BarChart3,
-  Activity,
+
   Target,
   ArrowUpRight,
   ArrowDownRight,
@@ -23,7 +23,7 @@ import {
   CardTitle,
 } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
-import { Badge } from '../../components/ui/badge';
+
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import {
@@ -39,7 +39,6 @@ import { useCurrency } from '../../contexts/CurrencyContext';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 
 export function ProfitLossReportPage() {
-  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState({
     from: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
     to: format(endOfMonth(new Date()), 'yyyy-MM-dd'),
@@ -47,7 +46,7 @@ export function ProfitLossReportPage() {
   const [period, setPeriod] = useState('month');
 
   const {
-    data: financialData,
+    profitLoss: { data: financialData } = { data: null },
     isLoading,
     error,
   } = useFinancialReports(dateRange);

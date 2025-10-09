@@ -33,8 +33,8 @@ export function LowStockAlertsPage() {
   const [sortBy, setSortBy] = useState('urgency');
 
   // Fetch real data from backend
-  const { data: lowStockData, isLoading: lowStockLoading, refetch: refetchLowStock } = useLowStockItems();
-  const { data: outOfStockData, isLoading: outOfStockLoading, refetch: refetchOutOfStock } = useOutOfStockItems();
+  const { data: lowStockData, isLoading: lowStockLoading } = useLowStockItems();
+  const { data: outOfStockData, isLoading: outOfStockLoading } = useOutOfStockItems();
 
   const lowStockItems = lowStockData || [];
   const outOfStockItems = outOfStockData || [];

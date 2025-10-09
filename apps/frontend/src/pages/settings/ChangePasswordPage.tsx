@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -112,9 +112,11 @@ export function ChangePasswordPage() {
                     id="currentPassword"
                     type={showCurrentPassword ? 'text' : 'password'}
                     {...register('currentPassword')}
-                    error={errors.currentPassword?.message}
-                    className="pr-10"
+                    className={`pr-10 ${errors.currentPassword ? 'border-red-500' : ''}`}
                   />
+                  {errors.currentPassword && (
+                    <p className="text-sm text-red-500 mt-1">{errors.currentPassword.message}</p>
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
@@ -139,9 +141,11 @@ export function ChangePasswordPage() {
                     id="newPassword"
                     type={showNewPassword ? 'text' : 'password'}
                     {...register('newPassword')}
-                    error={errors.newPassword?.message}
-                    className="pr-10"
+                    className={`pr-10 ${errors.newPassword ? 'border-red-500' : ''}`}
                   />
+                  {errors.newPassword && (
+                    <p className="text-sm text-red-500 mt-1">{errors.newPassword.message}</p>
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
@@ -166,9 +170,11 @@ export function ChangePasswordPage() {
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     {...register('confirmPassword')}
-                    error={errors.confirmPassword?.message}
-                    className="pr-10"
+                    className={`pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                   />
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-red-500 mt-1">{errors.confirmPassword.message}</p>
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
